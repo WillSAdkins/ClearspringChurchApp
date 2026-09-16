@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block content %}
+
+<main class="board offline-page">
+  <div class="offline-inner">
+    <p class="offline-emoji" aria-hidden="true">{{ icon('dove', 40) }}</p>
+    <h1 class="offline-title">You're offline</h1>
+    <p class="offline-lead">
+      There's no connection right now — but the app still works for anything
+      you've already opened.
+    </p>
+    <div class="offline-actions">
+      <a href="{{ url_for('bible_hub') }}" class="btn btn-primary">Open the Bible</a>
+      <button type="button" class="btn btn-ghost" onclick="window.location.reload()">
+        Try again
+      </button>
+    </div>
+    <p class="offline-note">
+      Bible chapters you've read, and pages you've already visited, are saved on
+      your device and will still open. New content will load again as soon as
+      you're back online.
+    </p>
+  </div>
+</main>
+
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "icons.html" import icon %}
+{% block content %}
+
+<main class="bible">
+
+  <header class="bible-head">
+    <h1 class="bible-title">Bible</h1>
+    <a href="{{ url_for('bible_books') }}" class="bible-search" aria-label="Find a book">
+      {{ icon('search', 20) }}
+    </a>
+  </header>
+
+  <!-- Verse of the day: the hero content, not a menu -->
+  <section class="votd" data-reveal>
+    <p class="votd-label">Verse of the day</p>
+    <p class="votd-text">{{ verse.text }}</p>
+    <div class="votd-foot">
+      <span class="votd-ref">{{ verse.ref }}</span>
+      <a href="{{ url_for('bible_books') }}" class="votd-action">Read in context</a>
+    </div>
+  </section>
+
+  <!-- Continue reading / plans -->
+  <section class="bible-block" data-reveal>
+    <div class="bible-block-head">
+      <h2 class="bible-h2">Reading plans</h2>
+      <a href="{{ url_for('reading_plans') }}" class="bible-more">All plans</a>
+    </div>
+    <div class="plan-rail">
+      {% for p in plans[:4] %}
+        <a href="{{ url_for('reading_plan_detail', plan_slug=p.slug) }}" class="plan-card">
+          <span class="plan-card-emoji" aria-hidden="true">{{ p.emoji }}</span>
+          <span class="plan-card-days">{{ p.length }} days</span>
+          <span class="plan-card-title">{{ p.title }}</span>
+          <span class="plan-card-sub">{{ p.subtitle }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Today's devotional, shown inline -->
+  {% if devotional %}
+  <section class="bible-block" data-reveal>
+    <div class="bible-block-head">
+      <h2 class="bible-h2">Today's devotional</h2>
+      <a href="{{ url_for('devotionals') }}" class="bible-more">Archive</a>
+    </div>
+    <a href="{{ url_for('devotional_detail', devotional_id=devotional['id']) }}" class="devo-feature">
+      <span class="devo-feature-ref">{{ devotional['verse_ref'] }}</span>
+      {% if devotional_has_video %}<span class="devo-feature-video-badge" title="Includes a video">▶ Watch</span>{% endif %}
+      <h3 class="devo-feature-title">{{ devotional['title'] }}</h3>
+      <p class="devo-feature-excerpt">{{ devotional['body'] | excerpt(150) }}</p>
+      <span class="devo-feature-cta">Read devotional {{ icon('chevron-right', 16) }}</span>
+    </a>
+  </section>
+  {% endif %}
+
+  <!-- Utility list — a list, not a grid of tiles -->
+  <nav class="bible-list">
+    <a href="{{ url_for('bible_books') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('book', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Browse Scripture</span>
+        <span class="bible-row-sub">All 66 books, KJV, ASV &amp; WEB</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    <a href="{{ url_for('devotionals') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('sunrise', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Devotionals</span>
+        <span class="bible-row-sub">Short daily reflections</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    <a href="{{ url_for('saved_verses') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('bookmark', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Saved verses</span>
+        <span class="bible-row-sub">Passages you've kept</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+  </nav>
+
+</main>
+
+{% endblock %}
