@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "icons.html" import icon %}
+{% block content %}
+
+<main class="bible bible-search-page">
+
+  <header class="bible-head">
+    <h1 class="bible-title">Search</h1>
+  </header>
+
+  <form class="bsearch-form" action="{{ url_for('bible_search') }}" method="get" role="search">
+    <span class="bsearch-icon">{{ icon('search', 20) }}</span>
+    <input
+      type="search"
+      name="q"
+      class="bsearch-input"
+      value="{{ query }}"
+      placeholder="A verse (John 3:16) or a word (love)…"
+      autocomplete="off"
+      autofocus>
+    <button type="submit" class="bsearch-go">Search</button>
+  </form>
+
+  {% if query and results is not none %}
+    {% if results %}
+      <p class="bsearch-count">{{ results|length }} result{{ 's' if results|length != 1 }} for "{{ query }}"</p>
+      <ul class="bsearch-results">
+        {% for r in results %}
+          <li class="bsearch-hit">
+            {% if r.slug and r.chapter %}
+              <a href="{{ url_for('bible_read_chapter', book_slug=r.slug, chapter=r.chapter) }}{% if r.verse %}?v={{ r.verse }}{% endif %}" class="bsearch-hit-link">
+                <span class="bsearch-hit-ref">{{ r.reference }}</span>
+                <span class="bsearch-hit-text">{{ r.text }}</span>
+                <span class="bsearch-hit-chev">{{ icon('chevron-right', 16) }}</span>
+              </a>
+            {% else %}
+              <div class="bsearch-hit-link bsearch-hit-plain">
+                <span class="bsearch-hit-ref">{{ r.reference }}</span>
+                <span class="bsearch-hit-text">{{ r.text }}</span>
+              </div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% elif not search_enabled %}
+      <div class="bsearch-empty">
+        <p class="bsearch-empty-emoji" aria-hidden="true">{{ icon('search', 32) }}</p>
+        <p class="bsearch-empty-title">Word search is coming soon</p>
+        <p class="bsearch-empty-note">
+          You can still jump straight to any passage — try typing a reference
+          like <strong>John 3:16</strong> or <strong>Psalm 23</strong>.
+        </p>
+      </div>
+    {% else %}
+      <div class="bsearch-empty">
+        <p class="bsearch-empty-emoji" aria-hidden="true">{{ icon('search', 32) }}</p>
+        <p class="bsearch-empty-title">No results for "{{ query }}"</p>
+        <p class="bsearch-empty-note">
+          Try a different word, or jump to a passage like <strong>John 3:16</strong>.
+        </p>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="bsearch-hint">
+      <p class="bsearch-hint-line"><span class="bsearch-hint-icon">{{ icon('book', 18) }}</span> Type a reference — <strong>John 3:16</strong>, <strong>Romans 8</strong> — to go straight there.</p>
+      <p class="bsearch-hint-line"><span class="bsearch-hint-icon">{{ icon('search', 18) }}</span> Or search for a word — <strong>love</strong>, <strong>hope</strong>, <strong>peace</strong> — to find verses.</p>
+    </div>
+  {% endif %}
+
+</main>
+
+{% endblock %}
