@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Stories from the church · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Stories', url_for('grow_hub'), 'Back to Grow') }}
+  {% if sent %}
+  <div class="gw-thanks" role="status">
+    <b>Thank you for sharing your story.</b>
+    <span>Someone from the church will read it soon. It will appear here once they have.</span>
+  </div>
+  {% endif %}
+  <p class="bible-lede">What God has been doing in the lives of people at Clearspring.</p>
+
+  {% for st in stories %}
+  <article class="gw-story">
+    {% if st['title'] %}<h2>{{ st['title'] }}</h2>{% endif %}
+    <div class="gw-story-body">{{ st['body']|paras }}</div>
+    <p class="gw-story-by">{{ st['author_name'] or 'Someone at Clearspring' }} · {{ st['published_at'][:10]|pretty_date }}</p>
+  </article>
+  {% else %}
+  <div class="gw-empty">
+    <p><b>No stories yet</b></p>
+    <p>Be the first to share what God has done in your life.</p>
+  </div>
+  {% endfor %}
+
+  <a class="pp-card" href="{{ url_for('grow_story') }}"><span class="pp-emoji" aria-hidden="true">✍️</span><span class="pp-body"><b>Write your story</b><span>Guided questions help you tell it</span></span>{{ icon('chevron-right', 18) }}</a>
+</main>
+{% endblock %}

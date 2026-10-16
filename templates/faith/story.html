@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}The big story · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw gw-read">
+  {{ head('The big story', url_for('faith_hub'), 'Back to Exploring faith') }}
+  <p class="bible-lede">The Bible is sixty-six books, but one story: God making a world, losing it, and winning it back. Here it is in {{ story|length }} chapters.</p>
+  <nav class="bs-chapters" aria-label="Chapters">
+    {% for s in story %}<a href="#ch{{ s.n }}"><b>{{ s.n }}</b>{{ s.title }}</a>{% endfor %}
+  </nav>
+  <ol class="bs-list">
+    {% for s in story %}
+    <li class="bs-item" id="ch{{ s.n }}">
+      <span class="bs-n" aria-hidden="true"><b>{{ s.n }}</b></span>
+      <div class="bs-b">
+        <h2>{{ s.title }}</h2>
+        <p class="gw-p">{{ s.body|scripture_links }}</p>
+        {{ scripture(texts[s.verse], '', false) }}
+        <a class="gw-chip" href="{{ s.read|ref_url }}">{{ icon('book', 16) }} Read {{ s.read.replace('-', '–') }}</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  <section class="gw-try">
+    <h3>Where do you fit?</h3>
+    <p>The story isn’t finished. Chapter 10 is still being written, and everyone is invited into it.</p>
+    <p><a href="{{ url_for('faith_gospel') }}">The good news, simply →</a></p>
+    {% if url_for('timeline_page') %}<p><a href="{{ url_for('timeline_page') }}">See the Bible timeline →</a></p>{% endif %}
+  </section>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

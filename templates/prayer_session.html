@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Pray now · Clearspring{% endblock %}
+{% block content %}
+<main class="ps" id="ps">
+  <header class="ps-head">
+    <a href="{{ url_for('prayer_journal') }}" class="ps-x" aria-label="Close">{{ icon('chevron-left', 22) }}</a>
+    <div class="ps-dots" id="psDots" aria-hidden="true"></div>
+    <button type="button" class="ps-sound" id="psSound" aria-pressed="true" aria-label="Bell sound">🔔</button>
+  </header>
+
+  <!-- Choose a length -->
+  <section class="ps-step ps-intro" id="psIntro">
+    <p class="ps-k">Pray now</p>
+    <h1 class="ps-t">Take a few minutes with God</h1>
+    <p class="ps-p">We’ll go gently: be still, praise, give thanks, say sorry, pray for the people on your heart and for the church, and finish with the prayer Jesus taught.</p>
+    <div class="ps-len" role="group" aria-label="How long">
+      <button type="button" data-len="short">About 5 minutes</button>
+      <button type="button" data-len="standard" class="on">About 10 minutes</button>
+      <button type="button" data-len="long">Unhurried</button>
+    </div>
+    <button type="button" class="ps-go" id="psStart">Begin</button>
+    <a class="ps-alt" href="{{ url_for('prayer_practices') }}">Or try a prayer practice →</a>
+  </section>
+
+  <section class="ps-step" id="psStage" hidden></section>
+
+  <footer class="ps-foot" id="psFoot" hidden>
+    <button type="button" class="ps-back" id="psBack">Back</button>
+    <button type="button" class="ps-next" id="psNext">Next</button>
+  </footer>
+</main>
+<script id="psData" type="application/json">{{ {'texts': texts, 'names': names, 'wall': wall}|tojson }}</script>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-bell.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-session.js') }}"></script>
+{% endblock %}

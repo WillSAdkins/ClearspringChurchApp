@@ -1,0 +1,23 @@
+{# Shared bits for the Wave 6 pages (grow, faith, everyday). #}
+{% from "icons.html" import icon %}
+
+{% macro head(title, back, back_label='Back') -%}
+<header class="bible-head">
+  <a href="{{ back }}" class="bible-back" aria-label="{{ back_label }}">{{ icon('chevron-left', 22) }}</a>
+  <h1 class="bible-title">{{ title }}</h1>
+  <span style="width:2.4rem"></span>
+</header>
+{%- endmacro %}
+
+{% macro scripture(t, cls='', numbers=true) -%}
+{% if t %}
+<blockquote class="ps-scripture gw-scripture {{ cls }}">
+  <p>{% for v in t.verses %}{% if numbers and t.verses|length > 1 %}<sup>{{ v.verse }}</sup>{% endif %}{{ v.text }}{{ ' ' if not loop.last }}{% endfor %}</p>
+  <a class="ps-ref" href="{{ t.href }}">{{ t.ref }}</a>
+</blockquote>
+{% endif %}
+{%- endmacro %}
+
+{% macro draft_note() -%}
+<p class="gw-draft">Written for Clearspring. If anything here raises a question, <a href="{{ url_for('ask_question') }}">ask us</a>.</p>
+{%- endmacro %}

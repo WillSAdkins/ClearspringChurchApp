@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Family devotions · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Family devotions', url_for('grow_hub'), 'Back to Grow') }}
+  <p class="bible-lede">Ten minutes round the dinner table: read a Bible story together, talk about it, and pray. Questions for little ones and for older children.</p>
+  {% set t = items[today] %}
+  <a class="gw-path" href="{{ url_for('family_page', n=today + 1) }}">
+    <span class="gw-path-k">Today’s story</span>
+    <span class="gw-path-t">{{ t.title }}</span>
+    <span class="gw-path-s">{{ t.story }}</span>
+  </a>
+  <h2 class="bible-h2">All the stories</h2>
+  <ol class="gw-steps">
+    {% for f in items %}
+    <li><a class="gw-step" href="{{ url_for('family_page', n=loop.index) }}" data-tick="family:{{ loop.index }}">
+      <span class="gw-step-n" aria-hidden="true"><b>{{ loop.index }}</b>{{ icon('check', 16) }}</span>
+      <span class="gw-step-b"><b>{{ f.title }}</b><small>{{ f.read.replace('-', '–') }}</small></span>
+      {{ icon('chevron-right', 18) }}
+    </a></li>
+    {% endfor %}
+  </ol>
+  <p class="gw-note">For younger children, try telling the story in your own words rather than reading it.</p>
+</main>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+{% endblock %}

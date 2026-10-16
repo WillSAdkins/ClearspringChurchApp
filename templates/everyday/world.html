@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}Pray for the world · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Pray for the world', url_for('prayer_practices'), 'Back to Ways to pray') }}
+  <p class="bible-lede">One country a day, so that over the year you pray for the whole world.</p>
+  <section class="wd-card">
+    <p class="gw-k">{{ 'Today' if offset == 0 else ('Tomorrow' if offset == 1 else ('Yesterday' if offset == -1 else ('In ' ~ offset ~ ' days' if offset > 0 else (-offset) ~ ' days ago'))) }}</p>
+    <p class="wd-flag" aria-hidden="true">{{ c.flag }}</p>
+    <h2 class="gw-h1">{{ c.name }}</h2>
+    <nav class="wd-nav">
+      <a href="{{ url_for('prayer_world', d=offset - 1) }}">{{ icon('chevron-left', 16) }} Previous</a>
+      {% if offset != 0 %}<a href="{{ url_for('prayer_world') }}">Today</a>{% endif %}
+      <a href="{{ url_for('prayer_world', d=offset + 1) }}">Next {{ icon('chevron-right', 16) }}</a>
+    </nav>
+  </section>
+  <ol class="wd-prompts">
+    {% for t, body, ref in prompts %}
+    <li><b>{{ t }}</b><p>{{ body }}</p><details><summary>{{ ref.replace('-', '–') }}</summary>{{ scripture(texts[ref], '', false) }}</details></li>
+    {% endfor %}
+  </ol>
+  <button type="button" class="ps-go" id="wdDone">I’ve prayed for {{ c.name }}</button>
+  <p class="gw-note">To learn more about the church in {{ c.name }} and how to pray, many Christians use the book <i>Operation World</i>, or the prayer guides from mission agencies.</p>
+  <details class="gw-more"><summary>All {{ countries|length }} countries</summary>
+    <ul class="wd-all">{% for x in countries %}<li>{{ x.flag }} {{ x.name }}</li>{% endfor %}</ul>
+  </details>
+</main>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script>
+document.getElementById("wdDone").addEventListener("click", function () {
+  if (window.Prayers) window.Prayers.logDay(3);
+  this.textContent = "Amen"; this.disabled = true;
+});
+</script>
+{% endblock %}

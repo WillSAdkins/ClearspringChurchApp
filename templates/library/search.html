@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}Search the library · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Search", url_for('library_hub'), "Library", "Library") }}
+  <form class="lib-search" action="{{ url_for('library_search') }}" method="get" role="search">
+    {{ icon('search', 18) }}<input type="search" name="q" value="{{ q }}" placeholder="People, places, topics, words…" aria-label="Search the library">
+  </form>
+  {% set sections = [('people','People','person_page'),('places','Places','place_page'),('topics','Topics','topic_page'),('dictionary','Dictionary','dictionary_page')] %}
+  {% set ns = namespace(any=false) %}
+  {% for key, label, ep in sections %}{% if results.get(key) %}{% set ns.any = true %}
+  <section class="lib-section">
+    <h2 class="bible-h2">{{ label }}</h2>
+    <nav class="bible-list">
+      {% for it in results[key] %}
+      <a class="bible-row" href="{{ url_for(ep, slug=it.slug) }}">
+        <span class="bible-row-body"><span class="bible-row-title">{{ it.title or it.name or it.term }}</span>
+        {% if it.verses %}<span class="bible-row-sub">{{ it.verses }} verses</span>{% elif it.refs %}<span class="bible-row-sub">{{ it.refs }} references</span>{% endif %}</span>
+        {{ icon('chevron-right', 18) }}
+      </a>
+      {% endfor %}
+    </nav>
+  </section>
+  {% endif %}{% endfor %}
+  {% if q and not ns.any %}<p class="lib-note">Nothing in the library matches “{{ q }}”. To search the words of the Bible itself, <a href="{{ url_for('bible_search', q=q) }}">search Scripture</a>.</p>{% endif %}
+  {% if q and ns.any %}<p class="lib-note">Looking for a phrase in the Bible itself? <a href="{{ url_for('bible_search', q=q) }}">Search Scripture for “{{ q }}”</a>.</p>{% endif %}
+</main>
+{% endblock %}

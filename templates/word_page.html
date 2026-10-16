@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "icons.html" import icon %}
+{% block title %}{{ entry.translit }} ({{ entry.display }}) · Clearspring{% endblock %}
+{% block content %}
+{% set heb = entry.language == 'Hebrew' %}
+
+<main class="bible wp">
+
+  <header class="wp-hero">
+    <p class="wp-lang">{{ entry.language }} · Strong's {{ entry.display }}{% if entry.pos %} · {{ entry.pos }}{% endif %}</p>
+    <h1 class="wp-lemma" lang="{{ 'he' if heb else 'grc' }}" {% if heb %}dir="rtl"{% endif %}>{{ entry.lemma }}</h1>
+    <p class="wp-translit">{{ entry.translit }}</p>
+    {% if entry.meaning %}<p class="wp-meaning">{{ entry.meaning }}</p>{% endif %}
+  </header>
+
+  <section class="wp-stats">
+    <div class="wp-stat"><b>{{ conc.total_uses }}</b><span>times used</span></div>
+    <div class="wp-stat"><b>{{ conc.verse_count }}</b><span>verses</span></div>
+    <div class="wp-stat"><b>{{ conc.books|length }}</b><span>books</span></div>
+  </section>
+
+  {% if conc.renderings %}
+  <section class="vp-section">
+    <h2 class="bible-h2">How it's translated</h2>
+    <ul class="wp-renderings">
+      {% for g, n in conc.renderings %}
+        <li><span>{{ g }}</span><b>{{ n }}</b></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if entry.definition %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Definition</h2>
+    <div class="wp-def">
+      {% for line in entry.definition.split('\n') %}<p>{{ line }}</p>{% endfor %}
+    </div>
+    {% if related %}
+      <p class="wp-related">Other senses of this number:
+        {% for r in related %}<a href="{{ url_for('word_page', code=r.strong) }}">{{ r.meaning or r.strong }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+      </p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if conc.books %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Where it appears</h2>
+    {% set top = conc.books[0][1] %}
+    <ul class="wp-books">
+      {% for name, n in conc.books[:10] %}
+        <li><span class="wp-book">{{ name }}</span><span class="wp-bar"><i style="width: {{ (n / top * 100)|round(1) }}%"></i></span><b>{{ n }}</b></li>
+      {% endfor %}
+    </ul>
+    {% if conc.books|length > 10 %}<p class="vp-hint">…and {{ conc.books|length - 10 }} more books.</p>{% endif %}
+  </section>
+  {% endif %}
+
+  <section class="vp-section" id="uses">
+    <div class="bible-block-head">
+      <h2 class="bible-h2">Every verse</h2>
+      {% if conc.pages > 1 %}<span class="vp-count">Page {{ conc.page }} of {{ conc.pages }}</span>{% endif %}
+    </div>
+    <nav class="bible-list">
+      {% for x in conc['items'] %}
+        <a class="bible-row vp-xref" href="{{ url_for('verse_page', book_slug=x.slug, chapter=x.chapter, verse=x.verse) }}">
+          <span class="bible-row-body">
+            <span class="bible-row-title">{{ x.ref }}{% if x.gloss %} <em class="wp-as">“{{ x.gloss }}”</em>{% endif %}</span>
+            {% if x.text %}<span class="vp-xref-text">{{ x.text }}</span>{% endif %}
+          </span>
+          {{ icon('chevron-right', 18) }}
+        </a>
+      {% endfor %}
+    </nav>
+    {% if conc.pages > 1 %}
+    <nav class="vp-paging wp-paging" aria-label="More verses">
+      {% if conc.page > 1 %}<a class="vp-page" href="{{ url_for('word_page', code=entry.strong, page=conc.page - 1) }}#uses">{{ icon('chevron-left', 16) }}<span>Previous</span></a>{% else %}<span></span>{% endif %}
+      <span class="vp-count">{{ (conc.page - 1) * 40 + 1 }}–{{ [conc.page * 40, conc.verse_count]|min }} of {{ conc.verse_count }}</span>
+      {% if conc.page < conc.pages %}<a class="vp-page" href="{{ url_for('word_page', code=entry.strong, page=conc.page + 1) }}#uses"><span>Next</span>{{ icon('chevron-right', 16) }}</a>{% else %}<span></span>{% endif %}
+    </nav>
+    {% endif %}
+  </section>
+
+  <p class="ws-credit">English previews: World English Bible. {{ attribution }}</p>
+  <form class="bible-searchbar wh-search" action="{{ url_for('words_hub') }}" method="get" role="search" style="margin-top:1.5rem">
+    <span class="bible-searchbar-icon">{{ icon('search', 20) }}</span>
+    <input type="search" name="q" class="bible-searchbar-input" placeholder="Look up another Greek or Hebrew word" autocomplete="off" aria-label="Look up another word">
+  </form>
+</main>
+{% endblock %}

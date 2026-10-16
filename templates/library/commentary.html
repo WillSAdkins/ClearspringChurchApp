@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}{{ info.name }} on {{ book.name }} {{ chapter }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(("Psalm" if book.slug == "psalms" else book.name) ~ " " ~ chapter, url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter), book.name ~ " " ~ chapter, info.full) }}
+  <div class="cm-tabs">
+    {% for s in [source] + others %}<a class="lib-chip {{ 'on' if s == source }}" href="{{ url_for('commentary_page', source=s, book_slug=book.slug, chapter=chapter) }}">{{ {'mhcc': 'Matthew Henry', 'tdavid': 'Spurgeon'}[s] }}</a>{% endfor %}
+    <a class="lib-chip" href="{{ url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter) }}">Read the chapter</a>
+  </div>
+  {% set nav = [] %}
+  {% for s in sections if s.v1 %}{% set _ = nav.append(s) %}{% endfor %}
+  {% if nav|length > 1 and source == 'mhcc' %}<nav class="lib-chips cm-jump">{% for s in nav %}<a class="lib-chip" href="#v{{ s.v1 }}">{{ s.label }}</a>{% endfor %}</nav>{% endif %}
+  {% if not sections %}<p class="lib-note">{{ info.name }} doesn’t comment on this chapter. Try the next one, or another commentary above.</p>{% endif %}
+  <article class="lib-article cm-body">
+    {% for s in sections %}
+      {% if s.v1 %}<h3 class="cm-vh" id="v{{ s.v1 }}"><a href="{{ url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter) }}?v={{ s.v1 }}">{{ s.label }}</a></h3>{% endif %}
+      {{ s.html|safe }}
+    {% endfor %}
+  </article>
+  <nav class="vp-paging lib-paging">
+    {% if prev_ch %}<a class="vp-page" href="{{ url_for('commentary_page', source=source, book_slug=prev_ch[0], chapter=prev_ch[1]) }}">{{ icon('chevron-left', 16) }}<span>{{ prev_ch[2] }}</span></a>{% else %}<span></span>{% endif %}
+    {% if next_ch %}<a class="vp-page" href="{{ url_for('commentary_page', source=source, book_slug=next_ch[0], chapter=next_ch[1]) }}"><span>{{ next_ch[2] }}</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  {{ source(info.full ~ " (" ~ info.year ~ "). Public domain, from the CrossWire SWORD module.") }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

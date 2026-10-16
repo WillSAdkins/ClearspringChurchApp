@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Groups · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw gr">
+  {{ head('Groups', url_for('community_hub'), 'Back to Community') }}
+  <p class="bible-lede">Read, pray and grow together with a few others: your small group, a reading buddy, a prayer circle, a mentor, your family.</p>
+
+  {% if not member %}
+  <section class="gr-signin">
+    <h2>Groups need an account</h2>
+    <p>So that only the people in your group can see what’s shared, you need to be signed in. It’s free and takes a minute.</p>
+    <div class="gr-acts">
+      <a class="ps-go" href="{{ url_for('signin') }}">Sign in</a>
+      <a class="ps-alt" href="{{ url_for('signup') }}">Create an account</a>
+    </div>
+  </section>
+  <ul class="gr-what">
+    <li><b>📖 Read together.</b> Choose a plan and see how everyone’s getting on.</li>
+    <li><b>🙏 Pray for each other.</b> Share requests privately, and celebrate answers.</li>
+    <li><b>💬 Talk it over.</b> Chat about each day’s reading, share a verse, check in each week.</li>
+    <li><b>🎯 Learn a verse.</b> Learn the same verse by heart together.</li>
+  </ul>
+  {% else %}
+
+  {% if mine %}
+  <div class="gr-list">
+    {% for x in mine %}
+    <a class="gr-card" href="{{ url_for('group_page', gid=x.id) }}">
+      <span class="gr-card-emoji" aria-hidden="true">{{ x.emoji }}</span>
+      <span class="gr-card-b">
+        <b>{{ x.name }}</b>
+        <small>{{ x.kind_name }} · {{ x.members }} {{ 'person' if x.members == 1 else 'people' }}{% if x.role == 'leader' %} · you lead{% endif %}</small>
+      </span>
+      {% if x.unread %}<span class="gr-badge" aria-label="{{ x.unread }} new">{{ x.unread if x.unread < 100 else '99+' }}</span>{% endif %}
+      {{ icon('chevron-right', 18) }}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="gw-empty"><p><b>You’re not in a group yet</b></p><p>Start one below, or join with a code someone has sent you.</p></div>
+  {% endif %}
+
+  <section class="gr-box">
+    <h2 class="bible-h2">Join a group</h2>
+    <form method="post" action="{{ url_for('group_join_code') }}" class="ps-thanks">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="code" maxlength="12" placeholder="Invite code, e.g. K7Q2MX9P" aria-label="Invite code" autocapitalize="characters" autocomplete="off">
+      <button type="submit">Join</button>
+    </form>
+  </section>
+
+  <details class="gw-more gr-box" {{ 'open' if not mine }}>
+    <summary>Start a new group</summary>
+    <form method="post" action="{{ url_for('group_new') }}" class="gr-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Name<input type="text" name="name" maxlength="80" required placeholder="e.g. Tuesday group, or Sam &amp; Jo"></label>
+      <fieldset class="gr-kinds"><legend>What kind of group?</legend>
+        {% for k, n, e in kinds %}<label class="gr-kind"><input type="radio" name="kind" value="{{ k }}" {{ 'checked' if loop.first }}><span>{{ e }} {{ n }}</span></label>{% endfor %}
+      </fieldset>
+      <label>About (optional)<textarea name="about" rows="2" maxlength="400" placeholder="When you meet, what you’re about"></textarea></label>
+      {% if needs_name %}<label>Your name, as others in the group will see it<input type="text" name="display_name" maxlength="60" required></label>{% endif %}
+      <button type="submit" class="ps-go">Start the group</button>
+      <p class="gw-note">You’ll get an invite link to send to people. Only people with the link can join, and only members can see what’s in the group.</p>
+    </form>
+  </details>
+  {% endif %}
+
+  <p class="gw-note gr-safe">Groups are private to their members. Church staff can’t read them, except for a post someone reports. Groups for under-18s should be run by leaders in line with Clearspring’s safeguarding policy.</p>
+</main>
+{% endblock %}

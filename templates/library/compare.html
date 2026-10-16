@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ title }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib lib-wide">
+  {{ head(title, url_for('harmony_page'), "the four Gospels", "Side by side") }}
+  <form class="cmp-trans" method="get">
+    {% for c in cols %}<input type="hidden" name="r" value="{{ c.label }}">{% endfor %}<input type="hidden" name="t" value="{{ title }}">
+    <label>Translation <select name="translation" onchange="this.form.submit()">
+      {% for code, name in [('web','WEB'),('webbe','WEBBE'),('bsb','BSB'),('asv','ASV')] %}<option value="{{ code }}" {{ 'selected' if code == translation }}>{{ name }}</option>{% endfor %}
+    </select></label>
+  </form>
+  <div class="cmp cmp-{{ cols|length }}">
+    {% for c in cols %}
+    <section class="cmp-col">
+      <h2 class="cmp-ref"><a href="{{ url_for('bible_read_chapter', book_slug=c.ref.slug, chapter=c.ref.chapter) }}?translation={{ translation }}&v={{ c.ref.verse or 1 }}">{{ c.label }}</a></h2>
+      <p class="cmp-text">{% for v in c.verses %}<sup>{{ v.verse }}</sup>{{ v.text }} {% endfor %}</p>
+    </section>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

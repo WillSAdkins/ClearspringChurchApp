@@ -1,0 +1,28 @@
+library.sqlite — sources and licences (built by tools/build_library.py)
+
+PUBLIC DOMAIN
+  Matthew Henry's Concise Commentary (1706)       CrossWire SWORD module MHCC (Ubuntu package sword-comm-mhcc)
+  C. H. Spurgeon, The Treasury of David (1869-85)  CrossWire SWORD module TDavid (sword-comm-tdavid)
+  Nave's Topical Bible (1896)                      CrossWire SWORD module Nave (sword-dict-naves)
+  Easton's Bible Dictionary (1897)                 text via Theographic (below)
+  Creeds, confessions, catechisms                  github.com/NonlinearFruit/Creeds.json — only texts marked
+                                                   "Public Domain"; the repo lists several copyrighted texts,
+                                                   none of which are included
+  Gospel harmony                                   derived from Berean Standard Bible headings (public domain)
+  Basemap (static/maps/basemap.svg)                Natural Earth, public domain
+
+CC BY 4.0
+  Hitchcock's Bible Names (public-domain text)     BibleData, Brady Stephenson, github.com/BradyStephenson/bible-data
+  Place coordinates                                OpenBible.info Bible Geocoding Data (via Theographic)
+
+CC BY-SA 4.0 — this database's tables derived from these are shared under CC BY-SA 4.0
+  people, places, events, chapter_people, chapter_places, dictionary
+                                                   Theographic Bible Metadata, Robert Rouse,
+                                                   github.com/robertrouse/theographic-bible-metadata
+  parallels                                        UBS Parallel Passage Database, (c) 2023 United Bible Societies,
+                                                   github.com/ubsicap/ubs-open-license
+  routes                                           UBS Project MARBLE Bible Routes, Dr Leen Ritmeyer,
+                                                   (c) United Bible Societies 2023
+
+Changes made: data reshaped into SQLite tables, references normalised and linked,
+route lines thinned, text converted from OSIS/Markdown to simple HTML.

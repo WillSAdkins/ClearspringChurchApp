@@ -1,0 +1,8 @@
+{% macro prayer_nav(active) -%}
+<nav class="pr-nav" aria-label="Prayer">
+  <a href="{{ url_for('prayer_wall') }}" class="{{ 'on' if active == 'wall' }}">Church</a>
+  <a href="{{ url_for('prayer_journal') }}" class="{{ 'on' if active == 'mine' }}">My prayers</a>
+  <a href="{{ url_for('prayer_session') }}" class="{{ 'on' if active == 'pray' }}">Pray now</a>
+  <a href="{{ url_for('prayer_practices') }}" class="{{ 'on' if active == 'practices' }}">Practices</a>
+</nav>
+{%- endmacro %}

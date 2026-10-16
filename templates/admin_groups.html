@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Groups · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area</p>
+      <h1>Groups</h1>
+    </div>
+    <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a></div>
+  </div>
+  <p class="empty-sub" style="margin-bottom:1.5rem;">Members make and run their own groups. You can see that each group exists and how busy it is, but not what’s said in it. The only exception is a post someone has reported, which shows below.</p>
+
+  <h2 class="section-label">Reported posts ({{ reports|length }})</h2>
+  {% if not reports %}<p class="empty-sub">Nothing reported.</p>{% endif %}
+  {% for r in reports %}
+  <article class="qa-admin-card">
+    <p class="qa-meta">In <b>{{ r['group_name'] }}</b> · by {{ r['author'] or 'a former member' }} · reported {{ r['reported_at']|pretty_datetime }}</p>
+    {% if r['reason'] %}<p class="qa-meta">Reason given: “{{ r['reason'] }}”</p>{% endif %}
+    <div class="qa-answer">{{ r['body'] }}</div>
+    <div class="qa-admin-actions" style="margin-top:.75rem">
+      <form method="post" action="{{ url_for('admin_group_report', rid=r['report_id'], action='remove') }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-danger small">Remove the post</button></form>
+      <form method="post" action="{{ url_for('admin_group_report', rid=r['report_id'], action='keep') }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-ghost small">It’s fine, dismiss</button></form>
+    </div>
+  </article>
+  {% endfor %}
+
+  <h2 class="section-label" style="margin-top:2.5rem;">All groups ({{ groups|length }})</h2>
+  <div class="admin-table">
+    {% for g in groups %}
+    <div class="admin-row">
+      <div class="admin-row-main">
+        <span class="card-tag">{{ kinds.get(g['kind'], 'Group') }}</span>
+        <strong>{{ g['name'] }}</strong>{% if g['archived'] %} <em>(closed)</em>{% endif %}
+        <span class="admin-row-loc">{{ g['members'] }} members · {{ g['posts'] }} posts · last active {{ (g['last_post'] or g['created_at'])|pretty_datetime }}</span>
+      </div>
+      <form method="post" action="{{ url_for('admin_group_action', gid=g['id'], action='reopen' if g['archived'] else 'close') }}" onsubmit="return confirm('{{ 'Reopen' if g['archived'] else 'Close' }} this group?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn-ghost small">{{ 'Reopen' if g['archived'] else 'Close' }}</button>
+      </form>
+    </div>
+    {% else %}<p class="empty-sub">No groups yet.</p>{% endfor %}
+  </div>
+</main>
+{% endblock %}

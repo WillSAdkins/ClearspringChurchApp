@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}{{ f.label }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw gw-read">
+  {{ head(f.emoji ~ ' ' ~ f.label, url_for('feelings_index'), 'Back to feelings') }}
+  {% if f.urgent %}
+  <section class="fl-help" aria-label="Get help now">
+    <h2>You don’t have to face this alone</h2>
+    <p>If you’re thinking about ending your life, or you’re not safe, please reach out now.</p>
+    <ul>
+      {% for name, label, href, sub in help %}<li><a href="{{ href }}"><b>{{ name }}</b> <span>{{ label }}</span></a><small>{{ sub }}</small></li>{% endfor %}
+    </ul>
+    <p>You can also <a href="{{ url_for('prayer_new') }}">ask the church to pray</a> or <a href="{{ url_for('ask_question') }}">contact a pastor</a>.</p>
+  </section>
+  {% endif %}
+  <p class="gw-p gw-lead">{{ f.word }}</p>
+  {% for r in f.verses %}{{ scripture(texts[r]) }}{% endfor %}
+  {% if f.help and not f.urgent %}<p class="gw-note fl-note">{{ f.help }}</p>{% endif %}
+  <section class="gw-try">
+    <h3>Pray</h3>
+    <p class="ps-prayer">{{ f.prayer }}</p>
+    <p><a href="{{ url_for('prayer_session') }}">Spend a few more minutes in prayer →</a></p>
+  </section>
+  <h2 class="bible-h2">Feeling something else?</h2>
+  <div class="fl-grid small">
+    {% for o in feelings if o.slug != f.slug %}<a class="fl-chip" href="{{ url_for('feeling_page', slug=o.slug) }}"><span aria-hidden="true">{{ o.emoji }}</span>{{ o.label }}</a>{% endfor %}
+  </div>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

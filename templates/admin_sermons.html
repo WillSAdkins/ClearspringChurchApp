@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% set show_back = false %}{# this page draws its own back link #}
+{% block title %}Sermons · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area</p>
+      <h1>Sermons</h1>
+    </div>
+    <div class="admin-actions">
+      <a href="{{ url_for('new_sermon') }}" class="btn-primary">+ Add sermon</a>
+      <a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a>
+    </div>
+  </div>
+
+  <section class="admin-panel">
+    <h2 class="section-label">Live stream</h2>
+    <p class="empty-sub" style="margin-bottom:1rem;">
+      Paste the URL of your live stream (YouTube, Vimeo or Facebook). Tick "We're live"
+      on a Sunday to show the player at the top of the Watch tab.
+    </p>
+    <form method="post" action="{{ url_for('admin_live_settings') }}" class="event-form" style="max-width:100%;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="live_stream_url">Live stream URL</label>
+      <input type="url" id="live_stream_url" name="live_stream_url" value="{{ live_url }}"
+             placeholder="https://www.youtube.com/live/...">
+      <label class="admin-check">
+        <input type="checkbox" name="live_is_on" {{ 'checked' if live_on }}>
+        <span>We're live right now</span>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" style="width:auto;">Save</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="admin-panel" id="youtube" style="margin-top:2rem;">
+    <h2 class="section-label">From YouTube</h2>
+    <p class="empty-sub" style="margin-bottom:.75rem;">
+      New videos on the church's YouTube channel are added here automatically, with their date and
+      any Bible passage in the title. It checks every few hours. Each video is only brought in once,
+      so if you delete one it won't come back. If you've already typed in a talk for that date, the
+      video is attached to it instead.
+    </p>
+    <p class="yt-status">
+      {% if not yt.on %}Switched off.{% elif yt.last_check %}Last checked {{ yt.last_check|pretty_datetime }} at {{ yt.last_check[11:16] }}.{% else %}Not checked yet.{% endif %}
+      {% if yt.last_error %}<br><span class="yt-err">Last problem: {{ yt.last_error }}</span>{% endif %}
+    </p>
+    <form method="post" action="{{ url_for('admin_youtube') }}" style="margin-bottom:1rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="check">
+      <button type="submit" class="btn-primary" style="width:auto;margin:0;">Check YouTube now</button>
+    </form>
+    <details class="yt-more">
+      <summary>Settings</summary>
+      <form method="post" action="{{ url_for('admin_youtube') }}" class="event-form" style="max-width:100%;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="save">
+        <label for="yt_channel">Channel</label>
+        <input type="text" id="yt_channel" name="channel" value="{{ yt.channel }}" placeholder="youtube.com/@yourchurch">
+        <p class="field-hint">The channel's link or ID. Currently youtube.com/@clearspringchurch.</p>
+        <label class="admin-check"><input type="checkbox" name="on" {{ 'checked' if yt.on }}><span>Bring in new videos automatically</span></label>
+        <label class="admin-check"><input type="checkbox" name="publish" {{ 'checked' if yt.publish }}><span>Show them in the app straight away (untick to review each one first)</span></label>
+        <label for="yt_mode">Date each talk by</label>
+        <select id="yt_mode" name="date_mode">
+          <option value="youtube" {{ 'selected' if yt.date_mode == 'youtube' }}>The day it went live or was uploaded</option>
+          <option value="sunday" {{ 'selected' if yt.date_mode == 'sunday' }}>The Sunday before (if videos go up on Monday or later)</option>
+        </select>
+        <p class="field-hint">A date written in the video title, like 12/10/25, always wins.</p>
+        <div class="form-actions"><button type="submit" class="btn-ghost" style="width:auto;">Save settings</button></div>
+      </form>
+    </details>
+  </section>
+  <style>
+    .yt-status { font-size: var(--fs-sm); margin: 0 0 .75rem; }
+    .yt-err { color: var(--danger, #b3261e); }
+    .yt-more summary { cursor: pointer; font-weight: 600; font-size: var(--fs-sm); margin: .25rem 0 .75rem; }
+  </style>
+
+  <h2 class="section-label" style="margin-top:2.5rem;">Archive ({{ sermons|length }})</h2>
+  {% if not sermons %}
+    <p class="empty-sub">No sermons yet. Add the first one.</p>
+  {% endif %}
+
+  <div class="admin-table">
+    {% for s in sermons %}
+      <div class="admin-row">
+        <div class="admin-row-date">
+          <span class="mono">{{ s['preached_on'] }}</span>
+          {% if not s['published'] %}<span class="mono" style="color:var(--muted)">draft</span>{% endif %}
+        </div>
+        <div class="admin-row-main">
+          <strong>{{ s['title'] }}</strong>
+          <span class="admin-row-loc">
+            {% if s['speaker'] %}{{ s['speaker'] }}{% endif %}
+            {% if s['series'] %} · {{ s['series'] }}{% endif %}
+            {% if s['audio_url'] %} · audio{% endif %}
+            {% if s['video_url'] %} · video{% endif %}
+          </span>
+        </div>
+        <div class="admin-row-actions">
+          <a href="{{ url_for('edit_sermon', sermon_id=s['id']) }}" class="btn-ghost small">Edit</a>
+          <form method="post" action="{{ url_for('delete_sermon', sermon_id=s['id']) }}"
+                onsubmit="return confirm('Delete this sermon?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-danger small">Delete</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

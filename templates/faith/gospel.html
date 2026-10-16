@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}The good news, simply · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw gw-read">
+  {{ head('The good news', url_for('faith_hub'), 'Back to Exploring faith') }}
+  <p class="bible-lede">The heart of the Christian faith in five short steps.</p>
+  <ol class="gs-panels">
+    {% for p in panels %}
+    <li class="gs-panel">
+      <span class="gs-n" aria-hidden="true">{{ loop.index }}</span>
+      <h2>{{ p.title }}</h2>
+      <p class="gw-p">{{ p.body }}</p>
+      {{ scripture(texts[p.verse], '', false) }}
+    </li>
+    {% endfor %}
+  </ol>
+
+  <section class="gs-respond">
+    <h2>Want to respond?</h2>
+    <p class="gw-p">If this rings true, you can talk to God right now. There are no magic words; it’s the attitude of your heart that matters. You could pray something like this:</p>
+    <p class="ps-prayer gs-prayer">{{ prayer }}</p>
+    <p class="gw-p">If you’ve prayed that, welcome to God’s family! Please tell someone, so we can celebrate with you and help you take your first steps.</p>
+    <div class="gs-acts">
+      <a class="ps-go" href="{{ url_for('grow_first_steps') }}">Take your first steps</a>
+      <a class="ps-alt" href="{{ url_for('ask_question') }}">Tell us, or ask a question</a>
+    </div>
+  </section>
+
+  <section class="gs-share">
+    <p class="gw-note">Know someone who’d find this helpful?</p>
+    <button type="button" class="gw-btn" id="gsShare">{{ icon('message', 16) }} Share this page</button>
+  </section>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+(function () {
+  var b = document.getElementById("gsShare");
+  b.addEventListener("click", function () {
+    var d = { title: "The good news, simply", text: "What Christians believe, in five short steps", url: location.href };
+    if (navigator.share) navigator.share(d).catch(function () {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function () { b.textContent = "Link copied"; });
+  });
+})();
+</script>
+{% endblock %}

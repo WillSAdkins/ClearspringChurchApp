@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}The four Gospels side by side · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib lib-wide">
+  {{ head("The four Gospels", url_for('library_hub'), "Library", "A harmony") }}
+  <p class="lib-note">Each line is one part of Jesus’ life and teaching, and where each Gospel tells it. Tap a line with more than one Gospel to read them side by side.</p>
+  <div class="hm" role="table" aria-label="Gospel harmony">
+    <div class="hm-row hm-head" role="row"><span role="columnheader">Section</span><span role="columnheader">Matthew</span><span role="columnheader">Mark</span><span role="columnheader">Luke</span><span role="columnheader">John</span></div>
+    {% for r in rows %}
+    {% set refs_ = [r.matthew, r.mark, r.luke, r.john]|select|list %}
+    <div class="hm-row" role="row">
+      <span class="hm-title" role="cell">{% if refs_|length > 1 %}<a href="{{ url_for('compare_passages', t=r.title) }}{% for x in refs_ %}&r={{ x|urlencode }}{% endfor %}">{{ r.title }}</a>{% else %}{{ r.title }}{% endif %}</span>
+      {% for g, x in [('mt', r.matthew), ('mk', r.mark), ('lk', r.luke), ('jn', r.john)] %}
+      <span class="hm-cell hm-{{ g }}" role="cell">{% if x %}{% set f = x.split(' ', 1) %}<a href="{{ url_for('compare_passages', t=r.title, r=x) }}">{{ f[1] }}</a>{% endif %}</span>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  {{ source("Sections and parallels from the Berean Standard Bible headings (public domain), arranged in story order.") }}
+</main>
+{% endblock %}

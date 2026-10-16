@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, refs_by_book, source, chip_place %}
+{% block title %}{{ p.name }} · Places of the Bible{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(p.name, url_for('places_index'), "Places", (p.sub or p.type or "Place")) }}
+  {% if p.lat is not none %}
+  <div class="lib-map lib-map-tall" id="placeMap"></div>
+  {% endif %}
+  <dl class="lib-facts">
+    {% if p.meaning %}<div><dt>Name means</dt><dd>{{ p.meaning }}</dd></div>{% endif %}
+    {% if p.comment %}<div><dt>Today</dt><dd>{{ p.comment }}</dd></div>{% endif %}
+    {% if p.lat is not none %}<div><dt>Location</dt><dd>{{ '%.3f'|format(p.lat) }}°N, {{ '%.3f'|format(p.lon) }}°E{% if p.precision %} · {{ p.precision|lower }}{% endif %}</dd></div>{% endif %}
+    <div><dt>Mentioned</dt><dd>{{ p.verse_count }} verse{{ '' if p.verse_count == 1 else 's' }}</dd></div>
+  </dl>
+
+  {% if p.summary %}
+  <section class="lib-section">
+    <h2 class="bible-h2">About {{ p.name }}</h2>
+    <article class="lib-article lib-clamp" data-clamp>{{ p.summary|safe }}</article>
+    {{ source("From Easton’s Bible Dictionary (1897).") }}
+  </section>
+  {% endif %}
+
+  {% if events %}
+  <section class="lib-section">
+    <h2 class="bible-h2">What happened here</h2>
+    <ol class="tl-mini">{% for e in events %}<li><span class="tl-when">{{ e.when }}</span><a href="{{ e.href or '#' }}">{{ e.title }}</a>{% if e.ref %}<small>{{ e.ref }}</small>{% endif %}</li>{% endfor %}</ol>
+  </section>
+  {% endif %}
+
+  {% if nearby %}
+  <section class="lib-section">
+    <h2 class="bible-h2">Nearby</h2>
+    <div class="lib-chips">{% for x in nearby %}<a class="lib-chip lib-chip-place" href="{{ url_for('place_page', slug=x.slug) }}">{{ x.name }}<small>{{ x.km }} km</small></a>{% endfor %}</div>
+  </section>
+  {% endif %}
+
+  <section class="lib-section">
+    <h2 class="bible-h2">Every mention</h2>
+    {% if p.by_book|length > 12 %}<details class="lib-more-refs"><summary>Show all {{ p.verse_count }} verses</summary>{{ refs_by_book(p.by_book) }}</details>
+    {% else %}{{ refs_by_book(p.by_book) }}{% endif %}
+  </section>
+  {{ source("Places: Theographic Bible Metadata (CC BY-SA 4.0), with locations from OpenBible.info. Many ancient sites are uncertain.") }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+document.querySelectorAll("[data-clamp]").forEach(function (b) {
+  if (b.scrollHeight <= b.clientHeight + 12) { b.classList.add("open"); return; }
+  var btn = document.createElement("button");
+  btn.type = "button"; btn.className = "vp-cm-more"; btn.textContent = "Read more";
+  btn.addEventListener("click", function () { var o = b.classList.toggle("open"); btn.textContent = o ? "Show less" : "Read more"; });
+  b.parentNode.insertBefore(btn, b.nextSibling);
+});
+</script>
+{% if p.lat is not none %}
+<script src="{{ url_for('static', filename='bible-map.js') }}"></script>
+<script>
+  BibleMap.mount(document.getElementById("placeMap"), {
+    markers: [{ lat: {{ p.lat }}, lon: {{ p.lon }}, label: {{ p.name|tojson }}, main: true }].concat(
+      {{ nearby|tojson }}.map(function (x) { return { lat: x.lat, lon: x.lon, label: x.name, href: "/bible/places/" + x.slug, rank: x.verses }; })),
+    fit: { lat: {{ p.lat }}, lon: {{ p.lon }}, span: 0.7 }
+  });
+</script>
+{% endif %}
+{% endblock %}

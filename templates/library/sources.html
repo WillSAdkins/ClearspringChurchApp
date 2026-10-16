@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Where the library comes from · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Where this comes from", url_for('library_hub'), "Library", "Sources and licences") }}
+  <article class="lib-article lib-sources">
+    <p>Everything in the library is free to use. The old works are in the public domain; the modern datasets are shared under Creative Commons licences, which ask us to say where they come from. Thank you to everyone who made them.</p>
+    <h3>Public domain</h3>
+    <ul>
+      <li><b>Matthew Henry’s Concise Commentary</b> (1706) and <b>C. H. Spurgeon’s Treasury of David</b> (1869–85), from the CrossWire Bible Society’s SWORD modules.</li>
+      <li><b>Nave’s Topical Bible</b> (Orville J. Nave, 1896), from the CrossWire SWORD module.</li>
+      <li><b>Easton’s Bible Dictionary</b> (M. G. Easton, 1897).</li>
+      <li><b>Hitchcock’s Bible Names Dictionary</b> (Roswell D. Hitchcock, 1869), via BibleData by Brady Stephenson (CC BY 4.0).</li>
+      <li>The <b>creeds, confessions and catechisms</b>, from the Creeds.json project (only the texts it marks as public domain).</li>
+      <li>The <b>Gospel harmony</b> is built from the section headings of the Berean Standard Bible (public domain).</li>
+      <li>The <b>map</b> is drawn from Natural Earth (public domain), with no modern borders.</li>
+    </ul>
+    <h3>Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)</h3>
+    <ul>
+      <li><b>People, places, events and the Easton’s text</b>: Theographic Bible Metadata by Robert Rouse (theographic.com), github.com/robertrouse/theographic-bible-metadata. Locations draw on the OpenBible.info Bible Geocoding Data (CC BY 4.0).</li>
+      <li><b>Parallel passages and the Old Testament in the New</b>: UBS Parallel Passage Database, © 2023 United Bible Societies.</li>
+      <li><b>Journeys</b>: UBS Project MARBLE Bible Routes by Dr Leen Ritmeyer, © United Bible Societies 2023.</li>
+    </ul>
+    <p>We have reshaped these datasets (for example, merging them into one file and linking references). Our adapted versions of the CC BY-SA data, in <code>static/bibles/library.sqlite</code>, are shared under the same licence: creativecommons.org/licenses/by-sa/4.0.</p>
+  </article>
+</main>
+{% endblock %}

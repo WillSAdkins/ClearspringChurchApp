@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Next steps · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area</p>
+      <h1>Next steps</h1>
+    </div>
+    <div class="admin-actions">
+      <a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a>
+      <a href="{{ url_for('grow_next_steps') }}" class="btn-ghost">View page</a>
+    </div>
+  </div>
+  {% if saved %}<p class="av-saved" style="padding:.6rem .9rem;border-radius:10px;background:rgba(110,155,87,.16);color:#4E7A3C;font-weight:600">Saved.</p>{% endif %}
+  <p class="empty-sub" style="margin-bottom:1.5rem;">What people see under Grow → Next steps. These start as drafts: please make them match how Clearspring actually does things. Leave a blank line between paragraphs. Bible references become links. Clear a box to go back to the draft.</p>
+  <form method="post" class="event-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for key, label in labels.items() %}
+    <label for="{{ key }}">{{ label }}</label>
+    <textarea id="{{ key }}" name="{{ key }}" rows="{{ 3 if key == 'next_contact' else 7 }}">{{ info[key] }}</textarea>
+    {% endfor %}
+    <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto;">Save</button></div>
+  </form>
+</main>
+{% endblock %}

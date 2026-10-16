@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}{{ label }} · Memorise{% endblock %}
+{% block content %}
+<style>.site-nav, .global-back, .study-fab { display: none !important; } body.has-tabbar { padding-bottom: 0; }</style>
+
+<div class="ls" id="lesson"
+     data-key="{{ key }}" data-label="{{ label }}" data-mode="{{ mode }}"
+     data-add="{{ request.args.get('add', '') }}"
+     data-hub="{{ url_for('memorise_hub') }}"
+     data-other-refs='{{ path_labels | tojson }}'>
+
+  <div class="ls-top">
+    <a class="ls-close" id="lsClose" href="{{ url_for('memorise_hub') }}" aria-label="Close lesson">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </a>
+    <div class="ls-progress" role="progressbar" aria-label="Lesson progress"><i id="lsBar"></i></div>
+    <span class="ls-trans" id="lsTrans"></span>
+  </div>
+
+  <div class="ls-stage" id="lsStage"><p class="ls-tip">Loading…</p></div>
+
+  <div class="ls-footer" id="lsFooter">
+    <button type="button" class="ls-check" id="lsCheck" disabled>Check</button>
+  </div>
+
+  <div class="ls-feedback" id="lsFeedback" hidden role="status" aria-live="polite">
+    <div class="ls-fb-inner">
+      <p class="ls-fb-title" id="lsFbTitle"></p>
+      <p class="ls-fb-body" id="lsFbBody"></p>
+      <button type="button" class="ls-check" id="lsFbBtn">Continue</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='memorise.js') }}"></script>
+<script src="{{ url_for('static', filename='memorise-lesson.js') }}"></script>
+{% endblock %}

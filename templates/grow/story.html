@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Your story · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Your story', url_for('grow_hub'), 'Back to Grow') }}
+  <p class="bible-lede">Everyone who follows Jesus has a story worth telling. Answer these questions in your own words. They’ll help you say what God has done, whether to one friend over coffee or to the church on a Sunday.</p>
+  <p class="gw-note">Saved as you type, on this device (and your account if you’re signed in).</p>
+
+  <div class="st-parts">
+    {% for p in parts %}
+    <section class="st-part">
+      <label for="st_{{ p.key }}"><span class="st-n">{{ loop.index }}</span> {{ p.title }}</label>
+      <p class="st-prompt">{{ p.prompt }}</p>
+      <textarea id="st_{{ p.key }}" class="ps-input st-area" data-part="{{ p.key }}" rows="4"></textarea>
+      <p class="st-hint">{{ p.hint }}</p>
+    </section>
+    {% endfor %}
+  </div>
+
+  <p class="st-count" id="stCount" aria-live="polite"></p>
+
+  <details class="gw-more">
+    <summary>Tips for telling it well</summary>
+    <ul class="gw-list">{% for t in tips %}<li>{{ t }}</li>{% endfor %}</ul>
+  </details>
+
+  <section class="st-part">
+    <label for="st_short">Your one-minute version</label>
+    <p class="st-prompt">If someone asked “Why are you a Christian?”, what would you say in about a minute?</p>
+    <textarea id="st_short" class="ps-input st-area" data-part="short" rows="3"></textarea>
+  </section>
+
+  <section class="st-preview" id="stPreview" hidden>
+    <h2 class="bible-h2">Read it through</h2>
+    <div class="st-text" id="stText"></div>
+    <div class="st-acts">
+      <button type="button" class="gw-btn" id="stCopy">Copy</button>
+      <button type="button" class="gw-btn" id="stShareOut" hidden>Share…</button>
+      <a class="gw-btn" href="{{ url_for('prayer_journal') }}">Pray for people to tell</a>
+    </div>
+  </section>
+
+  <section class="st-church" id="stChurch" hidden>
+    <h2 class="bible-h2">Share it with the church</h2>
+    <p class="gw-p">Stories of what God is doing encourage everyone. If you’d like, send yours to the church team. Someone will read it before it appears on <a href="{{ url_for('grow_stories') }}">Stories from the church</a>, and may tidy it a little. They won’t publish anything without reading it first.</p>
+    <form method="post" action="{{ url_for('grow_story_share') }}" class="st-form" id="stForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input type="hidden" name="body" id="stBody">
+      <label>Your name, as you’d like it shown <input type="text" name="author_name" maxlength="80" placeholder="e.g. Sam, or leave blank to stay anonymous"></label>
+      <label>A title (optional) <input type="text" name="title" maxlength="120" placeholder="e.g. Found when I wasn’t looking"></label>
+      <label class="st-consent"><input type="checkbox" name="consent" value="1" required> The church may publish my story in the app. I’ve left out other people’s names and private details.</label>
+      <button type="submit" class="ps-go">Send my story</button>
+    </form>
+  </section>
+</main>
+<script id="stData" type="application/json">{{ parts|tojson }}</script>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+  var P = JSON.parse(document.getElementById("stData").textContent), G = window.Grow;
+  var $ = function (id) { return document.getElementById(id); };
+  var areas = document.querySelectorAll(".st-area");
+  function fill() {
+    var st = G.load().story;
+    areas.forEach(function (t) { if (document.activeElement !== t) t.value = t.dataset.part === "short" ? (st.short || "") : ((st.parts || {})[t.dataset.part] || ""); });
+    render();
+  }
+  function compose() {
+    var st = G.load().story, parts = st.parts || {};
+    return P.map(function (p) { return (parts[p.key] || "").trim(); }).filter(Boolean).join("\n\n");
+  }
+  function render() {
+    var text = compose(), n = G.words(text);
+    var mins = n / 130;
+    $("stCount").textContent = n ? n + " words · " + (mins < 1 ? "under a minute" : "about " + Math.round(mins) + " minute" + (Math.round(mins) === 1 ? "" : "s")) + " to say" + (n > 600 ? ". A little long for a Sunday; try trimming." : "") : "";
+    $("stPreview").hidden = !text; $("stChurch").hidden = n < 40;
+    var box = $("stText"); box.textContent = "";
+    text.split(/\n\n+/).forEach(function (para) { var p = document.createElement("p"); p.textContent = para; box.appendChild(p); });
+    $("stBody").value = text;
+  }
+  areas.forEach(function (t) {
+    t.addEventListener("input", function () {
+      G.update("story", function (st) { st.parts = st.parts || {}; if (t.dataset.part === "short") st.short = t.value; else st.parts[t.dataset.part] = t.value; });
+      render();
+    });
+  });
+  $("stCopy").addEventListener("click", function () {
+    var t = compose();
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { $("stCopy").textContent = "Copied"; setTimeout(function () { $("stCopy").textContent = "Copy"; }, 1500); }).catch(function () {});
+  });
+  if (navigator.share) {
+    $("stShareOut").hidden = false;
+    $("stShareOut").addEventListener("click", function () { navigator.share({ title: "My story", text: compose() }).catch(function () {}); });
+  }
+  fill();
+  G.sync().then(function (ch) { if (ch) fill(); });
+})();
+</script>
+{% endblock %}

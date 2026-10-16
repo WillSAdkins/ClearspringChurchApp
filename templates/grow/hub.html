@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Grow · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Grow', url_for('community_hub'), 'Back to Community') }}
+  <p class="bible-lede">Take your next step in following Jesus, wherever you’re starting from.</p>
+
+  {% set step_slugs = steps|map(attribute='slug')|join(',') %}
+  {% set session_slugs = sessions|map(attribute='slug')|join(',') %}
+  <div class="gw-paths">
+    <a class="gw-path" href="{{ url_for('grow_first_steps') }}">
+      <span class="gw-path-k">New to faith</span>
+      <span class="gw-path-t">🌱 First steps</span>
+      <span class="gw-path-s">{{ steps|length }} short steps for your first weeks as a Christian</span>
+      <span class="gw-bar"><i></i></span>
+      <span class="gw-path-p" data-progress="steps:{{ step_slugs }}" data-empty="Start here"></span>
+    </a>
+    <a class="gw-path alt" href="{{ url_for('grow_course') }}">
+      <span class="gw-path-k">The basics</span>
+      <span class="gw-path-t">🧱 {{ course.title }}</span>
+      <span class="gw-path-s">{{ course.subtitle }}</span>
+      <span class="gw-bar"><i></i></span>
+      <span class="gw-path-p" data-progress="course:{{ session_slugs }}" data-empty="On your own or in a group"></span>
+    </a>
+  </div>
+
+  <h2 class="bible-h2">Keep growing</h2>
+  <div class="pp-list">
+    <a class="pp-card" href="{{ url_for('grow_checkin') }}"><span class="pp-emoji" aria-hidden="true">🌿</span><span class="pp-body"><b>Growth check-in</b><span>A gentle look at how you’re doing, with ideas for next steps</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('grow_gifts') }}"><span class="pp-emoji" aria-hidden="true">🎁</span><span class="pp-body"><b>Discover your gifts</b><span>How has God made you to serve others?</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('grow_rhythm') }}"><span class="pp-emoji" aria-hidden="true">🗓️</span><span class="pp-body"><b>Your rhythm of life</b><span>A few simple habits that make room for God</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('grow_story') }}"><span class="pp-emoji" aria-hidden="true">✍️</span><span class="pp-body"><b>Write your story</b><span>Guided questions to help you tell what God has done</span></span>{{ icon('chevron-right', 18) }}</a>
+  </div>
+
+  <h2 class="bible-h2">At Clearspring</h2>
+  <div class="pp-list">
+    <a class="pp-card" href="{{ url_for('grow_next_steps') }}"><span class="pp-emoji" aria-hidden="true">💧</span><span class="pp-body"><b>Next steps</b><span>Baptism, belonging, serving and groups</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('groups_index') }}"><span class="pp-emoji" aria-hidden="true">👥</span><span class="pp-body"><b>Groups</b><span>Read, pray and learn together with a few others</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('grow_stories') }}"><span class="pp-emoji" aria-hidden="true">💬</span><span class="pp-body"><b>Stories from the church</b><span>What God has been doing in people’s lives</span></span>{{ icon('chevron-right', 18) }}</a>
+    {% if section_on('sunday') %}
+    <a class="pp-card" href="{{ url_for('sunday_page') }}"><span class="pp-emoji" aria-hidden="true">⛪</span><span class="pp-body"><b>This Sunday</b><span>The passage, fill-in notes and questions for your group</span></span>{{ icon('chevron-right', 18) }}</a>
+    {% endif %}
+    <a class="pp-card" href="{{ url_for('family_hub') }}"><span class="pp-emoji" aria-hidden="true">🍽️</span><span class="pp-body"><b>Family devotions</b><span>A short story, questions and a prayer for the dinner table</span></span>{{ icon('chevron-right', 18) }}</a>
+  </div>
+
+  <h2 class="bible-h2">Exploring faith</h2>
+  <div class="pp-list">
+    <a class="pp-card" href="{{ url_for('faith_hub') }}"><span class="pp-emoji" aria-hidden="true">🧭</span><span class="pp-body"><b>Questions, the big story and the gospel</b><span>For you, or for a friend who’s curious</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('faith_share') }}"><span class="pp-emoji" aria-hidden="true">🤝</span><span class="pp-body"><b>Sharing your faith</b><span>Praying for friends, starting conversations, inviting</span></span>{{ icon('chevron-right', 18) }}</a>
+  </div>
+
+  {% include "_season.html" %}
+</main>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+{% endblock %}

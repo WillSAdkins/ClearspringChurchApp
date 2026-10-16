@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}How are you feeling? · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('How are you feeling?', url_for('bible_hub'), 'Back to Study') }}
+  <p class="bible-lede">Choose whatever is closest. You’ll find words from the Bible for where you are, and a prayer to start you off.</p>
+  <div class="fl-grid">
+    {% for f in feelings %}
+    <a class="fl-chip{{ ' urgent' if f.urgent }}" href="{{ url_for('feeling_page', slug=f.slug) }}"><span aria-hidden="true">{{ f.emoji }}</span>{{ f.label }}</a>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Reading plans · Clearspring{% endblock %}
+{% block content %}
+<main class="bible pls">
+  <header class="bible-head">
+    <a href="{{ url_for('bible_hub') }}" class="bible-back" aria-label="Back to Study">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Plans</h1>
+    <a href="{{ url_for('reading_stats') }}" class="pls-stats" aria-label="Your reading">{{ icon('trophy', 20) }}</a>
+  </header>
+
+  {% if church %}
+  <a class="church-plan" href="{{ url_for('reading_plan_detail', plan_slug=church.slug) }}" id="churchPlan" data-slug="{{ church.slug }}" data-start="{{ church.start }}">
+    <span class="church-plan-k">Reading together · Clearspring</span>
+    <span class="church-plan-t">{{ church.emoji }} {{ church.title }}</span>
+    {% if church.note %}<span class="church-plan-n">{{ church.note }}</span>{% endif %}
+    <span class="church-plan-today" id="churchToday"></span>
+    <span class="church-plan-cta" id="churchCta">Join in</span>
+  </a>
+  {% endif %}
+
+  <section class="pls-mine" id="plsMine" hidden>
+    <div class="bible-block-head"><h2 class="bible-h2">Your plans</h2><a class="bible-more" href="{{ url_for('bible_today') }}">Today</a></div>
+    <div id="plsMineList" class="pls-mine-list"></div>
+  </section>
+
+  <a class="pls-make" href="{{ url_for('plan_builder') }}">
+    <span class="pls-make-icon">{{ icon('plus', 22) }}</span>
+    <span><b>Make your own plan</b><small>Choose the books, the pace and the days you read</small></span>
+    {{ icon('chevron-right', 18) }}
+  </a>
+
+  {% for label, items in groups %}
+  <section class="pls-group">
+    <h2 class="bible-h2">{{ label }}</h2>
+    <div class="plan-stack">
+      {% for p in items %}
+      <a href="{{ url_for('reading_plan_detail', plan_slug=p.slug) }}" class="plan-item" data-slug="{{ p.slug }}">
+        <span class="plan-item-emoji">{{ p.emoji }}</span>
+        <div class="plan-item-body">
+          <span class="plan-item-days">{{ p.length }} days · about {{ p.minutes }} min a day{% if p.weekdays_only %} · weekdays{% endif %}</span>
+          <h3 class="plan-item-title">{{ p.title }}</h3>
+          <p class="plan-item-sub">{{ p.subtitle }}</p>
+        </div>
+        {{ icon('chevron-right', 18) }}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</main>
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script src="{{ url_for('static', filename='plans-mine.js') }}"></script>
+{% endblock %}

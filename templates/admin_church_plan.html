@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Reading together · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area</p>
+      <h1>Reading together</h1>
+    </div>
+    <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a></div>
+  </div>
+
+  <p class="empty-sub" style="margin-bottom:1.5rem;">Choose a plan for the whole church to read together. Everyone sees it on the Bible, Plans and Today pages, and anyone who joins is on the same day as everyone else.</p>
+
+  {% if current %}
+  <section class="admin-panel">
+    <h2 class="section-label">Now reading</h2>
+    <p><strong>{{ current.emoji }} {{ current.title }}</strong>, started {{ current.start }}{% if current.note %}<br><span class="empty-sub">“{{ current.note }}”</span>{% endif %}</p>
+    <form method="post" style="margin-top:1rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" name="clear" value="1" class="btn-ghost" onclick="return confirm('Take the church plan down?');">Take it down</button>
+    </form>
+  </section>
+  {% endif %}
+
+  <h2 class="section-label" style="margin-top:2rem;">{{ 'Change the plan' if current else 'Choose a plan' }}</h2>
+  <form method="post" class="event-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="slug">Plan</label>
+    <select id="slug" name="slug" required>
+      {% for p in plans %}<option value="{{ p.slug }}" {{ 'selected' if current and current.slug == p.slug }}>{{ p.title }} ({{ p.length }} days)</option>{% endfor %}
+    </select>
+    <label for="start">Starts on</label>
+    <input type="date" id="start" name="start" required value="{{ current.start if current else today }}">
+    <p class="field-hint">Day 1 falls on this date for everyone. For a January start, choose 1 January.</p>
+    <label for="note">A line to go with it (optional)</label>
+    <input type="text" id="note" name="note" maxlength="280" value="{{ current.note if current else '' }}" placeholder="Join us as we read through the Bible this year">
+    <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto;">Save</button></div>
+  </form>
+
+  <h2 class="section-label" style="margin-top:2.5rem;">Daily reading reminders</h2>
+  <p class="empty-sub">People can choose a daily reminder time under Settings → Notifications. To send them, ask whoever looks after the server to add a <code>CRON_SECRET</code> setting on Render, then set a free scheduler (a Render Cron Job, or cron-job.org) to open <code>/cron/reminders?key=YOUR_SECRET</code> every 15 minutes.</p>
+</main>
+{% endblock %}

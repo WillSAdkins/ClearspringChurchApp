@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}{{ p.title }} · Clearspring{% endblock %}
+{% block content %}
+<main class="ps pp" id="pp">
+  <header class="ps-head">
+    <a href="{{ url_for('prayer_practices') }}" class="ps-x" aria-label="Back to prayer practices">{{ icon('chevron-left', 22) }}</a>
+    <div class="ps-dots" id="psDots" aria-hidden="true"></div>
+    <button type="button" class="ps-sound" id="psSound" aria-pressed="true" aria-label="Bell sound">🔔</button>
+  </header>
+
+  <section class="ps-step ps-intro" id="psIntro">
+    <p class="ps-k">{{ p.emoji }} {{ p.minutes }} minutes</p>
+    <h1 class="ps-t">{{ p.title }}</h1>
+    <p class="ps-p">{{ p.about }}</p>
+    {% if p.choose_passage %}
+    <form class="pp-choose" method="get">
+      <label for="ppPassage">Passage</label>
+      <select id="ppPassage" name="passage" onchange="this.form.submit()">
+        {% for r in p.choose_passage %}<option value="{{ r }}" {{ 'selected' if passage and passage.ref == r.replace('-', '–') }}>{{ r.replace('-', '–') }}</option>{% endfor %}
+      </select>
+    </form>
+    {% endif %}
+    {% if p.breath %}
+    <div class="pp-phrases" role="group" aria-label="Choose a prayer">
+      {% for a, b in p.breath %}<button type="button" class="pp-phrase {{ 'on' if loop.first }}" data-i="{{ loop.index0 }}">{{ a }} {{ b }}</button>{% endfor %}
+    </div>
+    <div class="ps-len" role="group" aria-label="How long">
+      <button type="button" data-min="3" class="on">3 min</button><button type="button" data-min="5">5 min</button><button type="button" data-min="10">10 min</button>
+    </div>
+    {% endif %}
+    {% if p.name_prayers %}
+    <label class="pp-name"><span>Who are you praying for?</span><input type="text" id="ppName" maxlength="40" placeholder="A name" autocomplete="off"></label>
+    {% endif %}
+    <button type="button" class="ps-go" id="psStart">Begin</button>
+  </section>
+
+  <section class="ps-step" id="psStage" hidden></section>
+  <footer class="ps-foot" id="psFoot" hidden>
+    <button type="button" class="ps-back" id="psBack">Back</button>
+    <button type="button" class="ps-next" id="psNext">Next</button>
+  </footer>
+</main>
+<script id="ppData" type="application/json">{{ {'p': p, 'texts': texts, 'passage': passage}|tojson }}</script>
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-bell.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-practice.js') }}"></script>
+{% endblock %}

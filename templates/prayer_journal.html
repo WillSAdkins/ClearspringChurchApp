@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_prayer_nav.html" import prayer_nav %}
+{% block title %}My prayers · Clearspring{% endblock %}
+{% block content %}
+<main class="bible pr">
+  <header class="bible-head">
+    <a href="{{ url_for('community_hub') }}" class="bible-back" aria-label="Back to Community">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">My prayers</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+  {{ prayer_nav('mine') }}
+
+  <a class="pr-now" href="{{ url_for('prayer_session') }}" id="prNow">
+    <span class="pr-now-k">Pray now</span>
+    <span class="pr-now-t" id="prNowText">A few quiet minutes with God</span>
+    {{ icon('chevron-right', 20) }}
+  </a>
+
+  <form class="pr-add" id="prAdd">
+    <div class="pr-kind" role="group" aria-label="Kind">
+      <label><input type="radio" name="kind" value="request" checked><span>A prayer</span></label>
+      <label><input type="radio" name="kind" value="thanks"><span>A thank-you</span></label>
+    </div>
+    <textarea id="prText" rows="3" maxlength="2000" placeholder="What are you praying for?" aria-label="Your prayer"></textarea>
+    <div class="pr-add-more" id="prMore">
+      <input type="text" id="prWho" maxlength="60" placeholder="For whom? (optional)" aria-label="For whom">
+      <div class="pr-cats" id="prCats" role="group" aria-label="Category"></div>
+      <div class="pr-days-row"><span>Pray on</span><div class="pr-days" id="prDays" role="group" aria-label="Days to pray">
+        {% for n, d in [(1,'M'),(2,'T'),(3,'W'),(4,'T'),(5,'F'),(6,'S'),(0,'S')] %}<button type="button" class="pr-day" data-d="{{ n }}" aria-pressed="false">{{ d }}</button>{% endfor %}
+      </div></div>
+      <p class="pr-days-hint" id="prDaysHint">Every day, or choose days so a long list spreads across the week.</p>
+    </div>
+    <button type="submit" class="pr-add-btn">Add</button>
+  </form>
+
+  <nav class="pr-filter" id="prFilter">
+    <button type="button" data-f="open" class="on">Praying</button>
+    <button type="button" data-f="answered">Answered</button>
+    <button type="button" data-f="thanks">Thank-yous</button>
+  </nav>
+  <div class="pr-catfilter" id="prCatFilter"></div>
+
+  <div id="prList" class="pr-list"></div>
+  <div id="prEmpty" class="saved-empty" hidden>
+    <span class="saved-empty-icon">{{ icon('hands', 26) }}</span>
+    <p class="saved-empty-title" id="prEmptyTitle">Nothing here yet</p>
+    <p class="saved-empty-sub" id="prEmptySub">Add the people and things you’re praying for. When a prayer is answered, mark it. It’s good to look back on.</p>
+  </div>
+
+  <p class="journal-privacy">{{ icon('bookmark', 16) }}<span>Only you can see these. They’re kept on this device{% if member %}, and in your own account so they follow you{% endif %}, and never shared with the church.</span></p>
+</main>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-list.js') }}"></script>
+{% endblock %}

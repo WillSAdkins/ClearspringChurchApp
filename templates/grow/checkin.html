@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Growth check-in · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Growth check-in', url_for('grow_hub'), 'Back to Grow') }}
+
+  <section id="ciIntro">
+    <p class="bible-lede">A few honest questions to help you notice where you’re growing and where you might take a next step. It isn’t a test or a score of how good a Christian you are. God’s love for you doesn’t go up or down with your answers.</p>
+    <p class="gw-note">Private: kept on your device (and your account, if you’re signed in). Nobody at church sees it.</p>
+  </section>
+
+  <section class="gw-results" id="ciResults" hidden>
+    <p class="gw-k" id="ciWhen"></p>
+    <h2 class="gw-h1">How you’re doing</h2>
+    <div class="ci-bars" id="ciBars"></div>
+    <h3 class="gw-h3">Ideas for a next step</h3>
+    <p class="gw-p" id="ciNextIntro">Pick one. Small steps are the ones that last.</p>
+    <div class="ci-next" id="ciNext"></div>
+    <div class="ci-acts">
+      <button type="button" class="gw-btn" id="ciAgain">Check in again</button>
+    </div>
+    <details class="gw-more" id="ciHistoryBox" hidden><summary>Earlier check-ins</summary><ul class="ci-history" id="ciHistory"></ul></details>
+  </section>
+
+  <form class="ci-form" id="ciForm">
+    {% for a in areas %}
+    <fieldset class="ci-area" data-key="{{ a.key }}">
+      <legend>{{ a.emoji }} {{ a.title }}</legend>
+      {% set ai = loop.index0 %}
+      {% for st in a.statements %}
+      <div class="ci-q">
+        <p id="ciq{{ ai }}_{{ loop.index0 }}">{{ st }}</p>
+        <div class="ci-scale" role="radiogroup" aria-labelledby="ciq{{ ai }}_{{ loop.index0 }}">
+          {% set qi = loop.index0 %}
+          {% for label in scale %}
+          <label><input type="radio" name="{{ a.key }}_{{ qi }}" value="{{ loop.index0 }}" required><span>{{ label }}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </fieldset>
+    {% endfor %}
+    <button type="submit" class="ps-go">See how I’m doing</button>
+  </form>
+</main>
+<script id="ciData" type="application/json">{{ {'areas': areas, 'scale': scale}|tojson }}</script>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+  var D = JSON.parse(document.getElementById("ciData").textContent), G = window.Grow;
+  var $ = function (id) { return document.getElementById(id); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function score(entry, key) { var v = entry.a[key] || []; return v.length ? v.reduce(function (s, x) { return s + x; }, 0) / (v.length * 3) : 0; }
+  function when(iso) { return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }); }
+
+  function show() {
+    var list = G.load().checkins.list;
+    if (!list.length) { $("ciResults").hidden = true; $("ciForm").hidden = false; $("ciIntro").hidden = false; return; }
+    var last = list[0], prev = list[1];
+    $("ciIntro").hidden = true; $("ciForm").hidden = true; $("ciResults").hidden = false;
+    $("ciWhen").textContent = "Checked in " + when(last.at);
+    var bars = $("ciBars"); bars.textContent = "";
+    D.areas.forEach(function (a) {
+      var s = score(last, a.key), row = el("div", "ci-bar");
+      row.appendChild(el("span", "ci-bar-l", a.emoji + " " + a.title));
+      var track = el("span", "ci-bar-t"), fill = el("i"); fill.style.width = Math.max(4, Math.round(s * 100)) + "%"; track.appendChild(fill); row.appendChild(track);
+      if (prev) {
+        var d = s - score(prev, a.key);
+        row.appendChild(el("span", "ci-bar-d" + (d > 0.01 ? " up" : d < -0.01 ? " down" : ""), d > 0.01 ? "↑" : d < -0.01 ? "↓" : "–"));
+      }
+      bars.appendChild(row);
+    });
+    // The two areas with most room to grow
+    var sorted = D.areas.slice().sort(function (x, y) { return score(last, x.key) - score(last, y.key); });
+    var next = $("ciNext"); next.textContent = "";
+    var low = sorted.filter(function (a) { return score(last, a.key) < 0.99; }).slice(0, 2);
+    $("ciNextIntro").textContent = low.length ? "Pick one. Small steps are the ones that last." : "You’re doing well in every area. Keep going, and think about how you could help someone else grow.";
+    low.forEach(function (a) {
+      var c = el("div", "ci-next-card");
+      c.appendChild(el("b", null, a.emoji + " " + a.title));
+      a.next.forEach(function (n) { if (!n.href) return; var l = el("a", null, n.text + " →"); l.href = n.href; c.appendChild(l); });
+      next.appendChild(c);
+    });
+    var h = $("ciHistory"); h.textContent = "";
+    list.slice(1, 12).forEach(function (e) { h.appendChild(el("li", null, when(e.at))); });
+    $("ciHistoryBox").hidden = list.length < 2;
+  }
+
+  $("ciForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var a = {};
+    D.areas.forEach(function (ar) {
+      a[ar.key] = ar.statements.map(function (_, i) { var c = document.querySelector("input[name='" + ar.key + "_" + i + "']:checked"); return c ? +c.value : 0; });
+    });
+    G.update("checkins", function (c) { c.list.unshift({ at: new Date().toISOString(), a: a }); c.list = c.list.slice(0, 24); });
+    show(); window.scrollTo(0, 0);
+  });
+  $("ciAgain").addEventListener("click", function () {
+    $("ciForm").reset(); $("ciResults").hidden = true; $("ciForm").hidden = false; $("ciIntro").hidden = false; window.scrollTo(0, 0);
+  });
+  show();
+  G.sync().then(function (ch) { if (ch) show(); });
+})();
+</script>
+{% endblock %}

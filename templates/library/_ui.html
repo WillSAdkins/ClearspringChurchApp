@@ -1,0 +1,41 @@
+{% from "icons.html" import icon %}
+
+{% macro head(title, back_href, back_label, kicker=None) -%}
+<header class="bible-head lib-head">
+  <a href="{{ back_href }}" class="bible-back" aria-label="Back to {{ back_label }}">{{ icon('chevron-left', 22) }}</a>
+  <div class="lib-head-text">
+    {% if kicker %}<p class="lib-kicker">{{ kicker }}</p>{% endif %}
+    <h1 class="bible-title lib-title">{{ title }}</h1>
+  </div>
+  <span style="width:2.4rem"></span>
+</header>
+{%- endmacro %}
+
+{% macro refs_by_book(groups, limit=0) -%}
+<div class="lib-refs">
+  {% for g in groups %}
+  <div class="lib-refs-book">
+    <span class="lib-refs-name">{{ g.name }}</span>
+    <span class="lib-refs-list">{% for r in g.refs %}<a href="{{ r.href }}">{{ r.label.split(' ')[-1] }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span>
+  </div>
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro letters_bar(base, letters, current) -%}
+<nav class="lib-letters" aria-label="Jump to letter">
+  {% for l in letters %}<a href="{{ base }}?l={{ l }}" class="{{ 'on' if l == current }}">{{ l|upper }}</a>{% endfor %}
+</nav>
+{%- endmacro %}
+
+{% macro chip_person(x) -%}
+<a class="lib-chip lib-chip-person" href="{{ url_for('person_page', slug=x.slug) }}">{{ x.name }}{% if x.title and x.title != x.name %}<small>{{ x.title[x.name|length:]|trim(' ,()') }}</small>{% endif %}</a>
+{%- endmacro %}
+
+{% macro chip_place(x) -%}
+<a class="lib-chip lib-chip-place" href="{{ url_for('place_page', slug=x.slug) }}">{{ x.name }}</a>
+{%- endmacro %}
+
+{% macro source(text) -%}
+<p class="lib-source">{{ text }}</p>
+{%- endmacro %}

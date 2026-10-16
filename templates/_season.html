@@ -1,0 +1,10 @@
+{# The church year: shown on Today, the Bible page and Grow. Expects `season`. #}
+{% if season %}
+<a class="gw-season s-{{ season.colour }}" href="{{ season.today.read|ref_url if season.today else (url_for('reading_plan_detail', plan_slug=season.plan) if season.plan else url_for('reading_plans')) }}">
+  <span class="gw-season-k">The church year{% if season.countdown %} · {{ season.countdown[1] }} day{{ 's' if season.countdown[1] != 1 }} to {{ season.countdown[0] }}{% endif %}</span>
+  <span class="gw-season-t">{{ season.today.name if season.today else season.name }}</span>
+  <span class="gw-season-s">{{ season.about }}</span>
+  {% if season.today %}<span class="gw-season-cta">Read {{ season.today.read.replace('-', '–') }} →</span>
+  {% elif season.plan %}<span class="gw-season-cta">Read along →</span>{% endif %}
+</a>
+{% endif %}

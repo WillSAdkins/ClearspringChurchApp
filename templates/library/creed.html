@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}{{ c.title }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(c.title, url_for('creeds_index'), "Creeds", c.format ~ (' · ' ~ c.year if c.year else '')) }}
+  {% if c.meta.OriginStory %}<p class="lib-note">{{ c.meta.OriginStory }}</p>{% endif %}
+  <article class="lib-article creed">
+  {% if c.data is mapping %}
+    {{ c.data.Content|paras }}
+  {% elif c.format == 'Catechism' %}
+    {% for q in c.data %}
+    <div class="cat-q" id="q{{ q.Number }}">
+      <p class="cat-n">Q{{ q.Number }}</p>
+      <p class="cat-question">{{ q.Question }}</p>
+      <div class="cat-answer">{{ (q.Answer or '')|paras }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    {% if c.data[0].Chapter is defined %}
+    <nav class="lib-chips tl-jump">{% for ch in c.data %}<a class="lib-chip" href="#ch{{ ch.Chapter }}">{{ ch.Chapter }}{% if ch.Title %}. {{ ch.Title }}{% endif %}</a>{% endfor %}</nav>
+    {% endif %}
+    {% for ch in c.data %}
+      {% if ch.Chapter is defined %}
+      <h2 class="creed-ch" id="ch{{ ch.Chapter }}">{{ ch.Chapter }}{% if ch.Title %}. {{ ch.Title }}{% endif %}</h2>
+      {% for s in ch.Sections or [] %}<div class="creed-sec">{% if s.Section %}<span class="creed-n">{{ s.Section }}</span>{% endif %}{{ (s.Content or '')|paras }}</div>{% endfor %}
+      {% else %}
+      <h2 class="creed-ch">{{ ch.Title or ('Article ' ~ ch.Article) }}</h2>{{ (ch.Content or '')|paras }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  </article>
+  {{ source("Public-domain text from the Creeds.json project" ~ ((" (source: " ~ c.meta.SourceUrl ~ ")") if c.meta.SourceUrl else "") ~ ".") }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

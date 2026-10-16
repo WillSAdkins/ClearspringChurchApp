@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}{{ course.title }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head(course.title, url_for('grow_hub'), 'Back to Grow') }}
+  <p class="bible-lede">{{ course.about }}</p>
+  <div class="gw-bar-row"><span class="gw-bar"><i></i></span><span class="gw-path-p" data-progress="course:{{ sessions|map(attribute='slug')|join(',') }}" data-empty="Not started yet"></span></div>
+  <ol class="gw-steps">
+    {% for s in sessions %}
+    <li><a class="gw-step" href="{{ url_for('grow_session', slug=s.slug) }}" data-tick="course:{{ s.slug }}">
+      <span class="gw-step-n" aria-hidden="true"><b>{{ loop.index }}</b>{{ icon('check', 16) }}</span>
+      <span class="gw-step-b"><b>{{ s.title }}</b><small>{{ s.read.replace('-', '–') }}</small></span>
+      {{ icon('chevron-right', 18) }}
+    </a></li>
+    {% endfor %}
+  </ol>
+  <section class="gw-try">
+    <h3>Doing it with others</h3>
+    <p>Foundations works well with a friend or a small group. Each read the passage beforehand, then use the questions to talk. Your answers here are private; nobody else sees them.</p>
+  </section>
+</main>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+{% endblock %}

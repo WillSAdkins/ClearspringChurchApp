@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}{{ t.name }} · Topics{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(t.name, url_for('topics_index', l=t.name[:1]|lower), "Topics", "Nave’s Topical Bible") }}
+  <p class="lib-note">{{ t.refs }} references. Tap any one to read it.</p>
+  {% if d %}<a class="lib-card-link" href="{{ url_for('dictionary_page', slug=d.slug) }}"><b>{{ d.term }} in Easton’s Bible Dictionary</b><span>What the word means and where it comes from</span></a>{% endif %}
+  <article class="lib-topic">{{ t.html|safe }}</article>
+  {{ source("Nave’s Topical Bible (Orville J. Nave, 1896), public domain, from the CrossWire SWORD module.") }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

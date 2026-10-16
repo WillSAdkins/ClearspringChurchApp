@@ -1,0 +1,64 @@
+{# One post in a group, with its replies. Expects grp, me, is_leader, unread_from. #}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import scripture %}
+{% macro post_card(p, tab) %}
+<article class="gp{{ ' new' if p.id > unread_from and p.member_id != me['id'] }}{{ ' gp-' ~ p.kind }}{{ ' answered' if p.answered_at }}" id="p{{ p.id }}">
+  <header class="gp-head">
+    <span class="gp-avatar" aria-hidden="true">{{ (p.name or 'A')[:1]|upper }}</span>
+    <span class="gp-who"><b>{{ p.name or 'A member' }}</b><small>{{ p.created_at|ago }}{% if p.plan_day %} · Day {{ p.plan_day }}{% endif %}{% if p.kind == 'checkin' %} · checked in{% elif p.kind == 'verse' %} · shared a verse{% endif %}</small></span>
+    <details class="gp-menu">
+      <summary aria-label="More">⋯</summary>
+      <div class="gp-menu-list">
+        {% if p.member_id == me['id'] or is_leader %}
+        <form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='delete') }}" onsubmit="return confirm('Delete this?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Delete</button></form>
+        {% endif %}
+        {% if p.member_id != me['id'] %}
+        <form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='report') }}" onsubmit="var r=prompt('What’s wrong with this post? (Church staff will see it.)'); if(r===null) return false; this.reason.value=r; return true;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="reason"><button type="submit">Report to church staff</button></form>
+        {% endif %}
+      </div>
+    </details>
+  </header>
+  {% if p.kind == 'checkin' and p.meta and p.meta.answers %}
+    <dl class="gp-checkin">
+      {% for key, q in checkin_qs or [] %}{% if p.meta.answers[key] %}<dt>{{ q }}</dt><dd>{{ p.meta.answers[key] }}</dd>{% endif %}{% endfor %}
+    </dl>
+  {% else %}
+    {% if p.kind == 'verse' and p.verse %}{{ scripture(p.verse, 'gp-verse') }}{% endif %}
+    {% if p.body %}<div class="gp-body">{{ p.body|paras }}</div>{% endif %}
+  {% endif %}
+  {% if p.kind == 'prayer' %}
+    {% if p.answered_at %}<div class="pr-answer"><b>Answered {{ p.answered_at|ago }}</b>{% if p.answer %}<p>{{ p.answer }}</p>{% endif %}</div>{% endif %}
+    <div class="gp-acts">
+      <button type="button" class="gp-pray{{ ' on' if p.i_prayed }}" data-url="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='pray') }}" aria-pressed="{{ 'true' if p.i_prayed else 'false' }}">🙏 <span>{{ 'Prayed' if p.i_prayed else 'I’ve prayed' }}</span>{% if p.prayed %} · <i>{{ p.prayed }}</i>{% endif %}</button>
+      {% if p.member_id == me['id'] and not p.answered_at %}
+      <details class="gp-answer"><summary>It’s been answered</summary>
+        <form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='answered') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <textarea name="answer" rows="2" maxlength="1000" placeholder="What happened? (optional)"></textarea>
+          <button type="submit" class="pr-act primary">Share the answer</button>
+        </form>
+      </details>
+      {% elif p.member_id == me['id'] and p.answered_at %}
+      <form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='unanswered') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="pr-act danger">Still praying</button></form>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if p.replies %}
+  <ul class="gp-replies">
+    {% for r in p.replies %}
+    <li id="p{{ r.id }}" class="{{ 'new' if r.id > unread_from and r.member_id != me['id'] }}">
+      <b>{{ r.name or 'A member' }}</b> <small>{{ r.created_at|ago }}</small>
+      <div class="gp-body">{{ r.body|paras }}</div>
+      {% if r.member_id == me['id'] or is_leader %}<form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=r.id, action='delete') }}" class="gp-rdel" onsubmit="return confirm('Delete this reply?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Delete</button></form>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <form method="post" action="{{ url_for('group_post', gid=grp['id']) }}" class="gp-reply">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="kind" value="reply"><input type="hidden" name="parent_id" value="{{ p.id }}"><input type="hidden" name="tab" value="{{ tab }}">
+    <input type="text" name="body" maxlength="2000" placeholder="{{ 'Send encouragement…' if p.kind == 'prayer' else 'Reply…' }}" aria-label="Reply" autocomplete="off">
+    <button type="submit" aria-label="Send">{{ icon('chevron-right', 18) }}</button>
+  </form>
+</article>
+{% endmacro %}

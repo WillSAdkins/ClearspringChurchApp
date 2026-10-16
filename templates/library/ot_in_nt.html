@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}The Old Testament in the New · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Old Testament in the New", url_for('library_hub'), "Library", "Quotations and echoes") }}
+  <p class="lib-note">Where the New Testament writers quote or closely echo the Old. Tap a pair to read them side by side.</p>
+  <nav class="lib-chips tl-jump">{% for b in books %}<a class="lib-chip" href="#{{ b.slug }}">{{ b.name }}</a>{% endfor %}</nav>
+  {% for b in books %}
+  <section class="lib-section" id="{{ b.slug }}">
+    <h2 class="bible-h2">{{ b.name }}</h2>
+    <ul class="otnt">
+      {% for it in b['items'] %}
+      <li><a class="otnt-nt" href="{{ it.nt.href }}">{{ it.nt.label }}</a><span class="otnt-arrow" aria-hidden="true">←</span>
+        <span class="otnt-ot">{% for o in it.ot %}<a href="{{ url_for('compare_passages', t='Quotation', r=[o.label, it.nt.label]) }}">{{ o.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+  {{ source("UBS Parallel Passage Database, © 2023 United Bible Societies, CC BY-SA 4.0.") }}
+</main>
+{% endblock %}

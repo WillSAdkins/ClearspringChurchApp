@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Staff · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page sf">
+  <div class="admin-header">
+    <div><p class="eyebrow">Staff area</p><h1>Staff and volunteers</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Board</a></div>
+  </div>
+  <p class="sf-lead">Give trusted people their own sign-in, so they can update the parts they look after without the main admin password. They sign in at the staff sign-in page with their email and password. Only you (with the main password) can see this page, backups, email and system settings.</p>
+
+  <section class="sf-card">
+    <h2 class="sf-h">Add someone</h2>
+    <form method="post" class="sf-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label><span>Name</span><input type="text" name="name" required maxlength="80" value="{{ form.get('name', '') }}"></label>
+      <label><span>Email</span><input type="email" name="email" required value="{{ form.get('email', '') }}"></label>
+      <label><span>Password</span><input type="text" name="password" required minlength="10" autocomplete="new-password"><small>At least 10 characters. Tell them in person; they can change it after signing in.</small></label>
+      <fieldset class="sf-areas"><legend>What they can update</legend>
+        {% for key, (label, about) in areas.items() %}
+        <label class="sf-area"><input type="checkbox" name="area_{{ key }}" value="1" {{ 'checked' if form.get('area_' ~ key) }}><span><b>{{ label }}</b><small>{{ about }}</small></span></label>
+        {% endfor %}
+      </fieldset>
+      <button type="submit" class="btn-primary" style="width:auto">Add</button>
+    </form>
+  </section>
+
+  {% for st in staff %}
+  <section class="sf-card{{ ' sf-off' if not st['active'] }}">
+    <h2 class="sf-h">{{ st['name'] }}{% if not st['active'] %} <small>(switched off)</small>{% endif %}</h2>
+    <p class="sf-meta">{{ st['email'] }} · {% if st['last_login'] %}last signed in {{ st['last_login']|pretty_datetime }}{% else %}hasn't signed in yet{% endif %}</p>
+    <form method="post" action="{{ url_for('admin_staff_action', staff_id=st['id']) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="areas">
+      <fieldset class="sf-areas">
+        {% set have = (st['areas'] or '').split(',') %}
+        {% for key, (label, about) in areas.items() %}
+        <label class="sf-area"><input type="checkbox" name="area_{{ key }}" value="1" {{ 'checked' if key in have }}><span><b>{{ label }}</b></span></label>
+        {% endfor %}
+      </fieldset>
+      <button type="submit" class="btn-ghost small">Save access</button>
+    </form>
+    <div class="sf-row">
+      <form method="post" action="{{ url_for('admin_staff_action', staff_id=st['id']) }}" class="sf-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="password">
+        <input type="text" name="password" minlength="10" placeholder="New password" required autocomplete="new-password">
+        <button type="submit" class="btn-ghost small">Set password</button>
+      </form>
+      <form method="post" action="{{ url_for('admin_staff_action', staff_id=st['id']) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="{{ 'off' if st['active'] else 'on' }}">
+        <button type="submit" class="btn-ghost small">{{ 'Switch off' if st['active'] else 'Switch on' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('admin_staff_action', staff_id=st['id']) }}" onsubmit="return confirm('Remove {{ st['name']|e }}\'s staff account?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="btn-danger small">Remove</button>
+      </form>
+    </div>
+  </section>
+  {% endfor %}
+</main>
+<style>
+  .sf-lead { max-width: 40rem; color: var(--muted); line-height: 1.6; margin: 0 0 1.25rem; }
+  .sf-card { border: 1px solid var(--line); border-radius: var(--r-md, 14px); padding: 1rem; margin: 0 0 1rem; background: var(--surface); max-width: 44rem; }
+  .sf-off { opacity: .65; }
+  .sf-h { font-family: var(--display); font-size: var(--fs-md); margin: 0 0 .25rem; overflow-wrap: anywhere; }
+  .sf-h small { font-family: var(--body, inherit); font-size: var(--fs-xs); color: var(--muted); }
+  .sf-meta { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 .75rem; overflow-wrap: anywhere; }
+  .sf-form > label { display: block; margin: 0 0 .875rem; }
+  .sf-form > label > span { display: block; font-weight: 600; font-size: var(--fs-sm); margin-bottom: .25rem; }
+  .sf-form input[type=text], .sf-form input[type=email], .sf-inline input { width: 100%; font: inherit; padding: .5rem .75rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
+  .sf-form small { display: block; font-size: var(--fs-xs); color: var(--muted); margin-top: .25rem; }
+  .sf-areas { border: 0; padding: 0; margin: 0 0 .75rem; display: grid; gap: .5rem; }
+  .sf-areas legend { font-weight: 600; font-size: var(--fs-sm); margin-bottom: .5rem; }
+  .sf-area { display: flex; gap: .625rem; align-items: flex-start; font-size: var(--fs-sm); line-height: 1.4; }
+  .sf-area input { margin-top: .2rem; flex: none; accent-color: var(--accent); }
+  .sf-area small { display: block; color: var(--muted); }
+  .sf-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .75rem; }
+  .sf-inline { display: flex; gap: .5rem; flex: 1 1 16rem; min-width: 0; }
+</style>
+{% endblock %}

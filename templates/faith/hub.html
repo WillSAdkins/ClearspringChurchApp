@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Exploring faith · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Exploring faith', url_for('grow_hub'), 'Back to Grow') }}
+  <p class="bible-lede">Curious about Jesus? Not sure what you believe? You’re very welcome here. Start wherever you like.</p>
+
+  <div class="gw-paths">
+    <a class="gw-path" href="{{ url_for('faith_gospel') }}">
+      <span class="gw-path-k">Two minutes</span>
+      <span class="gw-path-t">✝️ The good news, simply</span>
+      <span class="gw-path-s">What Christians believe, in five short steps</span>
+    </a>
+    <a class="gw-path alt" href="{{ url_for('faith_story') }}">
+      <span class="gw-path-k">Ten minutes</span>
+      <span class="gw-path-t">📜 The big story</span>
+      <span class="gw-path-s">The whole Bible, from creation to new creation</span>
+    </a>
+  </div>
+
+  <h2 class="bible-h2">Big questions</h2>
+  <div class="fq-list">
+    {% for q in questions %}<a class="fq-row" href="{{ url_for('faith_question', slug=q.slug) }}"><span>{{ q.q }}</span>{{ icon('chevron-right', 16) }}</a>{% endfor %}
+    <a class="fq-row more" href="{{ url_for('faith_questions') }}"><span>All questions</span>{{ icon('chevron-right', 16) }}</a>
+  </div>
+
+  <div class="pp-list" style="margin-top:1.25rem">
+    <a class="pp-card" href="{{ url_for('faith_words') }}"><span class="pp-emoji" aria-hidden="true">📘</span><span class="pp-body"><b>Church words, explained</b><span>Grace, gospel, sin… in plain English</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('bible_read_chapter', book_slug='mark', chapter=1) }}"><span class="pp-emoji" aria-hidden="true">📖</span><span class="pp-body"><b>Read about Jesus</b><span>Mark’s Gospel is short and fast. Start with chapter 1.</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('ask_question') }}"><span class="pp-emoji" aria-hidden="true">💬</span><span class="pp-body"><b>Ask your own question</b><span>A real person will read it and reply</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('plan_visit') }}"><span class="pp-emoji" aria-hidden="true">👋</span><span class="pp-body"><b>Come and see</b><span>What to expect if you visit on a Sunday</span></span>{{ icon('chevron-right', 18) }}</a>
+  </div>
+</main>
+{% endblock %}

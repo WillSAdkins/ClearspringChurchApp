@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import scripture %}
+{% block title %}Before sleep · Clearspring{% endblock %}
+{% block content %}
+<main class="ps nt" id="nt">
+  <header class="ps-head">
+    <a href="{{ url_for('prayer_practices') }}" class="ps-x" aria-label="Back to Ways to pray">{{ icon('chevron-left', 22) }}</a>
+    <span class="nt-moon" aria-hidden="true">🌙</span>
+    <button type="button" class="ps-sound" id="ntSpeak" aria-pressed="false" aria-label="Read aloud">{{ icon('mic', 18) }}</button>
+  </header>
+  <section class="ps-intro">
+    <p class="ps-k">Before sleep · about 5 minutes</p>
+    <h1 class="ps-t">Rest in God</h1>
+    <p class="ps-p">A quiet way to end the day, based on prayers Christians have said at night for centuries. Read slowly, or tap the microphone to have it read to you.</p>
+  </section>
+  <div class="nt-steps" id="ntSteps">
+    {% for s in steps %}
+    <section class="nt-step" data-key="{{ s.key }}">
+      <h2 class="nt-t">{{ s.title }}</h2>
+      {% if s.body %}<p class="ps-p nt-say">{{ s.body }}</p>{% endif %}
+      {% if s.key == 'psalm' %}
+        {{ scripture(texts[psalm], 'nt-say', false) }}
+        <form method="get" class="pp-choose"><label for="ntPsalm">Another psalm</label>
+          <select id="ntPsalm" name="psalm" onchange="this.form.submit()">{% for p in psalms %}<option {{ 'selected' if p == psalm }}>{{ p }}</option>{% endfor %}</select></form>
+      {% elif s.key == 'look' %}
+        <p class="ps-small"><a href="{{ url_for('practice_page', slug='examen') }}">Take longer over this with the Examen →</a></p>
+      {% elif s.key == 'give' %}
+        <ul class="nt-list" id="ntList"></ul>
+      {% endif %}
+      {% if s.verse %}{{ scripture(texts[s.verse], 'nt-say' ~ (' big' if s.key == 'bless' else ''), false) }}{% endif %}
+    </section>
+    {% endfor %}
+    <p class="nt-amen">Amen.</p>
+    <button type="button" class="ps-go" id="ntDone">Goodnight</button>
+  </div>
+</main>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+  // Tonight's prayers: a few from the list, so they can be handed over by name.
+  var R = window.Prayers, list = document.getElementById("ntList");
+  if (R && list) {
+    R.forToday().slice(0, 5).forEach(function (it) {
+      var li = document.createElement("li"); li.textContent = it.who ? it.who + ": " + it.text : it.text; list.appendChild(li);
+    });
+    if (!list.children.length) list.remove();
+  }
+  document.getElementById("ntDone").addEventListener("click", function () {
+    if (R) R.logDay(5);
+    try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {}
+    this.textContent = "Sleep well"; this.disabled = true;
+  });
+
+  // Read aloud, with the phone's own voice. Nothing leaves the device.
+  var btn = document.getElementById("ntSpeak"), synth = window.speechSynthesis;
+  if (!synth || !window.SpeechSynthesisUtterance) { btn.hidden = true; return; }
+  var speaking = false;
+  function voice() {
+    var vs = synth.getVoices();
+    return vs.find(function (v) { return /en-GB/i.test(v.lang); }) || vs.find(function (v) { return /^en/i.test(v.lang); }) || null;
+  }
+  function chunks() {
+    var out = [];
+    document.querySelectorAll(".nt-t, .nt-say p, p.nt-say, .nt-list li, .nt-amen").forEach(function (n) { out.push(n.textContent.trim()); });
+    return out.filter(Boolean);
+  }
+  function stop() { speaking = false; synth.cancel(); btn.setAttribute("aria-pressed", "false"); btn.classList.remove("on"); }
+  btn.addEventListener("click", function () {
+    if (speaking) { stop(); return; }
+    speaking = true; btn.setAttribute("aria-pressed", "true"); btn.classList.add("on");
+    var parts = chunks(), v = voice();
+    parts.forEach(function (t, i) {
+      var u = new SpeechSynthesisUtterance(t); u.rate = 0.85; u.pitch = 0.95; if (v) u.voice = v;
+      if (i === parts.length - 1) u.onend = stop;
+      synth.speak(u);
+    });
+  });
+  window.addEventListener("pagehide", function () { synth.cancel(); });
+})();
+</script>
+{% endblock %}

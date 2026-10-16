@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Big questions · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Big questions', url_for('faith_hub'), 'Back to Exploring faith') }}
+  <p class="bible-lede">Short, honest answers to questions people often ask about Christianity. They’re a starting point for a conversation, not the last word.</p>
+  <input type="search" class="ps-input fq-search" id="fqQ" placeholder="Search the questions" aria-label="Search the questions">
+  <div class="fq-list" id="fqList">
+    {% for q in questions %}<a class="fq-row" href="{{ url_for('faith_question', slug=q.slug) }}" data-hay="{{ (q.q ~ ' ' ~ q.a|join(' '))|lower }}"><span>{{ q.q }}</span>{{ icon('chevron-right', 16) }}</a>{% endfor %}
+  </div>
+  <p class="gw-empty" id="fqNone" hidden>Nothing matches. <a href="{{ url_for('ask_question') }}">Ask your question</a> and we’ll answer it.</p>
+  <section class="gw-try">
+    <h3>Got a question that isn’t here?</h3>
+    <p><a href="{{ url_for('ask_question') }}">Ask it</a>. A real person reads every question.{% if section_on('questions') %} You can also browse <a href="{{ url_for('questions') }}">questions others have asked</a>.{% endif %}</p>
+  </section>
+</main>
+<script>
+(function () {
+  var q = document.getElementById("fqQ"), rows = document.querySelectorAll("#fqList .fq-row");
+  q.addEventListener("input", function () {
+    var w = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean), n = 0;
+    rows.forEach(function (r) { var ok = w.every(function (x) { return r.dataset.hay.indexOf(x) >= 0; }); r.hidden = !ok; if (ok) n++; });
+    document.getElementById("fqNone").hidden = n > 0;
+  });
+})();
+</script>
+{% endblock %}
