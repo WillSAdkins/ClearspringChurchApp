@@ -9,7 +9,7 @@
    settings, the device changed most recently wins. */
 window.PrefsSync = (function () {
   "use strict";
-  var SCALARS = ["cs_theme", "cs_text_size", "cs_reader_prefs", "cs_reading_bg", "cs_audio_prefs", "cs_autoplay", "cs_bell"];
+  var SCALARS = ["cs_theme", "cs_palette", "cs_text_size", "cs_reader_prefs", "cs_reading_bg", "cs_audio_prefs", "cs_autoplay", "cs_bell"];
   var LISTS = ["cs_devos_read", "cs_prayed", "cs_my_requests"];
   var MAPS = ["cs_prayer_days"];
   var SNAP = "cs_prefs_sync";
@@ -45,6 +45,7 @@ window.PrefsSync = (function () {
     MAPS.forEach(function (k) { if (values[k] != null) { var m = mergeMap(get(k), values[k]); if (m !== get(k)) { set(k, m); changed = true; } } });
     if (changed && scalarsToo) {
       var t = get("cs_theme"); if (t) document.documentElement.setAttribute("data-theme", t);
+      if (window.CSPalette) CSPalette.apply(CSPalette.current());
       var z = get("cs_text_size"); if (z) document.documentElement.setAttribute("data-text-size", z);
     }
     return changed;

@@ -32,6 +32,24 @@
     <p class="set-hint">Automatic follows your phone's own light and dark setting.</p>
   </section>
 
+  <!-- Colour -->
+  <section class="set-block" aria-labelledby="colLabel">
+    <h2 class="set-label" id="colLabel">Colour</h2>
+    <p class="set-hint" style="margin-top:0">Pick any colour and the whole app follows it, in light and dark. Text is always kept easy to read.</p>
+    <div class="col-now">
+      <span class="col-now-dot" id="colNowDot" aria-hidden="true"></span>
+      <span class="col-now-name" id="colNowName">Clearspring teal</span>
+      <button type="button" class="btn-ghost small" id="colReset" hidden>Back to Clearspring teal</button>
+    </div>
+    <div class="col-named" role="radiogroup" aria-label="Favourite colours" id="colNamed"></div>
+    <h3 class="col-sub">Every colour</h3>
+    <div class="col-grid" role="radiogroup" aria-label="Every colour" id="colGrid"></div>
+    <label class="col-custom" for="colPick">
+      <span class="col-custom-swatch"><input type="color" id="colPick" value="#0a7269"></span>
+      <span><b>Any colour at all</b><small>Opens your phone's colour picker</small></span>
+    </label>
+  </section>
+
   <!-- Reading -->
   <section class="set-block">
     <h2 class="set-label">Reading</h2>
@@ -119,6 +137,7 @@
     document.documentElement.setAttribute("data-theme", t);
     paintThemeChoice();
     updateThemeColorMeta();
+    if (window.CSPalette) CSPalette.apply(CSPalette.current());
   }
 
   // Keep the browser chrome colour in step with the theme
@@ -132,6 +151,70 @@
   });
   paintThemeChoice();
   updateThemeColorMeta();
+
+  /* ---- Colour ---- */
+  const NAMED = [["", "Clearspring teal", "#0A7269"], ["#1E6FD9", "Ocean"], ["#4F46E5", "Indigo"], ["#7C3AED", "Violet"],
+    ["#C026D3", "Orchid"], ["#E11D48", "Rose"], ["#EA580C", "Ember"], ["#D97706", "Amber"], ["#A16207", "Gold"],
+    ["#65A30D", "Olive"], ["#15803D", "Forest"], ["#0E7490", "Lagoon"], ["#64748B", "Slate"], ["#3F3F46", "Graphite"],
+    ["#9F1239", "Wine"], ["#7C2D12", "Clay"]];
+  const toHex = (h, s, l) => {
+    const k = (n) => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+    const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return "#" + [f(0), f(8), f(4)].map((x) => Math.round(x * 255).toString(16).padStart(2, "0")).join("").toUpperCase();
+  };
+  // 24 hues round the colour wheel, each in four strengths: 96 swatches.
+  const ROWS = [[0.78, 0.5, "bright"], [0.62, 0.34, "deep"], [0.5, 0.64, "soft"], [0.26, 0.44, "muted"]];
+  const HUE_NAMES = ["red", "vermilion", "orange", "amber", "yellow", "lime", "chartreuse", "green", "green", "emerald", "jade", "teal",
+    "cyan", "sky", "azure", "blue", "blue", "indigo", "violet", "purple", "magenta", "fuchsia", "pink", "crimson"];
+  const named = document.getElementById("colNamed"), grid = document.getElementById("colGrid"), pick = document.getElementById("colPick");
+  const swatch = (val, label, show) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "col-sw"; b.setAttribute("role", "radio"); b.setAttribute("aria-label", label);
+    b.dataset.col = val; b.style.setProperty("--sw", show || val); b.title = label;
+    b.addEventListener("click", () => choose(val));
+    return b;
+  };
+  NAMED.forEach(([v, n, show]) => {
+    const b = swatch(v, n, show); b.classList.add("col-sw-named");
+    const t = document.createElement("span"); t.textContent = n; b.appendChild(t); named.appendChild(b);
+  });
+  ROWS.forEach(([sat, light, word]) => {
+    for (let i = 0; i < 24; i++) {
+      const hx = toHex(i * 15, sat, light);
+      grid.appendChild(swatch(hx, word + " " + HUE_NAMES[i]));
+    }
+  });
+  function nameOf(v) {
+    if (!v) return "Clearspring teal";
+    const n = NAMED.find((x) => x[0].toUpperCase() === v.toUpperCase());
+    if (n) return n[1];
+    const g = grid.querySelector(`[data-col="${v.toUpperCase()}"]`);
+    return g ? g.getAttribute("aria-label").replace(/^./, (c) => c.toUpperCase()) : "Your colour " + v.toUpperCase();
+  }
+  function paintColour() {
+    const v = (window.CSPalette ? CSPalette.current() : "").toUpperCase();
+    document.querySelectorAll(".col-sw").forEach((b) => {
+      const on = (b.dataset.col || "").toUpperCase() === v;
+      b.classList.toggle("on", on); b.setAttribute("aria-checked", on ? "true" : "false");
+    });
+    document.getElementById("colNowDot").style.background = v || "#0A7269";
+    document.getElementById("colNowName").textContent = nameOf(v);
+    document.getElementById("colReset").hidden = !v;
+    if (v) pick.value = v.toLowerCase();
+  }
+  function choose(v) {
+    if (window.CSPalette) CSPalette.save(v || "");
+    paintColour();
+    // Signed in: save it to the account (once they've stopped dragging the picker).
+    clearTimeout(choose.t);
+    choose.t = setTimeout(() => {
+      const signedIn = (document.querySelector('meta[name="member-signed-in"]') || {}).content === "true";
+      if (signedIn && window.PrefsSync) try { PrefsSync.run(true); } catch (e) {}
+    }, 1500);
+  }
+  pick.addEventListener("input", () => choose(pick.value.toUpperCase()));
+  document.getElementById("colReset").addEventListener("click", () => choose(""));
+  paintColour();
 
   /* ---- Text size ---- */
   const SIZE_KEY = "cs_text_size";
@@ -162,7 +245,7 @@
   /* ---- Clear local data ---- */
   document.getElementById("clearLocal").addEventListener("click", () => {
     if (!confirm("Clear highlights, notes, journal and reading progress saved on this device?")) return;
-    const keep = [THEME_KEY, SIZE_KEY];
+    const keep = [THEME_KEY, SIZE_KEY, "cs_palette"];
     Object.keys(localStorage)
       .filter((k) => k.startsWith("cs_") && !keep.includes(k))
       .forEach((k) => localStorage.removeItem(k));
