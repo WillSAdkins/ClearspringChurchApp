@@ -11,6 +11,7 @@
    static/reader-audio.js:  var p = AudioBible.player({ onChange: fn }). */
 (function () {
   "use strict";
+  if (window.AudioBible) return;        // loaded on every page by base.html; some pages include it too
   var KEY = "cs_listen";
   var BOOKS = window.CS_AUDIO_BOOKS || [];          // [[slug, name, chapters], …]
   var READERS = window.CS_AUDIO_READERS || { souer: "Bob Souer" };
@@ -28,11 +29,14 @@
       slug: INDEX[s.slug] != null ? s.slug : null,
       ch: +s.ch || 0,
       t: +s.t || 0,
-      auto: s.auto !== false
+      auto: s.auto !== false,
+      on: !!s.on,                        // was playing when the last page closed
+      active: !!s.active,                // a listening session the mini player should show
+      at: +s.at || 0
     };
   }
   function store(st) {
-    try { localStorage.setItem(KEY, JSON.stringify({ reader: st.reader, rate: st.rate, slug: st.slug, ch: st.ch, t: Math.floor(st.t || 0), auto: st.auto, at: Date.now() })); } catch (e) {}
+    try { localStorage.setItem(KEY, JSON.stringify({ reader: st.reader, rate: st.rate, slug: st.slug, ch: st.ch, t: Math.round((st.t || 0) * 10) / 10, auto: st.auto, on: !!st.on, active: !!st.active, at: Date.now() })); } catch (e) {}
   }
   function bookName(slug) { var b = BOOKS[INDEX[slug]]; return b ? b[1] : slug; }
   function chapLabel(slug, ch) { return (slug === "psalms" ? "Psalm" : bookName(slug)) + " " + ch; }
@@ -50,8 +54,14 @@
     return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(ss).padStart(2, "0");
   }
 
+  /* One player per page, shared by everything that plays the audio Bible
+     (the Listen page, the reader, the mini player): a second call adds its
+     listener to the same player instead of starting another. */
+  var shared = null, listeners = [];
   function player(opts) {
     opts = opts || {};
+    if (opts.onChange) listeners.push(opts.onChange);
+    if (shared) return shared;
     var st = load();
     var audio = document.getElementById("csAudioBible");
     if (!audio) {
@@ -62,7 +72,7 @@
     }
     var tried = 0, sleep = 0, sleepAt = 0, lastSave = 0, loaded = null, wantPlay = false, listened = {}, stand = null;
 
-    function emit(kind) { if (opts.onChange) opts.onChange(kind, api); }
+    function emit(kind) { listeners.slice().forEach(function (f) { try { f(kind, api); } catch (e) {} }); }
 
     function meta() {
       if (!("mediaSession" in navigator) || !st.slug) return;
@@ -100,7 +110,12 @@
       audio.src = src(st.reader, slug, ch, false);
       audio.playbackRate = st.rate;
       if (st.t) {
-        var seekOnce = function () { audio.removeEventListener("loadedmetadata", seekOnce); try { audio.currentTime = Math.min(st.t, (audio.duration || st.t + 1) - 1); } catch (e) {} };
+        // Keep the target: timeupdate overwrites st.t with 0 as soon as loading starts.
+        var target = st.t, seekOnce = function () {
+          audio.removeEventListener("loadedmetadata", seekOnce);
+          try { audio.currentTime = Math.min(target, (audio.duration || target + 1) - 1); } catch (e) {}
+          st.t = target;
+        };
         audio.addEventListener("loadedmetadata", seekOnce);
       }
       store(st); meta();
@@ -121,11 +136,31 @@
       wantPlay = false;
       emit("error");
     });
-    audio.addEventListener("play", function () { wantPlay = true; if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing"; emit("play"); });
+    audio.addEventListener("play", function () {
+      wantPlay = true; clearTimeout(offTimer); st.on = true; st.active = true; store(st);
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing"; emit("play");
+    });
+    // A page that's closing can pause its audio on the way out. Only count a
+    // pause as real if the page is still here a moment later, so the next
+    // page knows to carry on.
+    var offTimer = 0, leaving = false;
     audio.addEventListener("pause", function () {
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
       st.t = audio.currentTime; store(st); emit("pause");
+      if (leaving) return;
+      clearTimeout(offTimer);
+      offTimer = setTimeout(function () { if (audio.paused && !leaving) { st.on = false; store(st); } }, 400);
     });
+    function goingAway() {
+      if (!st.slug) return;
+      leaving = true;
+      st.t = audio.currentTime || st.t;
+      if (!audio.paused) st.on = true;
+      store(st);
+    }
+    window.addEventListener("pagehide", goingAway);
+    window.addEventListener("beforeunload", goingAway);
+    window.addEventListener("pageshow", function (e) { if (e.persisted) leaving = false; });
     audio.addEventListener("loadedmetadata", function () { audio.playbackRate = st.rate; position(); emit("time"); });
     audio.addEventListener("ratechange", position);
     audio.addEventListener("timeupdate", function () {
@@ -142,10 +177,10 @@
     });
     audio.addEventListener("ended", function () {
       st.t = 0; store(st);
-      if (sleep === "chapter") { sleep = 0; emit("sleep"); emit("ended"); return; }
+      if (sleep === "chapter") { sleep = 0; st.on = false; store(st); emit("sleep"); emit("ended"); return; }
       var n = st.auto ? step(st.slug, st.ch, 1) : null;
       if (n) open(n[0], n[1], 0, true);   // same element, no page load: keeps playing while locked
-      else emit("ended");
+      else { st.on = false; store(st); emit("ended"); }
     });
 
     var api = {
@@ -161,9 +196,10 @@
         wantPlay = true;
         var p = audio.play(); if (p && p.catch) p.catch(function () { emit("blocked"); });
       },
-      pause: function () { wantPlay = false; audio.pause(); },
+      pause: function () { wantPlay = false; st.on = false; store(st); audio.pause(); },
       toggle: function () { if (audio.paused) api.play(); else api.pause(); },
-      stop: function () { wantPlay = false; audio.pause(); try { audio.currentTime = 0; } catch (e) {} st.t = 0; store(st); emit("stop"); },
+      stop: function () { wantPlay = false; st.on = false; audio.pause(); try { audio.currentTime = 0; } catch (e) {} st.t = 0; store(st); emit("stop"); },
+      close: function () { wantPlay = false; st.on = false; st.active = false; audio.pause(); st.t = audio.currentTime || st.t; store(st); emit("close"); },
       seek: function (d) { if (!isFinite(audio.duration)) return; audio.currentTime = Math.max(0, Math.min(audio.duration - 0.5, audio.currentTime + d)); position(); emit("time"); },
       seekTo: function (frac) { if (isFinite(audio.duration)) { audio.currentTime = frac * audio.duration; position(); emit("time"); } },
       next: function () { var n = step(st.slug, st.ch, 1); if (n) open(n[0], n[1], 0, !audio.paused || wantPlay); },
@@ -192,9 +228,11 @@
         return "Sleep " + left + "m";
       },
       sleeping: function () { return !!sleep; },
+      playing: function () { return !audio.paused; },
       times: function () { return [fmt(audio.currentTime), fmt(audio.duration), isFinite(audio.duration) && audio.duration ? audio.currentTime / audio.duration : 0]; },
       step: step, chapLabel: chapLabel, src: src
     };
+    shared = api;
     return api;
   }
 

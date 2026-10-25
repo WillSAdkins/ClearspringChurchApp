@@ -198,7 +198,12 @@
 
   /* ---------------------------------------------------------------- start */
   var start = root.getAttribute("data-start");
-  if (start) {
+  // Arriving from another page mid-chapter: the mini player carries straight
+  // on from where it was, so don't load anything over the top of it.
+  var carrying = st.on && st.active && Date.now() - (st.at || 0) < 20000;
+  if (carrying) {
+    if (st.slug) showBook(st.slug);
+  } else if (start) {
     var parts = start.split("/");
     p.open(parts[0], +parts[1], st.slug === parts[0] && st.ch === +parts[1] ? st.t : 0, false);
     showBook(parts[0]);

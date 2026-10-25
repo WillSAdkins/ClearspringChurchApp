@@ -3028,6 +3028,19 @@ def page_photo(key):
     return None
 
 
+_AUDIO_JS = None
+
+
+@app.context_processor
+def inject_audio_bible():
+    """The audio Bible's books and narrators, for the mini player on every page."""
+    global _AUDIO_JS
+    if _AUDIO_JS is None:
+        _AUDIO_JS = {"books": audio_bible.books_for_js(), "readers": {k: v[0] for k, v in audio_bible.READERS.items()},
+                     "default": audio_bible.DEFAULT_READER}
+    return {"audio_bible_js": _AUDIO_JS}
+
+
 @app.context_processor
 def inject_scenes():
     def banner(key):

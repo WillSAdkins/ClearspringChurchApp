@@ -208,6 +208,9 @@
   // If this is where you stopped listening, offer to pick up from there.
   if (canRecord && prefs.mode === "recorded") {
     var last = AudioBible.load();
+    // Still listening from another page: join the same player, so this
+    // page's bar shows it (and the mini player steps aside).
+    if (last.active) recorded();
     if (last.slug === slug && last.ch === chapter && last.t > 20) {
       bar.hidden = false;
       label.textContent = "Resume from " + AudioBible.fmt(last.t);

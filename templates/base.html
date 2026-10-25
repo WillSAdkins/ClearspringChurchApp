@@ -47,7 +47,10 @@
   } catch (e) {}
 })();
 </script>
-<script src="{{ url_for('static', filename='palette.js', v='51') }}"></script>
+<script src="{{ url_for('static', filename='palette.js', v='52') }}"></script>
+<script>window.CS_AUDIO_BOOKS = {{ audio_bible_js.books|tojson }}; window.CS_AUDIO_READERS = {{ audio_bible_js.readers|tojson }}; window.CS_AUDIO_DEFAULT_READER = {{ audio_bible_js.default|tojson }};</script>
+<script src="{{ url_for('static', filename='audio-bible.js', v='52') }}"></script>
+<script src="{{ url_for('static', filename='mini-player.js', v='52') }}" defer></script>
 <title>{% block title %}Clearspring Church, Cheltenham{% endblock %}</title>
 
 <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -57,7 +60,7 @@
 <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ url_for('static', filename='fonts/literata.woff2') }}" as="font" type="font/woff2" crossorigin>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='51') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='52') }}">
 <script>
 // Attach the CSRF token to every same-origin state-changing fetch, so
 // individual scripts don't each have to remember to do it.
