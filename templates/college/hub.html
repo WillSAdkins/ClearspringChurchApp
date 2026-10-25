@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Bible College · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib bc">
+  {{ head("Bible College", url_for('bible_tab', tab='study'), "Study", "Mondays, 8–9pm") }}
+  <p class="bible-lede">An hour of teaching through the Bible every Monday evening, straight after Prayer and Worship. Open to anyone. Follow along here: read the passage before you come, look back over the teaching, and keep your own notes.</p>
+
+  {% if upcoming %}
+  <a class="bc-next" href="{{ url_for('college_session', cid=upcoming.course_id, n=upcoming.n) }}">
+    <span class="bc-next-k">{{ 'Tonight' if upcoming.session_date == today else (upcoming.session_date|pretty_date) }} · 8pm</span>
+    <b>{{ upcoming.title }}</b>
+    <span>{{ upcoming.course_title }}{% if upcoming.passage %} · {{ upcoming.passage }}{% endif %}</span>
+    <span class="bc-next-go">Read ahead →</span>
+  </a>
+  {% endif %}
+
+  <section class="lib-section">
+    <h2 class="bible-h2">Courses</h2>
+    {% if not courses %}<p class="lib-note">New courses will appear here.</p>{% endif %}
+    <ul class="art-list">
+      {% for c in courses %}
+      <li><a href="{{ url_for('college_course', cid=c.id) }}">
+        <b>{{ c.title }}{% if c.status != 'published' %} <span class="sn-kind">Draft</span>{% endif %}</b>
+        {% if c.subtitle %}<span>{{ c.subtitle }}</span>{% endif %}
+        <span>{{ c.sessions }} session{{ 's' if c.sessions != 1 }}{% if c.first_date %} · from {{ c.first_date|pretty_date }}{% endif %}{% if c.term %} · {{ c.term }}{% endif %}</span>
+        <span class="bc-prog" data-course="{{ c.id }}" data-total="{{ c.sessions }}"></span>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% if staff %}<p class="lib-note"><a href="{{ url_for('admin_college') }}">Manage courses in Admin →</a></p>{% endif %}
+</main>
+<script src="{{ url_for('static', filename='college.js') }}"></script>
+{% endblock %}

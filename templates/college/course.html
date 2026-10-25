@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ c.title }} · Bible College{% endblock %}
+{% block content %}
+<main class="bible lib bc" data-course="{{ c.id }}">
+  {{ head(c.title, url_for('college_hub'), "Bible College", "Bible College" ~ (' · ' ~ c.term if c.term else '')) }}
+  {% if c.status != 'published' %}<p class="lib-note bc-draft">Draft: only staff can see this course. Publish it in Admin when it’s ready.</p>{% endif %}
+  {% if c.subtitle %}<p class="bible-lede">{{ c.subtitle }}</p>{% endif %}
+  {% if c.description %}<div class="lib-article">{{ c.description|college_text }}</div>{% endif %}
+
+  <div class="bc-progress" id="bcProgress" data-total="{{ sessions|length }}" hidden>
+    <span class="dp-bar"><i></i></span><small></small>
+  </div>
+
+  <ol class="bc-sessions">
+    {% for s in sessions %}
+    <li class="{{ 'bc-next-s' if next_s and s.id == next_s.id }}" data-n="{{ s.n }}">
+      <a href="{{ url_for('college_session', cid=c.id, n=s.n) }}">
+        <span class="bc-n">{{ s.n }}</span>
+        <span class="bc-t"><b>{{ s.title }}</b>
+          <small>{% if s.session_date %}{{ s.session_date|pretty_date }}{% if next_s and s.id == next_s.id %} · next{% endif %}{% endif %}{% if s.passage %}{{ ' · ' if s.session_date }}{{ s.passage }}{% endif %}</small></span>
+        <i class="bc-tick" aria-hidden="true"></i>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+  {% if not sessions %}<p class="lib-note">Sessions will appear here soon.</p>{% endif %}
+  {% if staff %}<p class="lib-note"><a href="{{ url_for('admin_college_edit', cid=c.id) }}">Edit this course in Admin →</a></p>{% endif %}
+</main>
+<script src="{{ url_for('static', filename='college.js') }}"></script>
+{% endblock %}

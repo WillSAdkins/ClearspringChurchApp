@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% from "_scene.html" import banner with context %}
+{% set show_back = false %}{# this page draws its own back link #}
+{% from "icons.html" import icon %}
+{% from "_prayer_nav.html" import prayer_nav %}
+{% block title %}Prayer · Clearspring{% endblock %}
+{% block content %}
+
+<main class="bible">
+
+  <header class="bible-head">
+    <span style="width:2.4rem"></span>
+    <h1 class="bible-title">Prayer</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+  {{ banner('prayer') }}
+
+  {{ prayer_nav('wall') }}
+
+  <a href="{{ url_for('prayer_new') }}" class="prayer-cta">
+    {{ icon('hands', 20) }}
+    <span>Share a prayer request</span>
+    {{ icon('chevron-right', 18) }}
+  </a>
+
+  <a href="{{ url_for('prayer_session') }}" class="prayer-now-link">{{ icon('sunrise', 18) }}<span>Pray now: a guided few minutes</span>{{ icon('chevron-right', 16) }}</a>
+
+  {% if praises %}
+  <section class="prayer-block">
+    <h2 class="prayer-h2">Answered prayers</h2>
+    <div class="praise-rail">
+      {% for p in praises %}
+        <article class="praise-card">
+          <span class="praise-label">Praise report</span>
+          <p class="praise-body">{{ p['body'] }}</p>
+          {% if p['update_text'] %}<p class="praise-update">{{ p['update_text'] }}</p>{% endif %}
+          {% if p['author_name'] %}<p class="praise-author">— {{ p['author_name'] }}</p>{% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="prayer-block">
+    <h2 class="prayer-h2">Prayer requests</h2>
+
+    {% if not requests %}
+      <div class="saved-empty">
+        <span class="saved-empty-icon">{{ icon('hands', 26) }}</span>
+        <p class="saved-empty-title">No requests yet</p>
+        <p class="saved-empty-sub">Be the first to share something for the church to pray about.</p>
+        <a href="{{ url_for('prayer_new') }}" class="saved-empty-cta">Share a request</a>
+      </div>
+    {% endif %}
+
+    <div class="prayer-list">
+      {% for p in requests %}
+        <article class="prayer-item" data-id="{{ p['id'] }}">
+          <p class="prayer-body">{{ p['body'] }}</p>
+          {% if p['update_text'] %}<p class="prayer-update"><b>Update {{ p['update_at']|ago }}:</b> {{ p['update_text'] }}</p>{% endif %}
+          <div class="prayer-foot">
+            <span class="prayer-author">{{ p['author_name'] or 'Anonymous' }} · {{ p['submitted_at']|ago }}</span>
+            <a class="prayer-keep" href="{{ url_for('prayer_journal', add=p['body'][:300]) }}" aria-label="Add to my prayers" title="Add to my prayers">{{ icon('plus', 16) }}</a>
+            <form class="prayer-report" method="post" action="{{ url_for('prayer_report', prayer_id=p['id']) }}" onsubmit="var r=prompt('What’s wrong with this request? It will come off the wall until the church staff have looked at it.'); if(r===null) return false; this.reason.value=r; return true;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="reason"><button type="submit" aria-label="Report this request">Report</button></form>
+            <button type="button" class="pray-btn" data-id="{{ p['id'] }}">
+              {{ icon('hands', 16) }}
+              <span class="pray-label">Praying</span>
+              <span class="pray-count">{{ p['pray_count'] }}</span>
+            </button>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  const KEY = "cs_prayed";
+  function prayed() {
+    try { return new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); }
+    catch (e) { return new Set(); }
+  }
+  function remember(id) {
+    const s = prayed(); s.add(id);
+    localStorage.setItem(KEY, JSON.stringify([...s]));
+  }
+
+  // Requests shared from this device: offer to post news or say it's answered.
+  let mine = {};
+  try { mine = JSON.parse(localStorage.getItem("cs_my_requests") || "{}"); } catch (e) {}
+  document.querySelectorAll(".prayer-item").forEach((item) => {
+    const id = item.dataset.id, token = mine[id];
+    if (!token) return;
+    const box = document.createElement("div");
+    box.className = "prayer-own";
+    box.innerHTML = '<p class="prayer-own-k">You shared this</p>';
+    const ta = document.createElement("textarea");
+    ta.rows = 2; ta.maxLength = 1000; ta.placeholder = "Any news to share? (optional)";
+    const row = document.createElement("div"); row.className = "prayer-own-row";
+    const mk = (label, cls) => { const b = document.createElement("button"); b.type = "button"; b.className = "prayer-own-btn " + (cls || ""); b.textContent = label; row.appendChild(b); return b; };
+    const upd = mk("Post update"), ans = mk("It’s been answered!", "primary"), rem = mk("Take it down", "quiet");
+    const msg = document.createElement("p"); msg.className = "prayer-own-msg";
+    async function send(path, body) {
+      const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ token }, body)) });
+      return res.json();
+    }
+    upd.addEventListener("click", async () => {
+      if (!ta.value.trim()) { ta.focus(); return; }
+      const d = await send(`/prayer/${id}/update`, { text: ta.value });
+      msg.textContent = d.ok ? (d.held ? "Thanks. A pastor will read this before it’s shown." : "Update posted.") : (d.error || "Couldn’t post that.");
+      if (d.ok && !d.held) location.reload();
+    });
+    ans.addEventListener("click", async () => {
+      const d = await send(`/prayer/${id}/update`, { text: ta.value, answered: true });
+      msg.textContent = d.ok ? "Wonderful! It’s now with the answered prayers." : (d.error || "Couldn’t update that.");
+      if (d.ok) setTimeout(() => location.reload(), 900);
+    });
+    rem.addEventListener("click", async () => {
+      if (!confirm("Take this request down from the wall?")) return;
+      const d = await send(`/prayer/${id}/remove`, {});
+      if (d.ok) item.remove();
+    });
+    box.append(ta, row, msg);
+    item.appendChild(box);
+  });
+
+  const already = prayed();
+  document.querySelectorAll(".pray-btn").forEach((btn) => {
+    const id = parseInt(btn.dataset.id, 10);
+    if (already.has(id)) {
+      btn.classList.add("done");
+      btn.querySelector(".pray-label").textContent = "Prayed";
+    }
+    btn.addEventListener("click", async () => {
+      if (btn.classList.contains("done")) return;
+      btn.classList.add("done");
+      btn.querySelector(".pray-label").textContent = "Prayed";
+      remember(id);
+      try {
+        const res = await fetch(`/prayer/${id}/pray`, { method: "POST" });
+        const data = await res.json();
+        if (data.ok) btn.querySelector(".pray-count").textContent = data.count;
+      } catch (e) { /* count will catch up on next load */ }
+    });
+  });
+})();
+</script>
+
+{% endblock %}

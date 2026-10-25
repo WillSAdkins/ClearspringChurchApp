@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}{{ c['title'] }} · Courses · Clearspring{% endblock %}
+{% block content %}
+<main class="bible wc" id="wc" data-slug="{{ c['slug'] }}" data-total="{{ c['lessons'] }}">
+  <header class="bible-head">
+    <a href="{{ url_for('watch_learn') }}" class="bible-back" aria-label="Back to Courses">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title wc-headt">Course</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+
+  {% if c['status'] != 'live' %}<p class="admin-alert">Only staff can see this course ({{ c['status'] }}{% if c['problem'] %}: {{ c['problem'] }}{% endif %}).</p>{% endif %}
+
+  <div class="wc-player" id="wcPlayer">
+    <button type="button" class="wc-poster" id="wcPoster" aria-label="Play {{ c['title'] }}">
+      {% if c['lesson_list'] %}<img src="https://i.ytimg.com/vi/{{ c['lesson_list'][0]['video_id'] }}/hqdefault.jpg" alt="" id="wcPosterImg">{% endif %}
+      <span class="wc-play">{{ icon('play', 30) }}</span>
+      <span class="wc-poster-t" id="wcPosterT">Start the course</span>
+    </button>
+  </div>
+
+  <section class="wc-head">
+    <p class="wc-kicker"><span class="wl-badge lv-{{ c['level'] }}">{{ c['level_name'] }}</span> {{ c['subject_name'] }}</p>
+    <h2 class="wc-title">{{ c['title'] }}</h2>
+    <p class="wc-by">{% if c['teacher'] %}{{ c['teacher'] }}{% endif %}{% if c['provider'] %}{% if c['teacher'] %} · {% endif %}{% if c['provider_url'] %}<a href="{{ c['provider_url'] }}" target="_blank" rel="noopener" data-external>{{ c['provider'] }}</a>{% else %}{{ c['provider'] }}{% endif %}{% endif %}</p>
+    <div class="wc-progress" aria-live="polite">
+      <span class="wc-bar"><i id="wcBar"></i></span>
+      <span id="wcProgT">{% if c['lessons'] %}{{ c['lessons'] }} lesson{{ 's' if c['lessons'] != 1 }}{% endif %}{% if c['seconds'] %} · {{ fmt_length(c['seconds']) }}{% endif %}</span>
+    </div>
+    {% if c['about'] %}<p class="wc-about">{{ c['about'] }}</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="wcLessonsH">
+    <div class="wc-lessons-head">
+      <h3 class="wl-h" id="wcLessonsH">Lessons</h3>
+      <button type="button" class="pl-mini" id="wcReset" hidden>Start again</button>
+    </div>
+    <ol class="wc-lessons" id="wcLessons">
+      {% for l in c['lesson_list'] %}
+      <li data-n="{{ l['n'] }}" data-vid="{{ l['video_id'] }}">
+        <button type="button" class="wc-lesson">
+          <span class="wc-n">{{ l['n'] }}</span>
+          <span class="wc-lt">{{ l['title'] or 'Lesson ' ~ l['n'] }}</span>
+          <span class="wc-len">{% if l['seconds'] %}{{ fmt_length(l['seconds']) }}{% endif %}</span>
+          <span class="wc-tick" aria-hidden="true"></span>
+        </button>
+      </li>
+      {% endfor %}
+    </ol>
+    {% if c['playlist_id'] and c['lessons'] > c['lesson_list']|length %}
+      <p class="wc-more" id="wcMore">And {{ c['lessons'] - c['lesson_list']|length }} more lessons. They play on from the last one in the list.</p>
+    {% elif c['playlist_id'] and c['lesson_list']|length >= 15 %}
+      <p class="wc-more" id="wcMore">There may be more lessons after these. They play on from the last one in the list.</p>
+    {% endif %}
+  </section>
+
+  <section class="wc-notes" aria-labelledby="wcNotesH">
+    <h3 class="wl-h" id="wcNotesH">My notes</h3>
+    <textarea id="wcNotes" rows="5" maxlength="20000" placeholder="Thoughts, questions to bring to your group, things to look up…" aria-labelledby="wcNotesH"></textarea>
+    <p class="wc-saved" id="wcSaved" aria-live="polite"></p>
+  </section>
+
+  <p class="wc-yt">
+    <a href="{% if c['playlist_id'] %}https://www.youtube.com/playlist?list={{ c['playlist_id'] }}{% elif c['lesson_list'] %}https://www.youtube.com/watch?v={{ c['lesson_list'][0]['video_id'] }}{% endif %}" target="_blank" rel="noopener" data-external>Open on YouTube</a>
+    · Videos belong to {{ c['provider'] or 'their makers' }} and play in YouTube’s privacy-enhanced mode.
+  </p>
+
+  {% if more %}
+  <section aria-labelledby="wcMoreH">
+    <h3 class="wl-h" id="wcMoreH">You might also like</h3>
+    <div class="wl-row">
+      {% for m in more %}
+      <a class="wl-card wl-card-mini" href="{{ url_for('watch_course', slug=m['slug']) }}">
+        <span class="wl-thumb">{% if m['thumb'] %}<img src="{{ m['thumb'] }}" alt="" loading="lazy">{% endif %}<span class="wl-badge lv-{{ m['level'] }}">{{ m['level_name'] }}</span></span>
+        <span class="wl-card-body"><span class="wl-card-t">{{ m['title'] }}</span><span class="wl-card-by">{{ m['teacher'] or m['provider'] }}</span></span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</main>
+<script id="wcData" type="application/json">{{ {'playlist': c['playlist_id'], 'lessons': c['lesson_list']|map(attribute='video_id')|list, 'title': c['title']}|tojson }}</script>
+<script src="{{ url_for('static', filename='learn.js') }}"></script>
+<script src="{{ url_for('static', filename='watch-course.js') }}"></script>
+{% endblock %}

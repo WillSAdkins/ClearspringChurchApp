@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Page pictures · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page pc">
+  <div class="admin-header">
+    <div><p class="eyebrow">Staff area</p><h1>Page pictures</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Board</a></div>
+  </div>
+  <p class="pc-lead">Each main page has an illustrated banner that moves as people scroll. Upload a photo of the church for any page and it's used instead, with the same movement. Wide, landscape photos work best; they're resized on your device before uploading. Only use photos you have permission to use, and ask before showing children's faces.</p>
+
+  <div class="pc-grid">
+    {% for p in pages %}
+    <section class="pc-card" id="p-{{ p.key }}">
+      <div class="pc-preview">
+        {% if p.photo %}<img src="{{ p.photo }}" alt="">{% elif p.scene %}<div class="pc-scene">{{ p.scene }}</div>{% else %}<img src="{{ url_for('static', filename='hero-worship.jpg') }}" alt="">{% endif %}
+        {% if p.line %}<span class="pc-line">{{ p.line }}</span>{% endif %}
+      </div>
+      <div class="pc-body">
+        <b>{{ p.title }}</b>
+        <small>{{ 'Your photo' if p.photo else ('The original worship photo' if p.key == 'home' else 'Illustration') }}</small>
+        <form method="post" enctype="multipart/form-data" class="pc-upload" data-key="{{ p.key }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="key" value="{{ p.key }}">
+          <label class="btn-ghost small pc-pick">{{ 'Change photo' if p.photo else 'Upload a photo' }}
+            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" hidden>
+          </label>
+        </form>
+        {% if p.photo %}
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="key" value="{{ p.key }}"><input type="hidden" name="action" value="remove">
+          <button type="submit" class="btn-ghost small">{{ 'Use the original' if p.key == 'home' else 'Use the illustration' }}</button>
+        </form>
+        {% endif %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+</main>
+<style>
+  .pc-lead { max-width: 44rem; color: var(--muted); line-height: 1.6; margin: 0 0 1.25rem; }
+  .pc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1rem; }
+  .pc-card { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--surface); }
+  .pc-preview { position: relative; height: 8.5rem; overflow: hidden; background: var(--surface-2); }
+  .pc-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pc-scene { position: absolute; inset: 0; }
+  .pc-scene .sc-layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .pc-line { position: absolute; left: .75rem; right: .75rem; bottom: .5rem; color: #fff; font: 600 var(--fs-sm) var(--display); text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+  .pc-body { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .75rem; }
+  .pc-body b { flex: 1 1 100%; }
+  .pc-body small { flex: 1 1 100%; color: var(--muted); font-size: var(--fs-xs); margin-top: -.4rem; }
+  .pc-pick { cursor: pointer; }
+  .pc-busy { opacity: .6; pointer-events: none; }
+</style>
+<script>
+(function () {
+  // Shrink the photo on this device first: quicker uploads, and phone
+  // photos (often 5-10 MB) fit comfortably.
+  function shrink(file, max) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var s = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { b ? resolve(b) : reject(); }, "image/jpeg", 0.84);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(); };
+      img.src = url;
+    });
+  }
+  document.querySelectorAll(".pc-upload input[type=file]").forEach(function (input) {
+    input.addEventListener("change", function () {
+      var form = input.closest("form"), file = input.files && input.files[0];
+      if (!file) return;
+      form.closest(".pc-card").classList.add("pc-busy");
+      shrink(file, 1800).then(function (blob) {
+        var fd = new FormData(form); fd.set("photo", blob, "photo.jpg");
+        return fetch(form.action || location.pathname, { method: "POST", body: fd });
+      }, function () { form.submit(); return null; })
+      .then(function (r) { if (r) location.reload(); })
+      .catch(function () { form.submit(); });
+    });
+  });
+})();
+</script>
+{% endblock %}

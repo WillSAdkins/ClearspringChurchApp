@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Next steps · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Next steps', url_for('grow_hub'), 'Back to Grow') }}
+  <p class="bible-lede">Ready to go further at Clearspring? Here’s how.</p>
+  <nav class="gw-jump" aria-label="On this page">
+    {% for key, emoji, title in sections %}<a href="#{{ key[5:] }}">{{ emoji }} {{ title }}</a>{% endfor %}
+  </nav>
+  {% for key, emoji, title in sections %}
+  <section class="gw-ns" id="{{ key[5:] }}">
+    <h2>{{ emoji }} {{ title }}</h2>
+    <div class="gw-ns-body">{{ info[key]|paras }}</div>
+    {% if key == 'next_serve' %}<a class="gw-chip" href="{{ url_for('grow_gifts') }}">🎁 Discover your gifts</a>{% endif %}
+    {% if key == 'next_group' %}<a class="gw-chip" href="{{ url_for('ministries') }}">{{ icon('users', 16) }} Groups and ministries</a>{% endif %}
+  </section>
+  {% endfor %}
+  <section class="gw-try">
+    <h3>Talk to someone</h3>
+    <div>{{ info['next_contact']|paras }}</div>
+    <a class="ps-go" href="{{ url_for('ask_question') }}">Get in touch</a>
+  </section>
+</main>
+{% endblock %}

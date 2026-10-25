@@ -1,0 +1,8 @@
+{# An illustrated (or photo) banner that moves with the scroll. #}
+{% macro banner(key) -%}
+{% set b = page_banner(key) %}
+<div class="sc sc-{{ key }}{{ ' sc-has-photo' if b.photo }}" data-scene>
+  <div class="sc-art">{% if b.photo %}<img class="sc-layer sc-photo" data-depth="0.25" src="{{ b.photo }}" alt="" decoding="async">{% else %}{{ b.scene }}{% endif %}</div>
+  {% if b.line %}<p class="sc-line">{{ b.line }}</p>{% endif %}
+</div>
+{%- endmacro %}

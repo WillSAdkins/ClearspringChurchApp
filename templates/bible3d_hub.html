@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}3D Bible world · Clearspring{% endblock %}
+{% block content %}
+<main class="bible">
+  {{ head('3D Bible world', url_for('bible_hub'), 'Back to Study') }}
+  <p class="bible-lede">Walk around the places and things the Bible describes. The models are built to the measurements the Bible itself gives, so you can see their real size, with a person standing alongside for scale.</p>
+  <div class="b3h-grid">
+    {% for m in models %}
+    <a class="b3h-card{{ ' b3h-wide' if loop.first }}" href="{{ url_for('bible_3d', slug=m.slug) }}">
+      <span class="b3h-emoji" aria-hidden="true">{{ m.emoji }}</span>
+      <b>{{ m.title }}</b>
+      <span>{{ m.sub }}</span>
+      {% if m.ref %}<small>{{ m.ref }}</small>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  <p class="b3h-note">Drag to turn, pinch or scroll to zoom, and tap a label to learn more. The relief map is approximate: heights are exaggerated three times so the hills and the Jordan valley stand out.</p>
+</main>
+<style>
+  .b3h-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; margin: 1rem 0; }
+  .b3h-card { display: grid; gap: .25rem; align-content: start; padding: 1rem; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; min-width: 0; }
+  .b3h-wide { grid-column: 1 / -1; background: var(--invert-bg); border-color: var(--invert-bg); color: var(--invert-ink); }
+  .b3h-wide span:not(.b3h-emoji) { color: var(--invert-muted) !important; }
+  .b3h-emoji { font-size: 1.75rem; }
+  .b3h-card b { font: 600 var(--fs-md) var(--display); }
+  .b3h-card span:not(.b3h-emoji) { font-size: var(--fs-sm); color: var(--muted); line-height: 1.4; }
+  .b3h-card small { font-size: var(--fs-xs); color: var(--accent); font-weight: 600; }
+  .b3h-wide small { color: var(--invert-ink); }
+  .b3h-note { font-size: var(--fs-sm); color: var(--muted); line-height: 1.55; }
+</style>
+{% endblock %}

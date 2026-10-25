@@ -1,0 +1,113 @@
+/* Clearspring Arcade: the look Finn gave Rock Slinger, for every game.
+   A pixel title screen ("cabinet") before each game, and a night-time
+   arcade skin while playing. Loaded only on game pages (see _game_head.html). */
+@font-face { font-family: "Press Start 2P"; src: url("fonts/pressstart2p.woff2") format("woff2"); font-display: swap; }
+
+body.arcade {
+  --px-font: "Press Start 2P", ui-monospace, monospace;
+  --gold: #F3C623; --gold-lo: #C99B0E; --gold-hi: #FFE27A; --red: #8E1B1B;
+  --acc: var(--gold); --shade: var(--red);
+  /* Night-time arcade palette: every part of the game picks it up. */
+  --bg: #1B1B21; --surface: #26262E; --surface-2: #30303A; --white: #26262E;
+  --ink: #F4F1E8; --muted: #B3AFBF; --line: #3D3D48;
+  --accent: #F3C623; --accent-soft: #FFE27A; --accent-fill: #F3C623; --on-accent: #231A00; --on-accent-fill: #231A00;
+  --spring: #F3C623; --wash: rgba(243, 198, 35, .14); --glass: rgba(27, 27, 33, .86);
+  --invert-bg: #F3C623; --invert-ink: #231A00; --invert-muted: rgba(35, 26, 0, .7);
+  --shadow-lg: 0 18px 40px -18px rgba(0, 0, 0, .8);
+  background: #1B1B21 radial-gradient(120% 60% at 50% 0%, #2E2E36 0%, #1B1B21 70%) fixed;
+  color: var(--ink);
+}
+body.arcade::before {   /* faint pixel stars behind everything */
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .35;
+  background-image: radial-gradient(#fff 1px, transparent 1.5px), radial-gradient(#fff 1px, transparent 1.5px);
+  background-size: 61px 53px, 97px 79px; background-position: 9px 13px, 37px 29px;
+}
+
+/* ---- header ---- */
+body.arcade .gh-back { border-radius: 0; background: #111; color: #fff; border: 0; box-shadow: 0 0 0 2px #555, 3px 3px 0 2px var(--shade); }
+body.arcade .gh-k { font: 8px/1.6 var(--px-font); color: var(--acc); letter-spacing: .5px; text-transform: uppercase; }
+body.arcade .gh-title { font: 14px/1.5 var(--px-font); letter-spacing: 0; color: #fff; margin-top: .3rem; text-shadow: 2px 2px 0 var(--shade); }
+body.arcade .gh-emoji { display: none; }
+body.arcade .gh-tag { color: var(--muted); margin-top: .4rem; }
+
+/* ---- the title screen ---- */
+.arc-cab {
+  --ground: #4A4038; --ground2: #3C342D;
+  position: relative; overflow: hidden; isolation: isolate;
+  display: grid; justify-items: center; align-content: start; gap: .25rem;
+  max-width: 40rem; margin: 0 auto 1rem; min-height: min(32rem, 70vh); padding: 1.1rem 1rem 3.4rem;
+  color: #fff; text-align: center;
+  background: radial-gradient(circle at 50% 108%, color-mix(in srgb, var(--acc) 22%, transparent), transparent 55%), linear-gradient(#2E2E33, #232327);
+  box-shadow: inset 0 0 0 3px #111, 0 10px 30px rgba(0, 0, 0, .3);
+}
+.arc-wrap { padding: 0 1rem; }
+.arc-cab::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .5;
+  background-image: radial-gradient(#fff 1px, transparent 1.5px), radial-gradient(#fff 1px, transparent 1.5px);
+  background-size: 53px 47px, 89px 71px; background-position: 7px 11px, 31px 23px;
+  animation: arc-twinkle 4s steps(2) infinite;
+}
+@keyframes arc-twinkle { 50% { opacity: .25; } }
+.arc-by { margin: 0 0 .8rem; }
+.arc-by span { display: inline-block; font: 9px/1 var(--px-font); letter-spacing: .5px; color: var(--acc);
+  padding: .45rem .6rem; border: 2px solid var(--acc); box-shadow: 2px 2px 0 var(--shade); text-transform: uppercase; }
+.arc-sprite { width: 112px; height: auto; image-rendering: pixelated; margin: .6rem 0 .2rem; filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, .45));
+  animation: arc-bob 1.2s steps(2) infinite; }
+@keyframes arc-bob { 50% { transform: translateY(-6px); } }
+.arc-logo { margin: .8rem 0 .3rem; display: grid; gap: .5rem; font: 400 clamp(1.25rem, 7.4vw, 2.1rem)/1.1 var(--px-font); color: var(--acc);
+  text-shadow: 3px 3px 0 var(--shade), 6px 6px 0 rgba(0, 0, 0, .45); letter-spacing: 1px; text-transform: uppercase; }
+.arc-tag { margin: .5rem 0 0; max-width: 22rem; font-size: var(--fs-sm); line-height: 1.5; color: rgba(255, 255, 255, .8); }
+.arc-play { appearance: none; cursor: pointer; margin: 1rem 0 .5rem; padding: 1rem 2.4rem;
+  font: 16px/1 var(--px-font); color: #231A00; background: var(--gold); border: 0;
+  box-shadow: inset -4px -4px 0 var(--gold-lo), inset 4px 4px 0 var(--gold-hi), 0 0 0 3px #111, 5px 5px 0 3px var(--shade); }
+.arc-play:active { transform: translate(3px, 3px); box-shadow: inset -4px -4px 0 var(--gold-lo), inset 4px 4px 0 var(--gold-hi), 0 0 0 3px #111, 2px 2px 0 3px var(--shade); }
+.arc-play:focus-visible { outline: 3px solid #fff; outline-offset: 6px; }
+.arc-press { margin: .3rem 0 0; font: 9px/1 var(--px-font); color: rgba(255, 255, 255, .7); animation: arc-blink 1.1s steps(1) infinite; }
+@keyframes arc-blink { 50% { opacity: 0; } }
+.arc-lb { margin-top: .8rem; font: 9px/1.6 var(--px-font); color: var(--acc); text-decoration: none; }
+.arc-lb:hover { text-decoration: underline; }
+.arc-ground { position: absolute; left: 0; right: 0; bottom: 0; height: 1.6rem; z-index: 0;
+  background: repeating-linear-gradient(90deg, var(--ground) 0 12px, var(--ground2) 12px 24px); box-shadow: 0 -3px 0 color-mix(in srgb, var(--ground) 70%, #fff); }
+/* Until Play is pressed, the game waits behind the title screen. */
+body.arcade.arc-wait .board, body.arcade.arc-wait .site-nav ~ * .board { display: none; }
+body.arcade.arc-on .arc-wrap { display: none; }
+
+/* ---- while playing ---- */
+body.arcade .board { max-width: 40rem; }
+body.arcade .board [class$="-stats"], body.arcade .board .fb-scoreboard {
+  background: #111; color: #fff; border: 0; border-radius: 0;
+  box-shadow: 0 0 0 3px #3D3D48, 4px 4px 0 3px rgba(0, 0, 0, .5); font-family: var(--px-font); font-size: 9px; line-height: 1.8; letter-spacing: .3px;
+}
+body.arcade .board [class$="-stats"] strong, body.arcade .board .fb-scoreboard strong { color: var(--acc); font-weight: 400; }
+body.arcade .board .btn-primary {
+  border-radius: 0; color: #231A00; background: var(--gold); border: 0; font: 11px/1.2 var(--px-font); letter-spacing: .3px; padding: .9rem 1.2rem;
+  box-shadow: inset -3px -3px 0 var(--gold-lo), inset 3px 3px 0 var(--gold-hi), 0 0 0 3px #111, 4px 4px 0 3px var(--shade);
+}
+body.arcade .board .btn-primary:active { transform: translate(2px, 2px); }
+body.arcade .board .btn-ghost { border-radius: 0; font: 9px/1.2 var(--px-font); letter-spacing: .3px; color: #fff; background: #111;
+  border: 0; box-shadow: 0 0 0 2px #555; padding: .6rem .8rem; }
+body.arcade .board h2, body.arcade .board h3 { font-family: var(--px-font); font-weight: 400; font-size: 12px; line-height: 1.6; letter-spacing: .3px; color: var(--acc); }
+/* Panels and end-of-game boxes get a pixel frame. */
+body.arcade .board [class$="-panel"], body.arcade .board [class$="-end"], body.arcade .board [class*="-result"],
+body.arcade .board [class*="question-box"], body.arcade .board [class$="-setup"], body.arcade .board .game-end {
+  border-radius: 0 !important; box-shadow: 0 0 0 3px #111, 5px 5px 0 3px rgba(0, 0, 0, .45);
+}
+body.arcade .board canvas { image-rendering: pixelated; box-shadow: 0 0 0 3px #111, 0 0 0 6px #3D3D48; border-radius: 0; }
+body.arcade .site-nav { border-radius: 0; box-shadow: 0 0 0 3px #111, 0 -2px 18px rgba(0, 0, 0, .5); }
+
+@media (prefers-reduced-motion: reduce) {
+  .arc-cab::before, .arc-sprite, .arc-press { animation: none !important; }
+}
+
+/* ---- the games hub ---- */
+body.arcade .quest-main { padding-top: .5rem; }
+body.arcade .arc-tile { border-radius: 0 !important; background: #232327 !important; color: #fff;
+  box-shadow: 0 0 0 3px #111, inset 0 0 0 2px color-mix(in srgb, var(--acc) 45%, transparent), 4px 4px 0 3px rgba(0, 0, 0, .45) !important; }
+body.arcade .arc-tile::before { display: none; }
+body.arcade .arc-tile .game-name { font: 10px/1.5 var(--px-font); color: var(--acc); letter-spacing: .3px; text-transform: uppercase; }
+body.arcade .arc-tile .game-desc { color: rgba(255, 255, 255, .72); }
+.arc-tile-sprite { width: 56px; height: auto; image-rendering: pixelated; filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, .5)); margin-bottom: .3rem; }
+body.arcade .arc-tile:hover .arc-tile-sprite { animation: arc-bob .6s steps(2) infinite; }
+body.arcade .game-cup { border-radius: 0; background: #111; color: var(--gold); box-shadow: 0 0 0 2px #555; }
+body.arcade .game-feature { border-radius: 0 !important; box-shadow: 0 0 0 3px #111, 5px 5px 0 3px rgba(0, 0, 0, .45) !important; }
+html:has(body.arcade) { background: #1B1B21; }

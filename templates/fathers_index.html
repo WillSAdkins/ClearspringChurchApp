@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_w6.html" import head %}
+{% block title %}The early church on the Bible · Clearspring{% endblock %}
+{% block content %}
+<main class="bible">
+  {{ head('The early church', url_for('library_hub'), 'Back to the Library') }}
+  <p class="bible-lede">What Christians of the first thousand years said about the Bible, verse by verse: John Chrysostom, Augustine, Jerome, Ambrose, Bede and many more. Most of it comes from the <i>Catena Aurea</i>, the “golden chain” of comments on the four Gospels that Thomas Aquinas gathered in the 1260s.</p>
+  {% if not available %}
+    <p class="placeholder-card">This part of the Library isn't on the server at the moment. A church admin can see how to fix it in Admin → Status.</p>
+  {% else %}
+  {% for b in books %}
+  <section class="ef-book">
+    <h2 class="bible-h2">{{ b.name }} <small>{{ b.total }} comment{{ 's' if b.total != 1 }}</small></h2>
+    <div class="ef-chs">{% for ch, n in b.chapters %}<a href="{{ url_for('fathers_chapter', book_slug=b.slug, chapter=ch) }}" title="{{ n }} comments">{{ ch }}</a>{% endfor %}</div>
+  </section>
+  {% endfor %}
+  {% endif %}
+  <p class="lib-credits">From the Historical Christian Faith Commentaries Database (public domain), using only 19th-century public-domain translations: the Catena Aurea (translated under J. H. Newman, 1841–45) and the Nicene and Post-Nicene Fathers (1886–89).</p>
+</main>
+<style>
+  .ef-book { margin: 1.25rem 0; }
+  .ef-book small { font: 500 var(--fs-xs) var(--body); color: var(--muted); margin-left: .35rem; }
+  .ef-chs { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .ef-chs a { min-width: 2.4rem; text-align: center; padding: .4rem .5rem; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; font-size: var(--fs-sm); font-weight: 600; }
+</style>
+{% endblock %}

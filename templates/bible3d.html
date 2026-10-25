@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}{{ m.title }} in 3D · Clearspring{% endblock %}
+{% block content %}
+<main class="bible b3d-page">
+  {{ head(m.title, url_for('bible_3d_hub'), 'Back to 3D Bible world') }}
+  <section class="b3d" id="b3d" data-model="{{ m.slug }}" data-focus="{{ focus }}">
+    <div class="b3d-stage" aria-label="{{ m.title }}, a 3D model you can turn with your finger or mouse" role="img"></div>
+    <div class="b3d-labels"></div>
+    <div class="b3d-info" hidden>
+      <button type="button" class="b3d-info-x" aria-label="Close">×</button>
+      <b class="b3d-info-t"></b>
+      <p class="b3d-info-p"></p>
+      <a class="b3d-info-a" href="#" hidden></a>
+    </div>
+    <p class="b3d-nogl-msg">This phone or browser can't show 3D (it needs WebGL). Try another browser, or a newer device.</p>
+    <script id="b3dPlaces" type="application/json">{{ places|tojson }}</script>
+  </section>
+  <div class="b3d-tools">
+    <button type="button" data-b3d="reset">Reset view</button>
+    <button type="button" data-b3d="labels" aria-pressed="true">Labels</button>
+    {% if m.slug in ('tabernacle', 'temple') %}<button type="button" data-b3d="inside" aria-pressed="false">Look inside</button>{% endif %}
+    <button type="button" data-b3d="spin">Spin</button>
+  </div>
+  <p class="b3d-help">Drag to turn · pinch or scroll to zoom · two fingers to move · tap a label</p>
+  {% if m.ref %}<p class="b3d-ref">Built from {{ m.ref|scripture_links }}. 1 cubit ≈ 45 cm.</p>{% else %}<p class="b3d-ref">Heights are approximate and exaggerated three times. Place positions from OpenBible.info.</p>{% endif %}
+  <nav class="b3d-more" aria-label="More 3D models">
+    {% for x in models if x.slug != m.slug %}<a class="lib-chip" href="{{ url_for('bible_3d', slug=x.slug) }}">{{ x.emoji }} {{ x.title }}</a>{% endfor %}
+  </nav>
+  <p class="b3d-credit">3D drawn with three.js (MIT licence).</p>
+</main>
+<script type="module" src="{{ url_for('static', filename='vendor/bible3d.min.js') }}"></script>
+{% endblock %}

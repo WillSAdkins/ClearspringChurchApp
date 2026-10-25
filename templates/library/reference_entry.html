@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}{{ e.title }} · {{ info.short }}{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(e.title, url_for('reference_index', work=work, l=e.title[:1]|lower), info.name|capitalize, info.full) }}
+  {% if modern or easton or also or topic %}
+  <nav class="lib-chips ref-also" aria-label="This subject elsewhere">
+    {% if modern %}<a class="lib-chip" href="{{ url_for('dictionary_page', slug=e.slug) }}">Modern article</a>{% elif easton %}<a class="lib-chip" href="{{ url_for('dictionary_page', slug=e.slug, v='easton') }}">Easton’s</a>{% endif %}
+    {% for w, i in also %}<a class="lib-chip" href="{{ url_for('reference_entry', work=w, slug=e.slug) }}">{{ i.short }}</a>{% endfor %}
+    {% if topic %}<a class="lib-chip" href="{{ url_for('topic_page', slug=topic.slug) }}">Nave’s topics</a>{% endif %}
+  </nav>
+  {% endif %}
+  <article class="lib-article ref-body ref-{{ work }}">{{ e.html }}</article>
+  <nav class="vp-paging lib-paging">
+    {% if prev %}<a class="vp-page" href="{{ url_for('reference_entry', work=work, slug=prev.slug) }}">{{ icon('chevron-left', 16) }}<span>{{ prev.title }}</span></a>{% else %}<span></span>{% endif %}
+    {% if nxt %}<a class="vp-page" href="{{ url_for('reference_entry', work=work, slug=nxt.slug) }}"><span>{{ nxt.title }}</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  {{ source(info.full ~ ", " ~ info.editor ~ " (" ~ info.year ~ "). Public domain, from the CrossWire SWORD module.") }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

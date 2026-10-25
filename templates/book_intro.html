@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}Introducing {{ book.name }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib sn">
+  {{ head(book.name, url_for('bible_read_chapter', book_slug=book.slug, chapter=1), book.name ~ " 1", "Introducing") }}
+
+  {% if other %}
+  <nav class="sn-filter" aria-label="Introduction from">
+    <a href="{{ url_for('book_intro', book_slug=book.slug) }}" aria-current="{{ 'page' if source == 'tyndale' }}" class="{{ 'on' if source == 'tyndale' }}">In depth</a>
+    <a href="{{ url_for('book_intro', book_slug=book.slug, source='biblica') }}" aria-current="{{ 'page' if source == 'biblica' }}" class="{{ 'on' if source == 'biblica' }}">At a glance</a>
+  </nav>
+  {% endif %}
+
+  {% if videos %}
+  <div class="bp-card">
+    <p class="bp-k">Watch first</p>
+    {% for v in videos %}<a class="bp-link" href="{{ v.url }}" rel="noopener" target="_blank"><span class="bp-play" aria-hidden="true">▶</span><span><b>{{ v.title }}</b><small>BibleProject overview · opens bibleproject.com</small></span></a>{% endfor %}
+    <p class="bp-credit">{{ bp_credit }}</p>
+  </div>
+  {% endif %}
+
+  <article class="lib-article sn-intro-body">{{ body }}</article>
+
+  <div class="sn-start">
+    <a class="ps-go" href="{{ url_for('bible_read_chapter', book_slug=book.slug, chapter=1) }}">Start reading {{ book.name }}</a>
+    <a class="ps-link" href="{{ url_for('notes_chapter', book_slug=book.slug, chapter=1) }}">Study notes for chapter 1 →</a>
+  </div>
+
+  <nav class="vp-paging lib-paging">
+    {% if prev_b %}<a class="vp-page" href="{{ url_for('book_intro', book_slug=prev_b.slug) }}">{{ icon('chevron-left', 16) }}<span>{{ prev_b.name }}</span></a>{% else %}<span></span>{% endif %}
+    {% if next_b %}<a class="vp-page" href="{{ url_for('book_intro', book_slug=next_b.slug) }}"><span>{{ next_b.name }}</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  <p class="lib-source">{{ sources[source].credit }} <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

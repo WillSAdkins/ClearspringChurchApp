@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}{{ info.full }} on {{ book.name }} {{ chapter }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(("Psalm" if book.slug == "psalms" else book.name) ~ " " ~ chapter, url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter), book.name ~ " " ~ chapter, "Commentary") }}
+  <nav class="cm-tabs" aria-label="Commentaries on this chapter" id="cmTabs">
+    {% for s in all_sources %}<a class="lib-chip {{ 'on' if s == source }}" {% if s == source %}aria-current="page"{% endif %} data-src="{{ s }}" href="{{ url_for('commentary_page', source=s, book_slug=book.slug, chapter=chapter) }}">{{ commentaries[s].name }}</a>{% endfor %}
+  </nav>
+  <div class="cm-about">
+    <p class="cm-title">{{ info.full }} <span>({{ info.year }})</span></p>
+    <p>{{ info.about }}</p>
+  </div>
+  {% set nav = sections|selectattr('v1')|list %}
+  {% if nav|length > 1 %}
+  <nav class="cm-jump" aria-label="Jump to verse">
+    {% for s in nav %}<a href="#v{{ s.v1 }}">{{ s.v1 }}{% if s.v2 and s.v2 != s.v1 %}–{{ s.v2 }}{% endif %}</a>{% endfor %}
+  </nav>
+  {% endif %}
+  {% if not sections %}<p class="lib-note">{{ info.name }} doesn’t comment on this chapter. Try the next one, or another commentary above.</p>{% endif %}
+  <article class="lib-article cm-body">
+    {% for s in sections %}
+      {% if s.intro %}<details class="cm-intro"><summary>Introduction to {{ book.name }}</summary>{{ s.html|safe }}</details>
+      {% else %}
+      {% if s.v1 %}<h3 class="cm-vh" id="v{{ s.v1 }}"><a href="{{ url_for('verse_page', book_slug=book.slug, chapter=chapter, verse=s.v1) }}">{{ s.label }}</a></h3>{% endif %}
+      {{ s.html|safe }}
+      {% endif %}
+    {% endfor %}
+  </article>
+  <nav class="vp-paging lib-paging">
+    {% if prev_ch %}<a class="vp-page" href="{{ url_for('commentary_page', source=source, book_slug=prev_ch[0], chapter=prev_ch[1]) }}">{{ icon('chevron-left', 16) }}<span>{{ prev_ch[2] }}</span></a>{% else %}<span></span>{% endif %}
+    {% if next_ch %}<a class="vp-page" href="{{ url_for('commentary_page', source=source, book_slug=next_ch[0], chapter=next_ch[1]) }}"><span>{{ next_ch[2] }}</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  {{ source(info.full ~ " (" ~ info.year ~ "). " ~ info.licence) }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+  /* Remember the commentary someone chose, and keep its tab in view. */
+  try { localStorage.setItem("cs_commentary", "{{ source }}"); } catch (e) {}
+  (function () { var t = document.querySelector("#cmTabs .on"); if (t && t.scrollIntoView) t.scrollIntoView({ block: "nearest", inline: "center" }); })();
+</script>
+{% endblock %}

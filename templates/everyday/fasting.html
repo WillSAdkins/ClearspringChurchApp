@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}Fasting · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Fasting', url_for('prayer_practices'), 'Back to Ways to pray') }}
+
+  <section class="fs-now" id="fsNow" hidden>
+    <p class="gw-k">You’re fasting</p>
+    <h2 class="gw-h1" id="fsNowWhat"></h2>
+    <p class="gw-p" id="fsNowWhy"></p>
+    <p class="fs-time" id="fsNowTime"></p>
+    <div id="fsVerse"></div>
+    <div class="fs-acts">
+      <a class="gw-btn" href="{{ url_for('prayer_session') }}">Pray now</a>
+      <a class="gw-btn" href="{{ url_for('prayer_journal') }}">My prayers</a>
+      <button type="button" class="gw-btn" id="fsEnd">End my fast</button>
+    </div>
+    <form class="fs-reflect" id="fsReflect" hidden>
+      <label for="fsReflectText">How was it? What did God show you?</label>
+      <textarea id="fsReflectText" class="ps-input" rows="3"></textarea>
+      <button type="submit" class="ps-go">Finish</button>
+    </form>
+  </section>
+
+  <section id="fsGuide">
+    {% for p in about %}<p class="gw-p">{{ p|scripture_links }}</p>{% endfor %}
+    {{ scripture(texts[verses[0]]) }}
+    <details class="gw-more"><summary>More about fasting in the Bible</summary>
+      <ul class="gw-list">{% for v in verses %}<li><a href="{{ v|ref_url }}">{{ v.replace('-', '–') }}</a></li>{% endfor %}</ul>
+      {{ scripture(texts[verses[1]]) }}
+    </details>
+
+    <aside class="fs-safety" role="note">
+      <b>Look after yourself</b>
+      <p>{{ safety }}</p>
+    </aside>
+
+    <h2 class="bible-h2">How to fast</h2>
+    <ol class="fs-steps">{% for t, body in steps %}<li><b>{{ t }}</b><p>{{ body }}</p></li>{% endfor %}</ol>
+  </section>
+
+  <section class="fs-plan" id="fsPlan">
+    <h2 class="bible-h2">Plan a fast</h2>
+    <form id="fsForm">
+      <p class="fs-label">What will you go without?</p>
+      <div class="fs-kinds" role="radiogroup" aria-label="Kind of fast">
+        {% for k in kinds %}
+        <label class="fs-kind"><input type="radio" name="kind" value="{{ k.key }}" data-food="{{ 1 if k.food else 0 }}" {{ 'checked' if loop.first }}><span><b>{{ k.title }}</b><small>{{ k.about }}</small></span></label>
+        {% endfor %}
+      </div>
+      <label class="fs-check" id="fsFoodOk"><input type="checkbox" id="fsFoodBox"> I’ve read “Look after yourself” above, and it’s safe for me to fast from food.</label>
+      <label class="fs-field">What are you seeking God about?<textarea id="fsWhy" class="ps-input" rows="2" maxlength="400" placeholder="e.g. Guidance about a decision, a friend who’s ill, to know God better"></textarea></label>
+      <div class="fs-when">
+        <label class="fs-field">From<input type="datetime-local" id="fsStart" class="ps-input"></label>
+        <label class="fs-field">Until<input type="datetime-local" id="fsEndAt" class="ps-input"></label>
+      </div>
+      <p class="gw-note" id="fsErr" role="alert"></p>
+      <button type="submit" class="ps-go">Start planning</button>
+    </form>
+  </section>
+
+  <section id="fsPast" hidden>
+    <h2 class="bible-h2">Your fasts</h2>
+    <ul class="fs-history" id="fsHistory"></ul>
+  </section>
+</main>
+<script id="fsData" type="application/json">{{ {'kinds': kinds, 'during': during}|tojson }}</script>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+  var D = JSON.parse(document.getElementById("fsData").textContent), G = window.Grow;
+  var $ = function (id) { return document.getElementById(id); };
+  var KIND = {}; D.kinds.forEach(function (k) { KIND[k.key] = k; });
+  var DURING = Object.keys(D.during).map(function (k) { return D.during[k]; }).filter(Boolean);
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function local(d) { var z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); }
+  function nice(iso) { return new Date(iso).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); }
+
+  // sensible defaults: from now until this evening (or tomorrow evening)
+  var s = new Date(); s.setMinutes(Math.floor(s.getMinutes() / 5) * 5, 0, 0);
+  var e = new Date(s);
+  if (s.getHours() < 16) e.setHours(18, 0, 0, 0); else { e.setDate(e.getDate() + 1); e.setHours(12, 0, 0, 0); }
+  $("fsStart").value = local(s); $("fsEndAt").value = local(e);
+
+  function food() { var c = document.querySelector("input[name=kind]:checked"); return c && c.dataset.food === "1"; }
+  function paintKind() { $("fsFoodOk").hidden = !food(); }
+  document.querySelectorAll("input[name=kind]").forEach(function (r) { r.addEventListener("change", paintKind); });
+  paintKind();
+
+  $("fsForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var kind = document.querySelector("input[name=kind]:checked").value;
+    var st = new Date($("fsStart").value), en = new Date($("fsEndAt").value);
+    if (food() && !$("fsFoodBox").checked) { $("fsErr").textContent = "Please read “Look after yourself” and tick the box, or choose a fast that isn’t from food."; return; }
+    if (!(en > st)) { $("fsErr").textContent = "The end needs to be after the start."; return; }
+    $("fsErr").textContent = "";
+    G.update("fasts", function (f) { f.list.unshift({ id: Date.now().toString(36), kind: kind, why: $("fsWhy").value.trim(), start: st.toISOString(), end: en.toISOString(), done: false }); f.list = f.list.slice(0, 40); });
+    show(); window.scrollTo(0, 0);
+  });
+
+  function current() { return G.load().fasts.list.find(function (f) { return !f.done; }); }
+  function show() {
+    var f = current(), now = new Date();
+    $("fsNow").hidden = !f; $("fsPlan").hidden = !!f; $("fsGuide").hidden = !!f;
+    if (f) {
+      var st = new Date(f.start), en = new Date(f.end);
+      $("fsNowWhat").textContent = KIND[f.kind] ? KIND[f.kind].title : "A fast";
+      $("fsNowWhy").textContent = f.why ? "Seeking God about: " + f.why : "";
+      var t;
+      if (now < st) t = "Starts " + nice(f.start) + ", until " + nice(f.end) + ".";
+      else if (now < en) { var h = Math.round((en - now) / 36e5 * 2) / 2; t = h < 1 ? "Less than an hour to go." : "About " + h + " hour" + (h === 1 ? "" : "s") + " to go, until " + nice(f.end) + "."; }
+      else t = "Your fast has finished. Well done. Take a moment to look back.";
+      $("fsNowTime").textContent = t;
+      var v = DURING[Math.floor(now / 864e5) % DURING.length], box = $("fsVerse"); box.textContent = "";
+      if (v) {
+        var q = el("blockquote", "ps-scripture gw-scripture"); q.appendChild(el("p", null, v.text));
+        var a = el("a", "ps-ref", v.ref); a.href = v.href; q.appendChild(a); box.appendChild(q);
+      }
+      if (now >= en) { $("fsReflect").hidden = false; $("fsEnd").hidden = true; }
+    }
+    var past = G.load().fasts.list.filter(function (x) { return x.done; });
+    $("fsPast").hidden = !past.length;
+    var ul = $("fsHistory"); ul.textContent = "";
+    past.slice(0, 12).forEach(function (x) {
+      var li = el("li"); li.appendChild(el("b", null, (KIND[x.kind] ? KIND[x.kind].title : "A fast") + " · " + new Date(x.start).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })));
+      if (x.why) li.appendChild(el("span", null, x.why));
+      if (x.reflection) li.appendChild(el("p", null, x.reflection));
+      ul.appendChild(li);
+    });
+  }
+  $("fsEnd").addEventListener("click", function () { $("fsReflect").hidden = false; $("fsEnd").hidden = true; $("fsReflectText").focus(); });
+  $("fsReflect").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var f = current(); if (!f) return;
+    G.update("fasts", function (ff) { var x = ff.list.find(function (y) { return y.id === f.id; }); if (x) { x.done = true; x.endedAt = new Date().toISOString(); x.reflection = $("fsReflectText").value.trim(); } });
+    $("fsReflectText").value = ""; $("fsReflect").hidden = true; $("fsEnd").hidden = false;
+    show(); window.scrollTo(0, 0);
+  });
+  show();
+  G.sync().then(function (ch) { if (ch) show(); });
+})();
+</script>
+{% endblock %}

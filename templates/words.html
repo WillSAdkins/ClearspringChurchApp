@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% from "_scene.html" import banner with context %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% set show_back = false %}
+{% block title %}Greek &amp; Hebrew · Clearspring{% endblock %}
+{% block content %}
+<main class="bible wh">
+  {{ head("Greek & Hebrew", url_for('bible_tab', tab='study'), "Study", "Original languages") }}
+  {{ banner('words') }}
+
+  <p class="bible-lede">The New Testament was written in Greek and the Old Testament mostly in Hebrew. Look up the word behind the English: what it meant, how else it's translated, and every place it's used.</p>
+
+  {% if not available %}
+    <p class="placeholder-card">The Greek and Hebrew word data isn't on the server at the moment. A church admin can see how to fix this in Admin → Status.</p>
+  {% else %}
+  <form class="bible-searchbar wh-search" method="get" role="search">
+    <span class="bible-searchbar-icon">{{ icon('search', 20) }}</span>
+    <input type="search" name="q" value="{{ q }}" class="bible-searchbar-input" placeholder="love, grace, shalom, G26…" autocomplete="off" aria-label="Search Greek and Hebrew words">
+    {% if lang %}<input type="hidden" name="lang" value="{{ lang }}">{% endif %}
+  </form>
+  {% if not q %}
+  <section class="bible-block wh-wbw" id="word-by-word">
+    <h2 class="bible-h2">Read word by word</h2>
+    <p>Any chapter in the original language: every word with its meaning and grammar in plain English, sentences laid out clause by clause, and who each “he” or “they” refers to.</p>
+    <form class="wh-pick" action="{{ url_for('interlinear_go') }}" method="get">
+      <label class="sr-only" for="whBook">Book</label>
+      <select id="whBook" name="book">
+        {% for b in books %}<option value="{{ b.slug }}" {{ 'selected' if b.slug == 'john' }}>{{ b.name }}</option>{% endfor %}
+      </select>
+      <label class="sr-only" for="whCh">Chapter</label>
+      <input id="whCh" name="chapter" type="number" min="1" max="150" value="1" inputmode="numeric">
+      <button type="submit" class="ps-go">Open</button>
+    </form>
+    <div class="wh-starts">
+      {% for slug, ch, label in [('john', 1, 'John 1'), ('john', 3, 'John 3'), ('genesis', 1, 'Genesis 1'), ('psalms', 23, 'Psalm 23'), ('romans', 8, 'Romans 8'), ('philippians', 2, 'Philippians 2'), ('isaiah', 53, 'Isaiah 53'), ('ruth', 1, 'Ruth 1')] %}
+      <a class="filter-pill" href="{{ url_for('interlinear', book_slug=slug, chapter=ch) }}">{{ label }}</a>
+      {% endfor %}
+    </div>
+    <a class="wh-guide" href="{{ url_for('grammar_page') }}"><b>Grammar, simply</b><span>What “aorist”, “Qal” or “genitive” mean, in plain English with real verses</span></a>
+  </section>
+  {% endif %}
+  {% if q %}
+  <nav class="wh-filter" aria-label="Language">
+    <a href="{{ url_for('words_hub', q=q) }}" class="filter-pill {{ 'on' if not lang }}">Both</a>
+    <a href="{{ url_for('words_hub', q=q, lang='Greek') }}" class="filter-pill {{ 'on' if lang == 'Greek' }}">Greek (New Testament)</a>
+    <a href="{{ url_for('words_hub', q=q, lang='Hebrew') }}" class="filter-pill {{ 'on' if lang == 'Hebrew' }}">Hebrew (Old Testament)</a>
+  </nav>
+  {% endif %}
+
+  {% if results is not none %}
+  <section class="bible-block">
+    <h2 class="bible-h2">{% if results %}{{ results|length }}{% if results|length == 40 %}+{% endif %} word{{ 's' if results|length != 1 }} for “{{ q }}”{% else %}Nothing found for “{{ q }}”{% endif %}</h2>
+    {% if not results %}<p class="empty-sub">Try a simpler English word (“love” rather than “loving”), or a transliteration like <i>agape</i> or <i>shalom</i>.</p>{% endif %}
+    <ul class="wh-list">
+      {% for w in results %}
+      <li><a class="wh-row" href="{{ url_for('word_page', code=w.strong) }}">
+        <span class="wh-word" lang="{{ 'he' if w.language == 'Hebrew' else 'grc' }}" {% if w.language == 'Hebrew' %}dir="rtl"{% endif %}>{{ w.word }}</span>
+        <span class="wh-body"><b>{{ w.translit }}</b> · {{ w.meaning }}<small>{{ w.language }} · {{ w.display }} · used {{ w.count }} time{{ 's' if w.count != 1 }}</small></span>
+        {{ icon('chevron-right', 16) }}
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% for lang_name, words in featured.items() %}
+  <section class="bible-block">
+    <div class="bible-block-head"><h2 class="bible-h2">{{ 'Words worth knowing: Greek' if lang_name == 'Greek' else 'Words worth knowing: Hebrew' }}</h2></div>
+    <div class="wh-grid">
+      {% for w in words %}
+      <a class="wh-card" href="{{ url_for('word_page', code=w.strong) }}">
+        <span class="wh-card-word" lang="{{ 'he' if lang_name == 'Hebrew' else 'grc' }}" {% if lang_name == 'Hebrew' %}dir="rtl"{% endif %}>{{ w.word }}</span>
+        <b>{{ w.translit }}</b>
+        <span>{{ w.meaning.split(':')[0] }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <section class="bible-block wh-how">
+    <h2 class="bible-h2">While you read</h2>
+    <p>In the Bible reader, tap any verse and choose <b>α Greek</b> or <b>א Hebrew</b> to see every word in that verse. Or open <b>Study this verse</b> for the words alongside cross references, commentary and other translations.</p>
+    <a class="bible-more" href="{{ url_for('bible_tab') }}">Open the Bible →</a>
+  </section>
+  <p class="lib-credits">{{ attribution }}</p>
+  {% endif %}
+</main>
+<style>
+  .wh-search { margin-bottom: .75rem; }
+  .wh-filter { display: flex; flex-wrap: wrap; gap: .375rem; margin: 0 0 1rem; }
+  .wh-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .375rem; }
+  .wh-row { display: flex; align-items: center; gap: .875rem; padding: .75rem .875rem; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--ink); text-decoration: none; }
+  .wh-word { font-family: var(--reading, serif); font-size: 1.35rem; min-width: 4.5rem; text-align: center; flex: none; }
+  .wh-body { flex: 1; min-width: 0; font-size: var(--fs-base); line-height: 1.35; overflow-wrap: anywhere; }
+  .wh-body small { display: block; color: var(--muted); font-size: var(--fs-xs); margin-top: .125rem; }
+  .wh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .5rem; }
+  .wh-card { display: grid; gap: .125rem; padding: .875rem .75rem; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--ink); text-decoration: none; text-align: center; min-width: 0; }
+  .wh-card-word { font-family: var(--reading, serif); font-size: 1.5rem; line-height: 1.3; }
+  .wh-card b { font-size: var(--fs-sm); }
+  .wh-card span:last-child { font-size: var(--fs-xs); color: var(--muted); }
+  .wh-how p { font-size: var(--fs-base); line-height: 1.6; margin: 0 0 .5rem; }
+  .wh-wbw p { font-size: var(--fs-sm); line-height: 1.55; margin: 0 0 .75rem; }
+  .wh-pick { display: grid; grid-template-columns: 1fr 4.5rem auto; gap: .5rem; align-items: center; }
+  .wh-pick select, .wh-pick input { min-height: 44px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 0 .6rem; font: inherit; min-width: 0; }
+  .wh-pick .ps-go { margin: 0; min-height: 44px; padding: 0 1.1rem; width: auto; }
+  .wh-starts { display: flex; flex-wrap: wrap; gap: .375rem; margin: .75rem 0; }
+  .wh-guide { display: grid; gap: .15rem; padding: .85rem 1rem; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+  .wh-guide span { font-size: var(--fs-xs); color: var(--muted); }
+</style>
+{% endblock %}

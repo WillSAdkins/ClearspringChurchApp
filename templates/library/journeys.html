@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}Journeys · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Journeys", url_for('library_hub'), "Library", "Maps") }}
+  {% for era, items in eras %}
+  <section class="lib-section">
+    <h2 class="bible-h2">{{ era }}</h2>
+    <nav class="bible-list">
+      {% for r in items %}
+      <a class="bible-row" href="{{ url_for('journey_page', slug=r.slug) }}">
+        <span class="bible-row-body"><span class="bible-row-title">{{ r.title }}</span><span class="bible-row-sub">{{ r.ref.replace('-', '–') }}</span></span>{{ icon('chevron-right', 18) }}
+      </a>
+      {% endfor %}
+    </nav>
+  </section>
+  {% endfor %}
+  {{ source("Routes: UBS Project MARBLE, drawn by Dr Leen Ritmeyer, © United Bible Societies 2023, CC BY-SA 4.0. Map: Natural Earth.") }}
+</main>
+{% endblock %}

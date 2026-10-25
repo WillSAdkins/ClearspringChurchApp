@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "_scene.html" import banner with context %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}This Sunday · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw sn">
+  {{ head('This Sunday', url_for('watch_hub'), 'Back to Watch') }}
+
+  {{ banner('sunday') }}
+  {% if not s %}
+  <div class="gw-empty">
+    <p><b>Nothing here yet this week</b></p>
+    <p>When the team adds Sunday’s talk, you’ll find the passage, notes to fill in and questions for your group here.</p>
+    <p><a href="{{ url_for('watch_hub') }}">Watch recent talks</a> · <a href="{{ url_for('plan_visit') }}">Plan a visit</a></p>
+  </div>
+  {% else %}
+  <section class="sn-head" id="sn" data-id="{{ s['id'] }}" data-title="{{ s['title'] }}" data-speaker="{{ s['speaker'] or '' }}" data-date="{{ s['preached_on'] }}"
+           data-ref="{{ s['passage'] or '' }}" data-slug="{{ passage.slug if passage else '' }}" data-chapter="{{ passage.chapter if passage else '' }}" data-verse="{{ passage.verse or '' if passage else '' }}">
+    <p class="gw-k">{{ s['preached_on']|pretty_date }}{% if s['series'] %} · {{ s['series'] }}{% endif %}</p>
+    <h2 class="gw-h1">{{ s['title'] }}</h2>
+    {% if s['speaker'] %}<p class="sn-by">{{ s['speaker'] }}</p>{% endif %}
+    {% if s['summary'] %}<p class="gw-p">{{ s['summary'] }}</p>{% endif %}
+  </section>
+
+  {% if passage %}
+  <details class="gw-more sn-passage">
+    <summary>{{ icon('book', 16) }} {{ passage.label }}</summary>
+    {{ scripture(text) }}
+    <a class="gw-chip" href="{{ s['passage']|ref_url }}">Open in the Bible</a>
+  </details>
+  {% endif %}
+
+  {% if outline %}
+  <section class="sn-outline" id="snOutline">
+    <div class="sn-outline-top"><h2 class="bible-h2">Follow along</h2><button type="button" class="ps-link" id="snReveal" aria-pressed="false">Show answers</button></div>
+    {% for line in outline %}
+      {% if line.kind == 'h' %}<h3 class="sn-h">{% for p in line.parts %}{{ p.t if p.t is defined else p.b }}{% endfor %}</h3>
+      {% else %}<p class="sn-line">{% for p in line.parts %}{% if p.t is defined %}{{ p.t|scripture_links }}{% else %}<input type="text" class="sn-blank" data-n="{{ p.n }}" data-a="{{ p.b }}" size="{{ [p.b|length + 2, 6]|max }}" aria-label="Fill in the blank" autocomplete="off" autocapitalize="off" spellcheck="false">{% endif %}{% endfor %}</p>
+      {% endif %}
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="sn-mine">
+    <label for="snNotes" class="bible-h2">My notes</label>
+    <textarea id="snNotes" class="ps-input" rows="6" placeholder="Anything that strikes you"></textarea>
+    <label for="snKey" class="sn-label">The one thing to remember</label>
+    <textarea id="snKey" class="ps-input" rows="2"></textarea>
+    <label for="snDo" class="sn-label">One thing to do this week</label>
+    <textarea id="snDo" class="ps-input" rows="2"></textarea>
+    <p class="gw-note" id="snStatus" aria-live="polite">Your notes are saved to My study as you type.</p>
+  </section>
+
+  <div class="pp-list">
+    <a class="pp-card" href="{{ url_for('sermon_group', sermon_id=s['id']) }}"><span class="pp-emoji" aria-hidden="true">👥</span><span class="pp-body"><b>For your small group</b><span>The passage and questions to talk about midweek</span></span>{{ icon('chevron-right', 18) }}</a>
+    {% if s['published'] %}<a class="pp-card" href="{{ url_for('sermon_detail', sermon_id=s['id']) }}"><span class="pp-emoji" aria-hidden="true">▶️</span><span class="pp-body"><b>Watch or listen again</b><span>The full talk</span></span>{{ icon('chevron-right', 18) }}</a>{% endif %}
+    <a class="pp-card" href="{{ url_for('my_study', f='talk') }}"><span class="pp-emoji" aria-hidden="true">🗒️</span><span class="pp-body"><b>All my sermon notes</b><span>In My study</span></span>{{ icon('chevron-right', 18) }}</a>
+  </div>
+  {% endif %}
+</main>
+{% if s %}
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+  var S = window.Study, box = document.getElementById("sn"), D = box.dataset;
+  var ID = "sunday-" + D.id, blanks = document.querySelectorAll(".sn-blank");
+  var $ = function (id) { return document.getElementById(id); };
+
+  function norm(x) { return String(x || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+  function compose(item) {
+    var lines = [];
+    document.querySelectorAll("#snOutline .sn-h, #snOutline .sn-line").forEach(function (l) {
+      var t = "";
+      l.childNodes.forEach(function (n) {
+        if (n.nodeType === 3) t += n.textContent;
+        else if (n.classList && n.classList.contains("sn-blank")) t += (item.blanks[n.dataset.n] || "____");
+        else t += n.textContent;
+      });
+      lines.push(l.classList.contains("sn-h") ? "\n" + t.trim().toUpperCase() : "• " + t.trim());
+    });
+    return (lines.join("\n").trim() + (item.mine ? "\n\nMy notes:\n" + item.mine : "")).trim();
+  }
+  function current() {
+    return S.get("talk", ID) || { id: ID, title: D.title, speaker: D.speaker, date: D.date, ref: D.ref, refLabel: D.ref,
+      slug: D.slug || null, chapter: D.chapter ? +D.chapter : null, verse: D.verse ? +D.verse : null, sermonId: +D.id,
+      blanks: {}, mine: "", takeaway: "", action: "", notes: "", composed: "", tags: ["sunday"] };
+  }
+  function fill() {
+    var it = current();
+    blanks.forEach(function (b) { if (document.activeElement !== b) b.value = (it.blanks || {})[b.dataset.n] || ""; mark(b); });
+    if (document.activeElement !== $("snNotes")) $("snNotes").value = it.mine || "";
+    if (document.activeElement !== $("snKey")) $("snKey").value = it.takeaway || "";
+    if (document.activeElement !== $("snDo")) $("snDo").value = it.action || "";
+  }
+  var t = null;
+  function save() {
+    clearTimeout(t);
+    t = setTimeout(function () {
+      var it = Object.assign({}, current());
+      it.blanks = {}; blanks.forEach(function (b) { if (b.value.trim()) it.blanks[b.dataset.n] = b.value.trim(); });
+      it.mine = $("snNotes").value; it.takeaway = $("snKey").value; it.action = $("snDo").value;
+      var c = compose(it);
+      // If the notes were changed in My study, leave them be.
+      if (!it.notes || it.notes === it.composed) it.notes = c;
+      it.composed = c;
+      if (!Object.keys(it.blanks).length && !it.mine && !it.takeaway && !it.action) return;
+      S.save("talk", it);
+      $("snStatus").textContent = "Saved to My study.";
+    }, 500);
+  }
+  function mark(b) {
+    var on = b.value.trim() && norm(b.value) === norm(b.dataset.a);
+    b.classList.toggle("ok", !!on);
+  }
+  blanks.forEach(function (b) { b.addEventListener("input", function () { mark(b); save(); }); });
+  ["snNotes", "snKey", "snDo"].forEach(function (id) { $(id).addEventListener("input", save); });
+  var rev = $("snReveal");
+  if (rev) rev.addEventListener("click", function () {
+    var on = rev.getAttribute("aria-pressed") !== "true";
+    rev.setAttribute("aria-pressed", on ? "true" : "false"); rev.textContent = on ? "Hide answers" : "Show answers";
+    blanks.forEach(function (b) { b.placeholder = on ? b.dataset.a : ""; b.classList.toggle("revealed", on); });
+  });
+  fill();
+  S.merge("talk").then(function (ok) { if (ok) fill(); });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,43 @@
+{# Pop-ups: a scheduled church or sponsor notice (Admin → Pop-ups), or else a
+   built-in feature tip (app_features.py). At most one per visit. #}
+{% set pop = current_popup() %}
+{% set tips = feature_tips() %}
+{% if pop or tips %}
+{% if pop %}
+<div class="pu" id="popup" data-key="p{{ pop.id }}" hidden>
+  <section class="pu-card" role="dialog" aria-modal="true" aria-labelledby="puTitle">
+    <button type="button" class="pu-x" aria-label="Close">×</button>
+      {% if pop.image_url %}<img class="pu-img" src="{{ pop.image_url }}" alt="">{% endif %}
+      <div class="pu-body">
+        {% if pop.kind == 'sponsor' %}<p class="pu-sponsored">Sponsored · {{ pop.sponsor_name }}</p>{% endif %}
+        <h2 class="pu-title" id="puTitle">{{ pop.title }}</h2>
+        {% if pop.body %}<p class="pu-text">{{ pop.body }}</p>{% endif %}
+        <div class="pu-actions">
+          {% if pop.button_text and pop.button_url %}<a class="btn-primary pu-go" href="{{ pop.button_url }}"{% if pop.button_url.startswith('https://') %} target="_blank" rel="noopener{% if pop.kind == 'sponsor' %} sponsored{% endif %}"{% endif %}>{{ pop.button_text }}</a>{% endif %}
+          <button type="button" class="btn-ghost pu-later">Not now</button>
+        </div>
+      </div>
+  </section>
+</div>
+{% endif %}
+{% if tips %}
+<div class="pu" id="popupTip" hidden>
+  <section class="pu-card pu-tip" role="dialog" aria-modal="true" aria-labelledby="puTipTitle">
+    <button type="button" class="pu-x" aria-label="Close">×</button>
+      <div class="pu-tip-art" aria-hidden="true"><span class="pu-emoji"></span></div>
+      <div class="pu-body">
+        <p class="pu-kicker">Have you tried…</p>
+        <h2 class="pu-title" id="puTipTitle"></h2>
+        <p class="pu-text"></p>
+        <div class="pu-actions">
+          <a class="btn-primary pu-go" href="#"></a>
+          <button type="button" class="btn-ghost pu-later">Not now</button>
+        </div>
+        <button type="button" class="pu-notips">Don’t show tips</button>
+      </div>
+  </section>
+</div>
+{% endif %}
+{% if tips %}<script id="puTips" type="application/json">{{ {'tips': tips, 'every': popup_settings()['tips_every']|int}|tojson }}</script>{% endif %}
+<script src="{{ url_for('static', filename='popups.js') }}"></script>
+{% endif %}

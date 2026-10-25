@@ -1,0 +1,21 @@
+{# The app guide: a floating "Ask" button and its chat sheet. #}
+<button type="button" class="gd-fab" id="guideFab" aria-controls="guide" aria-expanded="false" aria-label="Ask the guide where to find something">
+  {{ icon('message', 20) }}<span>Ask</span>
+</button>
+<div class="gd" id="guide" hidden>
+  <section class="gd-sheet" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <header class="gd-head">
+      <div><p class="gd-title" id="guideTitle">Clearspring guide</p><p class="gd-sub">Ask where anything is, or say what you need</p></div>
+      <button type="button" class="gd-clear" aria-label="Start again">New</button>
+      <button type="button" class="gd-x" aria-label="Close">×</button>
+    </header>
+    <div class="gd-log" id="guideLog" aria-live="polite"></div>
+    <div class="gd-chips" id="guideChips" data-start='["When is church?", "Open the Bible", "I&#39;d like prayer", "What&#39;s on this week?", "Greek word for love", "How do I join a group?"]' hidden></div>
+    <form class="gd-form" id="guideForm" autocomplete="off">
+      <input type="text" id="guideQ" class="gd-input" maxlength="300" placeholder="Where would you like to go?" data-ph="Where would you like to go?" aria-label="Ask the guide" enterkeyhint="send">
+      <button type="button" class="gd-mic" id="guideMic" aria-label="Speak" aria-pressed="false" hidden>{{ icon('mic', 20) }}</button>
+      <button type="submit" class="gd-send" aria-label="Send">{{ icon('chevron-right', 20) }}</button>
+    </form>
+  </section>
+</div>
+<script src="{{ url_for('static', filename='guide.js') }}" defer></script>

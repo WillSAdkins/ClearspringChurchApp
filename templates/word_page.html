@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% from "icons.html" import icon %}
+{% block title %}{{ entry.translit }} ({{ entry.display }}) · Clearspring{% endblock %}
+{% block content %}
+{% set heb = entry.language == 'Hebrew' %}
+
+<main class="bible wp">
+
+  <header class="wp-hero">
+    <p class="wp-lang">{{ entry.language }} · Strong's {{ entry.display }}{% if entry.pos %} · {{ entry.pos }}{% endif %}</p>
+    <h1 class="wp-lemma" lang="{{ 'he' if heb else 'grc' }}" {% if heb %}dir="rtl"{% endif %}>{{ entry.lemma }}</h1>
+    <p class="wp-translit">{{ entry.translit }}</p>
+    {% if entry.meaning %}<p class="wp-meaning">{{ entry.meaning }}</p>{% endif %}
+  </header>
+
+  <section class="wp-stats">
+    <div class="wp-stat"><b>{{ conc.total_uses }}</b><span>times used</span></div>
+    <div class="wp-stat"><b>{{ conc.verse_count }}</b><span>verses</span></div>
+    <div class="wp-stat"><b>{{ conc.books|length }}</b><span>books</span></div>
+  </section>
+
+  {% if conc.renderings %}
+  <section class="vp-section">
+    <h2 class="bible-h2">How it's translated</h2>
+    <ul class="wp-renderings">
+      {% for g, n in conc.renderings %}
+        <li><span>{{ g }}</span><b>{{ n }}</b></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if entry.definition %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Definition</h2>
+    <div class="wp-def">
+      {% for line in entry.definition.split('\n') %}<p>{{ line }}</p>{% endfor %}
+    </div>
+    {% if related %}
+      <p class="wp-related">Other senses of this number:
+        {% for r in related %}<a href="{{ url_for('word_page', code=r.strong) }}">{{ r.meaning or r.strong }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+      </p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if study.forms %}
+  <section class="vp-section">
+    <h2 class="bible-h2">The forms it takes</h2>
+    <div class="wp-forms">
+      {% for f in study.forms %}
+      <div class="wp-form">
+        <h3>{{ f.title }}</h3>
+        <ul>
+          {% for r in f.rows %}
+          <li>
+            {% if r.slug %}<a href="{{ url_for('grammar_page') }}#{{ r.slug }}">{{ r.label }}</a>{% else %}<span>{{ r.label }}</span>{% endif %}
+            <span class="wp-bar"><i style="width: {{ r.pct }}%"></i></span><b>{{ r.pct_label }}</b>
+            {% if r.short %}<small>{{ r.short }}</small>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="vp-hint">Tap a form to see what it means in <a href="{{ url_for('grammar_page') }}">Grammar, simply</a>.</p>
+  </section>
+  {% endif %}
+
+  {% if study.domains or study.similar %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Its meaning group</h2>
+    {% for d in study.domains %}
+      <p class="wp-dom"><b>{{ d.top }}</b> › {{ d.sub }}{% if study.domains|length > 1 %} <span>{{ d.share }}% of uses</span>{% endif %}</p>
+    {% endfor %}
+    {% if study.similar %}
+    <h3 class="wp-h3">Words with a similar meaning</h3>
+    <ul class="wp-similar">
+      {% for x in study.similar %}
+      <li><a href="{{ url_for('word_page', code=x.strong) }}"><span lang="grc">{{ x.lemma }}</span> <i>{{ x.translit }}</i> · {{ x.meaning }}</a></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if study.lxx or study.lxx_of %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Between Hebrew and Greek</h2>
+    {% if study.lxx %}
+    <p class="vp-hint">The Greek Old Testament (the Septuagint), the Bible the first Christians often quoted, translates this word as:</p>
+    <ul class="wp-similar">
+      {% for x in study.lxx %}
+      <li><a href="{{ url_for('word_page', code=x.strong) }}"><span lang="grc">{{ x.lemma }}</span> <i>{{ x.translit }}</i> · {{ x.meaning }}</a> <b>{{ x.share }}%</b></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="vp-hint">In the Greek Old Testament (the Septuagint), this word translates these Hebrew words, which helps show what New Testament writers heard in it:</p>
+    <ul class="wp-similar">
+      {% for x in study.lxx_of %}
+      <li><a href="{{ url_for('word_page', code=x.strong) }}"><span lang="he" dir="rtl">{{ x.lemma }}</span> <i>{{ x.translit }}</i> · {{ x.meaning }}</a> <b>{{ x.n }}×</b></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if conc.books %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Where it appears</h2>
+    <div class="wp-dist" role="img" aria-label="Uses in each book of the {{ study.testament }}">
+      {% for b in study.dist %}<span class="wp-col{{ ' on' if b.n }}" title="{{ b.name }}: {{ b.n }}"><i style="height: {{ [b.pct, 4 if b.n else 0]|max }}%"></i></span>{% endfor %}
+    </div>
+    <p class="wp-dist-k"><span>{{ study.dist[0].name }}</span><span>across the {{ study.testament }}</span><span>{{ study.dist[-1].name }}</span></p>
+    {% set top = conc.books[0][1] %}
+    <ul class="wp-books">
+      {% for name, n in conc.books[:10] %}
+        <li><span class="wp-book">{{ name }}</span><span class="wp-bar"><i style="width: {{ (n / top * 100)|round(1) }}%"></i></span><b>{{ n }}</b></li>
+      {% endfor %}
+    </ul>
+    {% if conc.books|length > 10 %}<p class="vp-hint">…and {{ conc.books|length - 10 }} more books.</p>{% endif %}
+  </section>
+  {% endif %}
+
+  <section class="vp-section" id="uses">
+    <div class="bible-block-head">
+      <h2 class="bible-h2">Every verse</h2>
+      {% if conc.pages > 1 %}<span class="vp-count">Page {{ conc.page }} of {{ conc.pages }}</span>{% endif %}
+    </div>
+    <nav class="bible-list">
+      {% for x in conc['items'] %}
+        <a class="bible-row vp-xref" href="{{ url_for('verse_page', book_slug=x.slug, chapter=x.chapter, verse=x.verse) }}">
+          <span class="bible-row-body">
+            <span class="bible-row-title">{{ x.ref }}{% if x.gloss %} <em class="wp-as">“{{ x.gloss }}”</em>{% endif %}</span>
+            {% if x.text %}<span class="vp-xref-text">{{ x.text }}</span>{% endif %}
+          </span>
+          {{ icon('chevron-right', 18) }}
+        </a>
+      {% endfor %}
+    </nav>
+    {% if conc.pages > 1 %}
+    <nav class="vp-paging wp-paging" aria-label="More verses">
+      {% if conc.page > 1 %}<a class="vp-page" href="{{ url_for('word_page', code=entry.strong, page=conc.page - 1) }}#uses">{{ icon('chevron-left', 16) }}<span>Previous</span></a>{% else %}<span></span>{% endif %}
+      <span class="vp-count">{{ (conc.page - 1) * 40 + 1 }}–{{ [conc.page * 40, conc.verse_count]|min }} of {{ conc.verse_count }}</span>
+      {% if conc.page < conc.pages %}<a class="vp-page" href="{{ url_for('word_page', code=entry.strong, page=conc.page + 1) }}#uses"><span>Next</span>{{ icon('chevron-right', 16) }}</a>{% else %}<span></span>{% endif %}
+    </nav>
+    {% endif %}
+  </section>
+
+  <p class="ws-credit">English previews: World English Bible. {{ attribution }}</p>
+  <form class="bible-searchbar wh-search" action="{{ url_for('words_hub') }}" method="get" role="search" style="margin-top:1.5rem">
+    <span class="bible-searchbar-icon">{{ icon('search', 20) }}</span>
+    <input type="search" name="q" class="bible-searchbar-input" placeholder="Look up another Greek or Hebrew word" autocomplete="off" aria-label="Look up another word">
+  </form>
+</main>
+{% endblock %}

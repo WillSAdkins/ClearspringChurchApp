@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "_scene.html" import banner with context %}
+{% from "icons.html" import icon %}
+{% block title %}Community · Clearspring{% endblock %}
+{% block content %}
+
+<main class="bible">
+
+  <header class="bible-head">
+    <h1 class="bible-title">Community</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+  {{ banner('community') }}
+
+
+  <p class="bible-lede">Everything we do together: services, prayer, and getting connected.</p>
+
+  <nav class="bible-list">
+    <a href="{{ url_for('calendar_page') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('calendar', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Calendar</span>
+        <span class="bible-row-sub">Services &amp; upcoming events</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('prayer_wall') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('hands', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Prayer</span>
+        <span class="bible-row-sub">Requests, your prayer list &amp; ways to pray</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('groups_index') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('users', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Groups</span>
+        <span class="bible-row-sub">Read, pray and talk together with your small group or friends</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('grow_hub') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('target', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Grow</span>
+        <span class="bible-row-sub">First steps, Foundations, your gifts, your story &amp; next steps</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    {% if section_on('sunday') %}
+    <a href="{{ url_for('sunday_page') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('pen', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">This Sunday</span>
+        <span class="bible-row-sub">Fill-in notes and questions for your group</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    {% endif %}
+
+    <a href="{{ url_for('grow_stories') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('message', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Stories</span>
+        <span class="bible-row-sub">What God has been doing among us</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    {% if section_on('questions') %}
+    <a href="{{ url_for('questions') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('message', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Questions &amp; Answers</span>
+        <span class="bible-row-sub">Ask our pastors anything</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    {% endif %}
+  </nav>
+
+</main>
+
+{% endblock %}

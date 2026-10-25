@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ ch.title }} · {{ b.title }}{% endblock %}
+{% block content %}
+<main class="bible lib cl-read" id="clChapter" data-book="{{ b.slug }}" data-n="{{ ch.n }}" data-total="{{ total }}">
+  {{ head(b.title, url_for('classics_book', slug=b.slug), "Contents", b.author) }}
+  <p class="cl-where">Chapter {{ ch.n }} of {{ total }} · {{ ch.mins }} min read</p>
+  {% set parts = ch.title.rsplit(' · ', 1) %}
+  {% if parts|length == 2 %}<p class="cl-ch-part">{{ parts[0].replace(' · ', ', ') }}</p>{% endif %}
+  <h2 class="cl-ch-title">{{ parts[-1] }}</h2>
+  <article class="lib-article cl-text">{{ ch.html }}</article>
+  <nav class="vp-paging lib-paging cl-paging">
+    {% if prev %}<a class="vp-page" href="{{ url_for('classics_chapter', slug=b.slug, n=prev.n) }}">{{ icon('chevron-left', 16) }}<span>{{ prev.title|truncate(40) }}</span></a>{% else %}<span></span>{% endif %}
+    {% if nxt %}<a class="vp-page" href="{{ url_for('classics_chapter', slug=b.slug, n=nxt.n) }}"><span>{{ nxt.title|truncate(40) }}</span>{{ icon('chevron-right', 16) }}</a>
+    {% else %}<a class="vp-page" href="{{ url_for('classics_shelf') }}"><span>The end. Back to the shelf</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  <div class="cl-bar" aria-hidden="true"><i id="clBar"></i></div>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script src="{{ url_for('static', filename='classics.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}{{ book.name }} {{ chapter }} word by word · Clearspring{% endblock %}
+{% block content %}
+<main class="bible il{{ ' il-heb' if hebrew }}" id="il">
+  {{ head(book.name ~ ' ' ~ chapter, url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter), 'Back to the chapter') }}
+
+  <p class="il-sub">{{ language }}, word by word{% if hebrew %} · read right to left{% endif %}</p>
+
+  <div class="il-bar" role="toolbar" aria-label="View">
+    <div class="il-modes" role="group" aria-label="Layout">
+      <button type="button" data-mode="words" aria-pressed="true">Words</button>
+      <button type="button" data-mode="flow" aria-pressed="false">Sentence flow</button>
+    </div>
+    <div class="il-opts" role="group" aria-label="Show">
+      <button type="button" data-opt="tr" aria-pressed="true">Say it</button>
+      <button type="button" data-opt="tag" aria-pressed="true">Grammar</button>
+      <button type="button" data-opt="col" aria-pressed="false">Colours</button>
+      <button type="button" data-opt="en" aria-pressed="true">English</button>
+    </div>
+  </div>
+
+  <div class="il-legend" id="ilLegend" hidden>
+    {% for k, name in data.roles.items() %}<a class="il-key r-{{ k }}" href="{{ url_for('grammar_page') }}#{{ data.roleSlug[k] }}"><i></i>{{ name }}</a>{% endfor %}
+  </div>
+  <p class="il-flow-note" id="ilFlowNote" hidden>Each line is one clause. Indented lines depend on the line above them: “that…”, “so that…”, “who…”.</p>
+
+  <p class="il-tip">Tap any word to see what it means, its grammar in plain English and who it refers to.</p>
+
+  {% for v in verses %}
+  <section class="il-v" id="v{{ v.n }}" aria-label="Verse {{ v.n }}">
+    <h2 class="il-vn"><a href="{{ url_for('verse_page', book_slug=book.slug, chapter=chapter, verse=v.n) }}">{{ v.n }}</a></h2>
+    {% if v.words %}
+    <div class="il-words" {% if hebrew %}dir="rtl"{% endif %}>
+      {%- for w in v.words -%}
+      <button type="button" class="il-w{{ ' r-' ~ w.r if w.r }}{{ ' il-var' if w.var }}" data-i="{{ w.i }}" data-l="{{ w.L }}" data-d="{{ w.d }}">
+        <span class="il-o" lang="{{ 'he' if hebrew else 'grc' }}">{{ w.w }}</span>
+        <span class="il-tr" dir="ltr">{{ w.tr }}</span>
+        <span class="il-g" dir="ltr">{{ w.g }}</span>
+        {% if w.tag %}<span class="il-m" dir="ltr">{{ w.tag }}</span>{% endif %}
+      </button>
+      {%- endfor -%}
+    </div>
+    {% else %}
+    <p class="gw-note">No original-language words for this verse.</p>
+    {% endif %}
+    {% if v.en %}<p class="il-en">{{ v.en }}</p>{% endif %}
+  </section>
+  {% endfor %}
+
+  <nav class="il-nav" aria-label="Chapters">
+    {% if prev %}<a href="{{ url_for('interlinear', book_slug=prev[0], chapter=prev[1]) }}">{{ icon('chevron-left', 18) }} {{ prev[2] }}</a>{% else %}<span></span>{% endif %}
+    {% if nxt %}<a href="{{ url_for('interlinear', book_slug=nxt[0], chapter=nxt[1]) }}">{{ nxt[2] }} {{ icon('chevron-right', 18) }}</a>{% endif %}
+  </nav>
+  <p class="il-links"><a href="{{ url_for('grammar_page') }}">Grammar, simply: what the labels mean</a> · <a href="{{ url_for('words_hub') }}">Look up a word</a></p>
+  <p class="ws-credit">English: Berean Standard Bible (public domain). {{ attribution }} {{ grammar_attribution }} Words marked with a dotted line are found in only some manuscripts.</p>
+</main>
+
+<div class="il-sheet" id="ilSheet" role="dialog" aria-modal="true" aria-labelledby="ilSheetWord" hidden>
+  <div class="il-sheet-card">
+    <button type="button" class="il-sheet-x" id="ilSheetClose" aria-label="Close"><span aria-hidden="true">×</span></button>
+    <div id="ilSheetBody"></div>
+  </div>
+</div>
+<script type="application/json" id="ilData">{{ data|tojson }}</script>
+<script src="{{ url_for('static', filename='interlinear.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Courses · Watch · Clearspring{% endblock %}
+{% block content %}
+<main class="bible wl">
+  <header class="bible-head">
+    <a href="{{ url_for('watch_hub') }}" class="bible-back" aria-label="Back to Watch">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Courses</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+  <nav class="pr-nav wl-nav" aria-label="Watch">
+    <a href="{{ url_for('watch_hub') }}">Sundays</a>
+    <a href="{{ url_for('watch_learn') }}" class="on" aria-current="page">Courses</a>
+  </nav>
+
+  <p class="bible-lede">Free teaching from people the church trusts: courses to take at your own pace, alone or with your group. We’ll keep your place in each one.</p>
+
+  <section class="wl-continue" id="wlContinue" hidden aria-labelledby="wlContinueH">
+    <h2 class="wl-h" id="wlContinueH">Carry on</h2>
+    <div class="wl-row" id="wlContinueRow"></div>
+  </section>
+
+  <section class="wl-levels" aria-label="Levels">
+    {% for k, n, d in levels %}
+    <a class="wl-level {{ 'on' if level == k }} lv-{{ k }}" href="{{ url_for('watch_learn', level=None if level == k else k, subject=subject or None) }}" {% if level == k %}aria-current="true"{% endif %}>
+      <span class="wl-level-n">{{ loop.index }}</span>
+      <b>{{ n }}</b>
+      <small>{{ d }}</small>
+    </a>
+    {% endfor %}
+  </section>
+
+  {% if subjects|length > 1 %}
+  <div class="filter-row wl-subjects" role="group" aria-label="Subjects">
+    <a href="{{ url_for('watch_learn', level=level or None) }}" class="filter-pill {{ 'on' if not subject }}">All subjects</a>
+    {% for k, n in subjects %}
+      <a href="{{ url_for('watch_learn', subject=k, level=level or None) }}" class="filter-pill {{ 'on' if subject == k }}">{{ n }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="wl-grid">
+    {% for c in courses %}
+    <a class="wl-card" href="{{ url_for('watch_course', slug=c['slug']) }}" data-slug="{{ c['slug'] }}" data-total="{{ c['lessons'] }}">
+      <span class="wl-thumb">
+        {% if c['thumb'] %}<img src="{{ c['thumb'] }}" alt="" loading="lazy">{% else %}<span class="wl-thumb-blank">{{ icon('play', 28) }}</span>{% endif %}
+        <span class="wl-badge lv-{{ c['level'] }}">{{ c['level_name'] }}</span>
+      </span>
+      <span class="wl-card-body">
+        <span class="wl-card-sub">{{ c['subject_name'] }}</span>
+        <span class="wl-card-t">{{ c['title'] }}</span>
+        <span class="wl-card-by">{{ c['teacher'] or c['provider'] }}{% if c['teacher'] and c['provider'] and c['provider'] not in c['teacher'] %} · {{ c['provider'] }}{% endif %}</span>
+        <span class="wl-card-meta">{% if c['lessons'] %}{{ c['lessons'] }} lesson{{ 's' if c['lessons'] != 1 }}{% endif %}{% if c['seconds'] %} · {{ fmt_length(c['seconds']) }}{% endif %}</span>
+        <span class="wl-prog" hidden><i></i></span>
+      </span>
+    </a>
+    {% else %}
+    <div class="saved-empty">
+      <span class="saved-empty-icon">{{ icon('play', 26) }}</span>
+      <p class="saved-empty-title">Nothing here yet</p>
+      <p class="saved-empty-sub">{% if subject or level %}Try another subject or level.{% else %}Courses will appear here once the church adds them.{% endif %}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% for ch in channels if ch['video_list'] %}
+  <section class="wl-shelf" aria-labelledby="ch{{ ch['id'] }}">
+    <h2 class="wl-h" id="ch{{ ch['id'] }}">Latest from {{ ch['name'] }}</h2>
+    <div class="wl-row">
+      {% for v in ch['video_list'][:10] %}
+      <a class="wl-vid" href="{{ url_for('watch_video', video_id=v['id'], ch=ch['id']) }}">
+        <span class="wl-thumb"><img src="https://i.ytimg.com/vi/{{ v['id'] }}/mqdefault.jpg" alt="" loading="lazy"></span>
+        <span class="wl-vid-t">{{ v['title'] }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <p class="wl-credit">Videos play from YouTube in its privacy-enhanced mode, and belong to the people who made them. Recommending a course doesn’t mean the church agrees with every word; if something puzzles you, ask one of the team.</p>
+</main>
+<script src="{{ url_for('static', filename='learn.js') }}"></script>
+<script>
+(function () {
+  var L = window.Learn; if (!L) return;
+  function paint() {
+    document.querySelectorAll(".wl-card[data-slug]").forEach(function (a) {
+      var p = L.progress(a.dataset.slug, +a.dataset.total || 0);
+      var bar = a.querySelector(".wl-prog");
+      if (p.done) { bar.hidden = false; bar.firstChild.style.width = Math.round(p.frac * 100) + "%"; bar.setAttribute("aria-label", p.done + " of " + p.total + " lessons watched"); bar.setAttribute("role", "img"); }
+    });
+    var row = document.getElementById("wlContinueRow"); row.textContent = "";
+    var cards = {};
+    document.querySelectorAll(".wl-card[data-slug]").forEach(function (a) { cards[a.dataset.slug] = a; });
+    var recent = L.recent().filter(function (s) { return cards[s.slug] && !L.progress(s.slug, +cards[s.slug].dataset.total || 0).complete; }).slice(0, 4);
+    recent.forEach(function (s) { var c = cards[s.slug].cloneNode(true); c.classList.add("wl-card-mini"); row.appendChild(c); });
+    document.getElementById("wlContinue").hidden = !recent.length;
+  }
+  paint();
+  L.sync().then(function (ch) { if (ch) paint(); });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}{{ 'Edit course' if c.id else 'New course' }} · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">Bible College</p><h1>{{ c.title if c.id else 'New course' }}</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin_college') }}" class="btn-ghost">← Courses</a>{% if c.id %}<a href="{{ url_for('college_course', cid=c.id) }}" class="btn-ghost">View</a>{% endif %}</div>
+  </div>
+  <form method="post" class="event-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="title">Course title</label>
+    <input type="text" id="title" name="title" maxlength="120" required value="{{ c.title }}" placeholder="Romans: the gospel explained">
+    <label for="subtitle">One line about it <small>(optional)</small></label>
+    <input type="text" id="subtitle" name="subtitle" maxlength="200" value="{{ c.subtitle or '' }}" placeholder="Ten Monday evenings through Paul’s great letter">
+    <label for="description">Introduction <small>(optional; blank lines between paragraphs, “- ” for a list)</small></label>
+    <textarea id="description" name="description" rows="5" maxlength="4000">{{ c.description or '' }}</textarea>
+    <div class="form-row">
+      <div><label for="term">Term <small>(optional)</small></label><input type="text" id="term" name="term" maxlength="60" value="{{ c.term or '' }}" placeholder="Autumn 2026"></div>
+      <div><label for="status">Status</label><select id="status" name="status">{% for k, label in statuses.items() %}<option value="{{ k }}" {{ 'selected' if c.status == k }}>{{ label }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto">Save course</button></div>
+  </form>
+
+  {% if c.id %}
+  <h2 style="margin-top:2rem">Sessions</h2>
+  <div class="admin-table">
+    {% for s in sessions %}
+    <div class="admin-row">
+      <div class="admin-row-date"><span class="mono">{{ s.session_date|pretty_date_short_day if s.session_date else 'No date' }}</span></div>
+      <div class="admin-row-main"><span class="card-tag">Session {{ s.n }}</span><strong>{{ s.title }}</strong><span class="admin-row-loc">{{ s.passage or 'No passage' }}</span></div>
+      <div class="admin-row-actions"><a href="{{ url_for('admin_college_session', cid=c.id, sid=s.id) }}" class="btn-ghost small">Edit</a></div>
+    </div>
+    {% endfor %}
+  </div>
+  <p><a href="{{ url_for('admin_college_session', cid=c.id) }}" class="btn-primary" style="display:inline-block;width:auto">+ Add a session</a></p>
+  {% if sessions %}
+  <form method="post" class="event-form" style="margin-top:1rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="dates">
+    <label for="first_date">Fill in weekly dates <small>(sessions without a date get one, a week apart, counting from session 1)</small></label>
+    <div class="form-row"><div><input type="date" id="first_date" name="first_date"></div><div><button type="submit" class="btn-ghost" style="width:auto">Fill dates</button></div></div>
+  </form>
+  {% endif %}
+  <form method="post" onsubmit="return confirm('Delete this course and all its sessions?');" style="margin-top:2rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete">
+    <button type="submit" class="btn-danger small">Delete course</button>
+  </form>
+  {% endif %}
+</main>
+{% endblock %}

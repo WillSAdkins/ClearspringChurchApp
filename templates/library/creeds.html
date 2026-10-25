@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}Creeds and confessions · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Creeds & confessions", url_for('library_hub'), "Library", "What the church has confessed") }}
+  <p class="lib-note">The great statements of faith, from the earliest creeds to the confessions and catechisms of the Reformation.</p>
+  <nav class="bible-list">
+    {% for c in creeds %}
+    <a class="bible-row" href="{{ url_for('creed_page', slug=c.slug) }}">
+      <span class="bible-row-body"><span class="bible-row-title">{{ c.title }}</span><span class="bible-row-sub">{{ c.format }}{% if c.year %} · {{ c.year }}{% endif %}</span></span>{{ icon('chevron-right', 18) }}
+    </a>
+    {% endfor %}
+  </nav>
+  {{ source("Public-domain texts from the Creeds.json project.") }}
+</main>
+{% endblock %}

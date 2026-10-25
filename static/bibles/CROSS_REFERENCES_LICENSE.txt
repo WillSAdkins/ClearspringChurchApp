@@ -1,0 +1,11 @@
+cross_references.sqlite — cross-references for every verse
+
+The references are from the Treasury of Scripture Knowledge (R. A. Torrey,
+c. 1880), which is in the public domain, as compiled by the MetaV project
+(github.com/souliberty/MetaV) and packaged as JSON at
+github.com/josephilipraja/bible-cross-reference-json, which is distributed
+under the GNU General Public License, version 2.
+
+This data file is a converted copy of that package and is kept as a separate
+file under the same licence (GPL-2.0). The rest of the Clearspring app is not
+derived from it. Rebuild with tools/build_cross_references.py.

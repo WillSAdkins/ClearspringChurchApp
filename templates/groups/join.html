@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Join a group · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw gr">
+  {{ head('Join a group', url_for('groups_index'), 'Back to Groups') }}
+  {% if not grp %}
+  <div class="gw-empty"><p><b>That invite doesn’t work</b></p><p>The link may have been changed or the group closed. Ask the person who sent it for a new one.</p></div>
+  {% else %}
+  <section class="gr-invite">
+    <p class="gr-invite-emoji" aria-hidden="true">{{ emoji }}</p>
+    <p class="gw-k">{{ kind_name }} · {{ count }} {{ 'person' if count == 1 else 'people' }}</p>
+    <h2 class="gw-h1">{{ grp['name'] }}</h2>
+    {% if grp['about'] %}<p class="gw-p">{{ grp['about'] }}</p>{% endif %}
+    {% if member %}
+    <form method="post" class="gr-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if needs_name %}<label>Your name, as others in the group will see it<input type="text" name="display_name" maxlength="60" required></label>{% endif %}
+      <button type="submit" class="ps-go">Join the group</button>
+    </form>
+    <p class="gw-note">Others in the group will see your name, what you post, and how you’re getting on with the group’s reading plan and verse. You can switch off sharing your progress at any time.</p>
+    {% else %}
+    <p class="gw-p">You need to be signed in to join, so that only members can see what’s shared.</p>
+    <a class="ps-go" href="{{ url_for('signin') }}">Sign in to join</a>
+    <a class="ps-alt" href="{{ url_for('signup') }}">Create an account</a>
+    {% endif %}
+  </section>
+  {% endif %}
+</main>
+{% endblock %}

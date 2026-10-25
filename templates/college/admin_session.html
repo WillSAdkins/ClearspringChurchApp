@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}{{ 'Edit session' if s.id else 'New session' }} · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">{{ c.title }}</p><h1>{{ ('Session ' ~ s.n) if s.id else 'New session' }}</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin_college_edit', cid=c.id) }}" class="btn-ghost">← Course</a></div>
+  </div>
+  <form method="post" class="event-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="title">Session title</label>
+    <input type="text" id="title" name="title" maxlength="120" required value="{{ s.title }}" placeholder="Born again">
+    <div class="form-row">
+      <div><label for="passage">Main passage</label><input type="text" id="passage" name="passage" maxlength="80" value="{{ s.passage or '' }}" placeholder="John 3:1-21"></div>
+      <div><label for="session_date">Date <small>(optional)</small></label><input type="date" id="session_date" name="session_date" value="{{ s.session_date or '' }}"></div>
+    </div>
+    <label for="reading">Also read <small>(optional; separate with semicolons)</small></label>
+    <input type="text" id="reading" name="reading" maxlength="300" value="{{ s.reading or '' }}" placeholder="Numbers 21:4-9; Ezekiel 36:25-27">
+    <label for="teaching">Teaching notes <small>(“# ” for a heading, “- ” for a point, blank lines between paragraphs; Bible references become links)</small></label>
+    <textarea id="teaching" name="teaching" rows="12" maxlength="20000">{{ s.teaching or '' }}</textarea>
+    <label for="questions">Questions <small>(one per line)</small></label>
+    <textarea id="questions" name="questions" rows="5" maxlength="3000">{{ s.questions or '' }}</textarea>
+    <div class="form-row">
+      <div><label for="link_label">Extra link words <small>(optional)</small></label><input type="text" id="link_label" name="link_label" maxlength="60" value="{{ s.link_label or '' }}" placeholder="Slides from the evening"></div>
+      <div><label for="link_url">Link <small>(https://…)</small></label><input type="text" id="link_url" name="link_url" maxlength="300" value="{{ s.link_url or '' }}"></div>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto">Save session</button></div>
+  </form>
+  {% if s.id %}
+  <form method="post" onsubmit="return confirm('Delete this session?');" style="margin-top:1.5rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete">
+    <button type="submit" class="btn-danger small">Delete session</button>
+  </form>
+  {% endif %}
+</main>
+{% endblock %}

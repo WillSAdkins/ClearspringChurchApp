@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Hebrew and Greek grammar · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gg">
+  {{ head('Grammar, simply', url_for('words_hub'), 'Back to Hebrew and Greek') }}
+
+  <p class="bible-lede">Every label in the word-by-word view links here. You don’t need to learn a language to use it: each entry says what the label means, why it can matter, and shows it in a real verse.</p>
+  <p class="gg-honest">A word of caution: grammar helps you see what the text says, but it rarely settles a question by itself. Read it alongside the context, the whole passage and good commentaries.</p>
+
+  <nav class="gg-toc" aria-label="Sections">
+    {% for g, title, items in groups %}<a href="#{{ g }}">{{ title }}</a>{% endfor %}
+  </nav>
+
+  {% for g, title, items in groups %}
+  <section class="gg-group" id="{{ g }}">
+    <h2 class="bible-h2">{{ title }}</h2>
+    {% if g == 'roles' %}
+    <p class="gw-note">In the word-by-word view, “Colours” shows each word’s job in its sentence:</p>
+    <div class="il-legend gg-legend">
+      {% for k, name in roles.items() %}<a class="il-key r-{{ k }}" href="#{{ role_slug[k] }}"><i></i>{{ name }}</a>{% endfor %}
+    </div>
+    {% endif %}
+    {% for e in items %}
+    <article class="gg-entry" id="{{ e.slug }}">
+      <h3>{{ e.term }} <span>{{ e.short }}</span></h3>
+      <p>{{ e.body }}</p>
+      {% if e.why %}<p class="gg-why">{{ e.why }}</p>{% endif %}
+      {% set t = texts.get(e.ref) %}
+      <figure class="gg-ex">
+        {% if t and t.text %}<blockquote>{{ t.text }}</blockquote>{% endif %}
+        <figcaption><b>{{ e.ref }}</b> · {{ e.example }}{% if t and t.href %} <a href="{{ t.href }}">See it word by word →</a>{% endif %}</figcaption>
+      </figure>
+    </article>
+    {% endfor %}
+  </section>
+  {% endfor %}
+
+  <p class="ws-credit">Verses from the Berean Standard Bible (public domain). Grammar codes from STEPBible.org (Tyndale House, Cambridge, CC BY 4.0); explanations written for Clearspring.</p>
+</main>
+{% endblock %}

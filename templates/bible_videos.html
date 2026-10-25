@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Book overview videos · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Book overview videos", url_for('bible_tab', tab='study'), "Study", "BibleProject") }}
+  <p class="bible-lede">Short animated videos that walk through each book of the Bible: its shape, its big ideas, and how it fits the whole story. A great way in before you start reading a book, or with a small group.</p>
+  <div class="bp-card">
+    <p class="bp-k">The big picture</p>
+    {% for v in whole %}<a class="bp-link" href="{{ v.url }}" rel="noopener" target="_blank"><span class="bp-play" aria-hidden="true">▶</span><span><b>{{ v.title }}</b><small>Overview</small></span></a>{% endfor %}
+  </div>
+  {% for r in rows %}
+    {% if r.book.slug == 'genesis' %}<h2 class="bible-h2 lib-sub">Old Testament</h2>{% elif r.book.slug == nt_start %}<h2 class="bible-h2 lib-sub">New Testament</h2>{% endif %}
+    {% for v in r.videos %}
+    <a class="bp-row" href="{{ v.url }}" rel="noopener" target="_blank"><span class="bp-play" aria-hidden="true">▶</span><b>{{ v.title }}</b><span class="bp-go">↗</span></a>
+    {% endfor %}
+  {% endfor %}
+  <p class="bp-credit">{{ credit }} Videos open on bibleproject.com.</p>
+</main>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, letters_bar %}
+{% block title %}{{ title }} · Clearspring{% endblock %}
+{% block content %}
+{% set ep = {'dictionary':'dictionary_page','topics':'topic_page','people':'person_page','places':'place_page'}[kind] %}
+{% set idx = {'dictionary':'dictionary_index','topics':'topics_index','people':'people_index','places':'places_index'}[kind] %}
+<main class="bible lib">
+  {{ head(title, url_for('library_hub'), "Library", "Library") }}
+  <form class="lib-search" action="{{ url_for('library_search') }}" method="get" role="search">
+    {{ icon('search', 18) }}<input type="search" name="q" placeholder="Search {{ title|lower }}…" aria-label="Search">
+  </form>
+  {{ letters_bar(url_for(idx), letters, letter) }}
+  {% if kind == 'places' %}<p class="lib-note"><a href="{{ url_for('bible_map') }}">See every place on the map →</a></p>{% endif %}
+  {% if not letter and kind in ('people', 'places') %}<h2 class="bible-h2 lib-sub">Most mentioned</h2>{% endif %}
+  {% if popular and letter == 'a' and kind == 'topics' %}{% endif %}
+  <ul class="lib-index {{ 'lib-index-cols' if kind in ('dictionary','topics') }}">
+    {% for it in items %}
+    <li><a href="{{ url_for(ep, slug=it.slug) }}">{{ it.title or it.name or it.term }}{% if it.verses %}<small>{{ it.verses }}</small>{% elif it.refs %}<small>{{ it.refs }}</small>{% endif %}</a></li>
+    {% endfor %}
+  </ul>
+  {% if not items %}<p class="lib-note">Nothing under {{ letter|upper }}.</p>{% endif %}
+</main>
+{% endblock %}

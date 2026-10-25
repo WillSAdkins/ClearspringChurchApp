@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% set show_back = false %}{# this page draws its own back link #}
+{% from "icons.html" import icon %}
+{% block title %}System status · Clearspring admin{% endblock %}
+{% block content %}
+
+<header class="admin-head">
+  <div>
+    <p class="eyebrow"><a href="{{ url_for('admin') }}" style="color:inherit;">← The board</a></p>
+    <h1>System status</h1>
+  </div>
+</header>
+
+<main class="board">
+
+  <p class="st-lead">
+    Optional features switch themselves off when their settings are missing,
+    rather than showing an error. That's deliberate, but it means a feature you
+    can't find might simply not be configured yet. Here's what's actually on.
+  </p>
+
+  <div class="st-list">
+    {% for name, f in features %}
+    <div class="st-item {{ 'on' if f.on else 'off' }}">
+      <div class="st-row">
+        <span class="st-badge">{{ "ON" if f.on else "OFF" }}</span>
+        <span class="st-name">{{ name }}</span>
+      </div>
+      <p class="st-note">{{ f.note }}</p>
+      {% if f.on %}
+        <p class="st-where">Find it: {{ f.where }}</p>
+      {% else %}
+        <p class="st-where">
+          Needs:
+          {% for e in f.env %}<code>{{ e }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+        </p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2 class="st-h2" id="bible-data">Bible data files</h2>
+  <p class="st-note" style="margin-bottom:.75rem">These come in the separate data zips, not the app zip. If one is missing, its feature quietly disappears from the app.</p>
+  <div class="st-list">
+    {% for d in data %}
+    <div class="st-item {{ 'on' if d.ok else 'off' }}">
+      <div class="st-row">
+        <span class="st-badge">{{ "OK" if d.ok else d.problem|upper }}</span>
+        <span class="st-name">{{ d.feature }}</span>
+      </div>
+      <p class="st-note"><code>static/bibles/{{ d.file }}</code>{% if d.ok %} · {{ (d.size / 1048576)|round(1) }} MB{% endif %}</p>
+      {% if not d.ok %}<p class="st-where">Fix: upload <b>{{ d.zip }}</b> again, so this file is in <code>static/bibles/</code> on GitHub, then let Render redeploy.</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2 class="st-h2">Database</h2>
+  <div class="st-item {{ 'on' if storage.exists else 'off' }}">
+    <div class="st-row">
+      <span class="st-badge">{{ "OK" if storage.exists else "MISSING" }}</span>
+      <span class="st-name">Storage location</span>
+    </div>
+    <p class="st-note"><code>{{ storage.path }}</code></p>
+    {% if storage.production and not storage.explicit %}
+      <p class="st-warn">CHURCH_DB isn't set. On a deployed site the database
+        must be on a mounted disk or data is lost on the next deploy.</p>
+    {% endif %}
+  </div>
+
+  <h2 class="st-h2">Changing a setting</h2>
+  <ol class="st-steps">
+    <li>Open your service in the Render dashboard.</li>
+    <li>Go to <strong>Environment</strong> in the left-hand menu.</li>
+    <li>Add the variable exactly as spelled above. Names are case-sensitive.</li>
+    <li>Save. Render redeploys automatically; wait for it to finish.</li>
+    <li>Come back to this page. It should now read ON.</li>
+  </ol>
+  <p class="st-note">
+    Nothing takes effect until the redeploy completes. If this page still says
+    OFF afterwards, the name or value is wrong rather than the feature being
+    broken.
+  </p>
+
+</main>
+
+<style>
+  .st-lead { font-size: var(--fs-base); line-height: 1.55; color: var(--muted);
+             max-width: 40rem; margin: 0 0 1.5rem; }
+  .st-h2 { font-family: var(--display); font-size: var(--fs-md);
+           margin: 2rem 0 .75rem; }
+  .st-list { display: grid; gap: .75rem; }
+  .st-item { border: 1px solid var(--line); border-radius: var(--r-md);
+             padding: 1rem 1rem; background: var(--surface); }
+  .st-row { display: flex; align-items: center; gap: .5rem; }
+  .st-badge {
+    font-family: var(--mono); font-size: var(--fs-2xs); font-weight: 700;
+    letter-spacing: 0.1em; padding: .25rem .5rem; border-radius: var(--r-sm);
+  }
+  .st-item.on  .st-badge { background: #6E9B57; color: #FFFFFF; }
+  .st-item.off .st-badge { background: var(--surface-2); color: var(--muted); }
+  .st-name { font-weight: 600; font-size: var(--fs-base); }
+  .st-note { font-size: var(--fs-sm); color: var(--muted); margin: .5rem 0 0;
+             line-height: 1.5; }
+  .st-where { font-size: var(--fs-sm); color: var(--muted); margin: .375rem 0 0; }
+  .st-warn { font-size: var(--fs-sm); color: #C9683C; margin: .5rem 0 0;
+             font-weight: 600; line-height: 1.5; }
+  .st-item code, .st-where code {
+    font-family: var(--mono); font-size: var(--fs-sm);
+    background: var(--surface-2); padding: .125rem .375rem;
+    border-radius: var(--r-sm);
+  }
+  .st-steps { font-size: var(--fs-base); line-height: 1.7; padding-left: 1.25rem;
+              max-width: 40rem; }
+</style>
+
+{% endblock %}

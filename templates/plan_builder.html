@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Make your own plan · Clearspring{% endblock %}
+{% block content %}
+<main class="bible pb">
+  <header class="bible-head">
+    <a href="{{ url_for('reading_plans') }}" class="bible-back" aria-label="All plans">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Your own plan</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+
+  <form id="pbForm" class="pb-form">
+    <fieldset class="pb-step">
+      <legend>1. What do you want to read?</legend>
+      <div class="pb-opts" id="pbScope">
+        {% for v, l in [('bible','The whole Bible'),('nt','New Testament'),('ot','Old Testament'),('gospels','The Gospels'),('letters','The letters'),('wisdom','Psalms & Proverbs'),('books','Choose books…')] %}
+        <label class="pb-opt"><input type="radio" name="scope" value="{{ v }}" {{ 'checked' if v == 'bible' }}><span>{{ l }}</span></label>
+        {% endfor %}
+      </div>
+      <div class="pb-books" id="pbBooks" hidden>
+        <p class="pb-books-h">Old Testament</p>
+        <div class="pb-book-grid">{% for b in books[:39] %}<label class="pb-book"><input type="checkbox" name="book" value="{{ b.slug }}"><span>{{ b.name }}</span></label>{% endfor %}</div>
+        <p class="pb-books-h">New Testament</p>
+        <div class="pb-book-grid">{% for b in books[39:] %}<label class="pb-book"><input type="checkbox" name="book" value="{{ b.slug }}"><span>{{ b.name }}</span></label>{% endfor %}</div>
+      </div>
+    </fieldset>
+
+    <fieldset class="pb-step" id="pbOrderStep">
+      <legend>2. In what order?</legend>
+      <div class="pb-opts">
+        <label class="pb-opt"><input type="radio" name="order" value="canonical" checked><span>Bible order</span></label>
+        <label class="pb-opt"><input type="radio" name="order" value="chronological"><span>Time order</span></label>
+        <label class="pb-opt" id="pbBlend"><input type="radio" name="order" value="blend"><span>Old &amp; New side by side</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="pb-step">
+      <legend>3. How long?</legend>
+      <div class="pb-len">
+        <label><input type="number" id="pbDays" min="1" max="1100" value="365" inputmode="numeric"> <span>days of reading</span></label>
+        <div class="pb-presets">{% for n, l in [(30,'A month'),(90,'3 months'),(180,'6 months'),(365,'A year'),(730,'2 years')] %}<button type="button" data-n="{{ n }}">{{ l }}</button>{% endfor %}</div>
+      </div>
+      <p class="pb-estimate" id="pbEstimate"></p>
+    </fieldset>
+
+    <fieldset class="pb-step">
+      <legend>4. Give it a name <small>(optional)</small></legend>
+      <input type="text" id="pbTitle" class="pb-title" maxlength="80" placeholder="e.g. Through the letters this autumn">
+    </fieldset>
+
+    <p class="pb-error" id="pbError" hidden></p>
+    <button type="submit" class="pb-go" id="pbGo">Make the plan</button>
+    <p class="pb-note">You’ll choose your start date and reading days next.</p>
+  </form>
+</main>
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script>
+(function () {
+  var f = document.getElementById("pbForm"), books = document.getElementById("pbBooks");
+  var est = document.getElementById("pbEstimate"), err = document.getElementById("pbError"), days = document.getElementById("pbDays");
+  var timer;
+  function values() {
+    return {
+      scope: f.scope.value, order: f.order.value, days: +days.value || 365, title: document.getElementById("pbTitle").value,
+      books: Array.prototype.slice.call(f.querySelectorAll("input[name=book]:checked")).map(function (i) { return i.value; })
+    };
+  }
+  function build() {
+    return fetch("/api/plans/build", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(values()) })
+      .then(function (r) { return r.json(); });
+  }
+  function preview() {
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      var v = values();
+      books.hidden = v.scope !== "books";
+      document.getElementById("pbBlend").hidden = v.scope !== "bible";
+      if (v.order === "blend" && v.scope !== "bible") f.order.value = "canonical";
+      if (v.scope === "books" && !v.books.length) { est.textContent = "Tick the books you’d like to read."; return; }
+      build().then(function (d) {
+        if (!d.ok) { est.textContent = d.error; return; }
+        var m = d.plan.minutes, avg = Math.round(m.reduce(function (a, b) { return a + b; }, 0) / m.length);
+        est.textContent = d.plan.subtitle + " · about " + avg + " minute" + (avg === 1 ? "" : "s") + " a day." +
+          (d.plan.days.length < v.days ? " (There are only " + d.plan.days.length + " chapters, so it can’t be longer than that.)" : "");
+      }).catch(function () { est.textContent = ""; });
+    }, 250);
+  }
+  f.addEventListener("change", preview);
+  days.addEventListener("input", preview);
+  document.querySelectorAll(".pb-presets button").forEach(function (b) {
+    b.addEventListener("click", function () { days.value = b.getAttribute("data-n"); preview(); });
+  });
+  // Tapping the button while the days box still has focus can make the page
+  // jump (the keyboard closes) between press and release, so the tap "misses".
+  // A press that started on the button still counts.
+  var go = document.getElementById("pbGo"), pressed = 0, busy = false;
+  go.addEventListener("pointerdown", function () { pressed = Date.now(); });
+  document.addEventListener("pointerup", function (e) {
+    var hit = pressed && Date.now() - pressed < 1500 && !go.contains(e.target);
+    pressed = 0;
+    if (hit) { if (f.requestSubmit) f.requestSubmit(go); else go.click(); }
+  });
+  f.addEventListener("submit", function (e) {
+    e.preventDefault(); err.hidden = true;
+    if (busy) return;
+    var v = values();
+    if (v.scope === "books" && !v.books.length) { err.textContent = "Choose at least one book."; err.hidden = false; return; }
+    busy = true;
+    build().then(function (d) {
+      if (!d.ok) { busy = false; err.textContent = d.error; err.hidden = false; return; }
+      var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      var plan = d.plan; plan.created = new Date().toISOString(); delete plan.slug;
+      Plans.saveCustom(id, plan);
+      location.href = "/bible/plans/mine/" + id;
+    }).catch(function () { busy = false; err.textContent = "Couldn’t make the plan. Check your connection and try again."; err.hidden = false; });
+  });
+  preview();
+})();
+</script>
+{% endblock %}

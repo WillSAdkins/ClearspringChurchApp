@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}{{ plan.title if plan else 'Your plan' }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible pl" id="planPage" data-slug="{{ plan.slug if plan else 'c:' ~ custom_id }}"
+      {% if church %}data-church-slug="{{ church.slug }}" data-church-start="{{ church.start }}"{% endif %}>
+  <header class="bible-head">
+    <a href="{{ url_for('reading_plans') }}" class="bible-back" aria-label="All plans">{{ icon('chevron-left', 22) }}</a>
+    <span class="pl-head-emoji" id="plEmoji" aria-hidden="true">{{ plan.emoji if plan else '🧭' }}</span>
+    <span style="width:2.4rem"></span>
+  </header>
+  <h1 class="pl-title" id="plTitle">{{ plan.title if plan else '' }}</h1>
+  <p class="pl-sub" id="plSub">{{ plan.subtitle if plan else '' }}</p>
+  <p class="pl-meta" id="plMeta"></p>
+
+  {% if video_embed %}
+  <div class="video-frame">
+    <iframe src="{{ video_embed }}" title="{{ plan.title }}" frameborder="0" allow="encrypted-media; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+  {% endif %}
+
+  <!-- Not started yet -->
+  <section class="pl-start" id="plStart" hidden>
+    <h2 class="pl-h">Start this plan</h2>
+    <label class="pl-field"><span>Start on</span><input type="date" id="plStartDate"></label>
+    <div class="pl-field"><span>Read on</span>
+      <div class="pl-days" id="plDays" role="group" aria-label="Reading days">
+        {% for n, d in [(1,'M'),(2,'T'),(3,'W'),(4,'T'),(5,'F'),(6,'S'),(0,'S')] %}<button type="button" class="pl-day on" data-d="{{ n }}" aria-pressed="true" aria-label="{{ ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][n] }}">{{ d }}</button>{% endfor %}
+      </div>
+    </div>
+    <p class="pl-ends" id="plEnds"></p>
+    <button type="button" class="pl-go" id="plGo">Start the plan</button>
+    {% if church and plan and church.slug == plan.slug %}<p class="pl-church-note">This is the plan the church is reading together. Starting it puts you on the same day as everyone else.</p>{% endif %}
+  </section>
+
+  <!-- Started -->
+  <section class="pl-on" id="plOn" hidden>
+    <div class="pl-progress">
+      <div class="pl-ring" id="plRing"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" class="pl-ring-bg"/><circle cx="22" cy="22" r="19" class="pl-ring-fg" id="plRingFg"/></svg><b id="plPct">0%</b></div>
+      <div>
+        <p class="pl-count" id="plCount"></p>
+        <p class="pl-state" id="plState"></p>
+      </div>
+    </div>
+    <div class="pl-catchup" id="plCatchup" hidden>
+      <p id="plCatchupText"></p>
+      <div class="pl-catchup-actions">
+        <button type="button" id="plShift">Start again from today</button>
+        <button type="button" id="plSkip">Skip the missed days</button>
+      </div>
+      <p class="pl-catchup-hint">Or just read the missed days below. You can always catch up at your own pace.</p>
+    </div>
+    <div class="pl-today" id="plToday"></div>
+  </section>
+
+  <div class="pl-list-head">
+    <h2 class="pl-h">All {{ plan.days|length if plan else '' }} days</h2>
+    <button type="button" class="pl-jump" id="plJump" hidden>Jump to today</button>
+  </div>
+  <ol class="pl-list" id="plList"></ol>
+
+  <section class="pl-foot" id="plFoot" hidden>
+    <h2 class="pl-h">Reminders</h2>
+    <p class="pl-note">Get a daily nudge to read: <a href="{{ url_for('notification_settings') }}">turn on reading reminders</a>, or add a repeating reminder to your calendar.</p>
+    <div class="pl-cal">
+      <label>Time <input type="time" id="plCalTime" value="07:30"></label>
+      <a class="pl-cal-btn" id="plCal" href="#">Add to my calendar</a>
+    </div>
+    <button type="button" class="pl-stop" id="plStop">Stop this plan</button>
+  </section>
+
+  <p class="pl-missing" id="plMissing" hidden>This plan isn’t on this device. If you made it on another device, sign in on both and it will appear. <a href="{{ url_for('reading_plans') }}">See all plans</a></p>
+</main>
+{% if plan %}<script id="planData" type="application/json">{{ plan|tojson }}</script>{% endif %}
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script src="{{ url_for('static', filename='plan-view.js') }}"></script>
+{% endblock %}

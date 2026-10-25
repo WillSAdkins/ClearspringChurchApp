@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}Reference shelf · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Reference shelf", url_for('library_hub'), "Library", "Classic reference works") }}
+  <p class="bible-lede">Three of the great reference books of the nineteenth and early twentieth centuries, complete, plus Spurgeon’s daily readings. For modern articles, start with the <a href="{{ url_for('dictionary_index') }}">Bible dictionary</a>.</p>
+  <form class="lib-search" action="{{ url_for('library_search') }}" method="get" role="search">
+    {{ icon('search', 18) }}<input type="search" name="q" placeholder="Search every reference work…" aria-label="Search the reference works">
+  </form>
+  {% if today %}
+  <a class="me-card" href="{{ url_for('morning_evening') }}">
+    <span class="me-k">{{ today.part|capitalize }} · Spurgeon</span>
+    <b>{{ today.verse|truncate(110) }}</b>
+    <span class="me-ref">{{ today.ref }}</span>
+    <span class="me-go">Read today’s {{ today.part }} reading →</span>
+  </a>
+  {% endif %}
+  <div class="ref-works">
+    {% for code, w in works.items() %}
+    <a class="ref-work" href="{{ url_for('reference_index', work=code) }}">
+      <b>{{ w.full }}</b>
+      <span class="ref-meta">{{ w.editor }}, {{ w.year }} · {{ "{:,}".format(counts.get(code, 0)) }} entries</span>
+      <span>{{ w.about }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  <p class="lib-source">All public domain, from the CrossWire SWORD modules. <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+{% endblock %}

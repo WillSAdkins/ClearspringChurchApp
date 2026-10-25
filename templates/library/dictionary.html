@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, source, chip_person, chip_place %}
+{% from "library/_ui.html" import ref_also with context %}
+{% block title %}{{ d.term }} · Bible dictionary{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(d.term, url_for('dictionary_index', l=d.term[:1]|lower), "Dictionary", "Easton’s Bible Dictionary") }}
+  {% if modern %}<a class="lib-card-link" href="{{ url_for('dictionary_page', slug=d.slug) }}"><b>Read the modern article</b><span>From the Tyndale Open Bible Dictionary</span></a>{% endif %}
+  {% if d.meaning %}<p class="lib-meaning"><span>Name meaning</span>{{ d.meaning }}</p>{% endif %}
+  {% if links %}<div class="lib-chips lib-related">{% for kind, x in links %}{{ chip_person(x) if kind == 'person' else chip_place(x) }}{% endfor %}</div>{% endif %}
+  <article class="lib-article">
+    {% for s in d.senses %}
+      {% if d.senses|length > 1 %}<p class="lib-sense">{{ loop.index }}.</p>{% endif %}
+      {{ s.html|safe }}
+    {% endfor %}
+  </article>
+  {{ ref_also(d.slug) }}
+  {% if topic %}<a class="lib-card-link" href="{{ url_for('topic_page', slug=topic.slug) }}"><b>{{ topic.name }} in Nave’s Topical Bible</b><span>{{ topic.refs }} references, arranged by theme</span></a>{% endif %}
+  <nav class="vp-paging lib-paging">
+    {% if prev %}<a class="vp-page" href="{{ url_for('dictionary_page', slug=prev.slug) }}">{{ icon('chevron-left', 16) }}<span>{{ prev.term }}</span></a>{% else %}<span></span>{% endif %}
+    {% if nxt %}<a class="vp-page" href="{{ url_for('dictionary_page', slug=nxt.slug) }}"><span>{{ nxt.term }}</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  {{ source("Easton’s Bible Dictionary (1897), public domain. Text via Theographic Bible Metadata, CC BY-SA 4.0.") }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

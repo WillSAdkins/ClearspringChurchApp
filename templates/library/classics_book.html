@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ b.title }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib" id="clBook" data-book="{{ b.slug }}" data-total="{{ b.chapters }}" data-title="{{ b.title }}">
+  {{ head(b.title, url_for('classics_shelf'), "Classic books", b.author ~ " · " ~ b.year) }}
+  <p class="bible-lede">{{ b.about }}</p>
+  <p class="cl-facts">{{ b.chapters }} chapters · {{ "{:,}".format(b.words) }} words · {{ b.time }} to read{% if b.translator %} · Translated by {{ b.translator }}{% endif %}</p>
+  <div class="cl-actions">
+    <a class="ps-go" id="clGo" href="{{ url_for('classics_chapter', slug=b.slug, n=1) }}">Start reading</a>
+    <button class="ps-link cl-save" type="button" id="clSave" hidden>Save for offline reading</button>
+  </div>
+  <div class="cl-progress" id="clProgress" hidden><i></i><small></small></div>
+  <p class="cl-status" id="clStatus" role="status"></p>
+  <h2 class="bible-h2 lib-sub">Contents</h2>
+  {% set ns = namespace(group=None) %}
+  <ol class="cl-toc">
+    {% for c in contents %}
+    {% set parts = c.title.rsplit(' · ', 1) %}
+    {% if parts|length == 2 and parts[0] != ns.group %}{% set ns.group = parts[0] %}<li class="cl-toc-group" aria-hidden="false"><h3>{{ parts[0].replace(' · ', ', ') }}</h3></li>{% endif %}
+    <li data-n="{{ c.n }}"><a href="{{ url_for('classics_chapter', slug=b.slug, n=c.n) }}"><span>{{ parts[-1] }}</span><small>{{ c.mins }} min</small></a></li>
+    {% endfor %}
+  </ol>
+  <p class="lib-source">{{ b.source }}. <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+<script src="{{ url_for('static', filename='classics.js') }}"></script>
+{% endblock %}

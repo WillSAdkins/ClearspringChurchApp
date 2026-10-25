@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% set show_back = false %}{# this page draws its own back link #}
+{% block title %}Watch library · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page wl-admin">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area</p>
+      <h1>Watch library</h1>
+    </div>
+    <div class="admin-actions">
+      <a href="{{ url_for('watch_learn') }}" class="btn-ghost">See it in the app</a>
+      <a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a>
+    </div>
+  </div>
+
+  <p class="empty-sub" style="margin-bottom:1rem;">
+    Courses and teaching from YouTube channels the church trusts, shown under <strong>Watch → Courses</strong>.
+    A course is a YouTube playlist, or a list of videos you choose. The app plays them in YouTube's
+    privacy-enhanced player and credits the people who made them; nothing is copied.
+    The starter list is a suggestion: watch a little of each before you leave it in, and hide or delete anything that isn't right for Clearspring.
+  </p>
+  {% if not api_key %}
+  <p class="field-hint" style="margin-bottom:1.5rem;">
+    Without a YouTube key the app can list the first 15 lessons of each playlist (the player still plays them all).
+    For full lesson lists and lengths, add a free <code>YOUTUBE_API_KEY</code> on Render: see <code>docs/WATCH_LIBRARY.md</code>.
+  </p>
+  {% endif %}
+
+  <form method="post" style="margin:0 0 1.5rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="refresh">
+    <button type="submit" class="btn-ghost">Check YouTube for updates now</button>
+  </form>
+
+  <h2 class="section-label">Courses ({{ courses|length }})</h2>
+  <div class="admin-table">
+    {% for c in courses %}
+      <div class="admin-row" id="c{{ c['id'] }}">
+        <div class="admin-row-date">
+          <span class="mono">{{ c['level_name'] }}</span>
+          <span class="mono" style="color:var(--muted)">{{ c['subject_name'] }}</span>
+        </div>
+        <div class="admin-row-main">
+          <strong>{{ c['title'] }}{% if c['featured'] %} ★{% endif %}</strong>
+          <span class="admin-row-loc">
+            {{ c['teacher'] or '' }}{% if c['provider'] %} · {{ c['provider'] }}{% endif %} ·
+            {{ c['lessons'] }} lesson{{ 's' if c['lessons'] != 1 }}{% if c['playlist_id'] %} (playlist){% endif %}
+            {% if c['status'] == 'hidden' %} · <b>hidden</b>{% endif %}
+          </span>
+          {% if c['status'] == 'broken' %}<span class="admin-row-loc" style="color:#B3261E"><b>Not shown:</b> {{ c['problem'] }}</span>
+          {% elif c['problem'] %}<span class="admin-row-loc" style="color:#8A6A10">{{ c['problem'] }}</span>{% endif %}
+        </div>
+        <div class="admin-row-actions">
+          <a href="{{ url_for('watch_course', slug=c['slug']) }}" class="btn-ghost small">View</a>
+          <a href="{{ url_for('admin_watch_library', edit=c['id']) }}#edit" class="btn-ghost small">Edit</a>
+          {% for act, label in [('up', '↑'), ('down', '↓'), ('hide' if c['status'] != 'hidden' else 'show', 'Hide' if c['status'] != 'hidden' else 'Show')] %}
+          <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ c['id'] }}">
+            <button type="submit" name="action" value="{{ act }}" class="btn-ghost small" {% if act in ('up','down') %}aria-label="Move {{ c['title'] }} {{ act }}"{% endif %}>{{ label }}</button></form>
+          {% endfor %}
+          <form method="post" onsubmit="return confirm('Delete this course from the library?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ c['id'] }}">
+            <button type="submit" name="action" value="delete" class="btn-danger small">Delete</button>
+          </form>
+        </div>
+      </div>
+    {% else %}
+      <p class="empty-sub">No courses yet.</p>
+    {% endfor %}
+  </div>
+
+  <h2 class="section-label" id="edit" style="margin-top:2.5rem;">{{ "Edit “" ~ edit['title'] ~ "”" if edit else "Add a course" }}</h2>
+  <form method="post" class="event-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="{{ 'save' if edit else 'add' }}">
+    {% if edit %}<input type="hidden" name="id" value="{{ edit['id'] }}">{% endif %}
+    <label for="wl-title">Title</label>
+    <input type="text" id="wl-title" name="title" required maxlength="150" value="{{ edit['title'] if edit else '' }}" placeholder="The Gospel of Mark">
+
+    <label for="wl-source">YouTube playlist link, or videos</label>
+    <textarea id="wl-source" name="source" rows="4" {% if not edit %}required{% endif %}
+      placeholder="https://www.youtube.com/playlist?list=PL…&#10;— or one video per line, with an optional title:&#10;https://youtu.be/abcdefghijk | Session 1: Who is Jesus?">{% if edit and edit['playlist_id'] %}https://www.youtube.com/playlist?list={{ edit['playlist_id'] }}{% elif edit %}{% for v in edit_videos %}https://youtu.be/{{ v['video_id'] }}{% if v['title'] %} | {{ v['title'] }}{% endif %}
+{% endfor %}{% endif %}</textarea>
+    <p class="field-hint">A playlist keeps itself up to date: lessons added on YouTube appear here. A list of videos stays exactly as you set it.{% if edit %} Leave as it is to keep the lessons.{% endif %}</p>
+
+    <div class="form-row">
+      <div>
+        <label for="wl-teacher">Teacher</label>
+        <input type="text" id="wl-teacher" name="teacher" maxlength="120" value="{{ (edit['teacher'] or '') if edit else '' }}" placeholder="Rebecca McLaughlin">
+      </div>
+      <div>
+        <label for="wl-provider">From (organisation or channel)</label>
+        <input type="text" id="wl-provider" name="provider" maxlength="120" value="{{ (edit['provider'] or '') if edit else '' }}" placeholder="BibleProject">
+      </div>
+    </div>
+    <label for="wl-provider-url">Their website</label>
+    <input type="url" id="wl-provider-url" name="provider_url" maxlength="300" value="{{ (edit['provider_url'] or '') if edit else '' }}" placeholder="https://bibleproject.com">
+
+    <div class="form-row">
+      <div>
+        <label for="wl-subject">Subject</label>
+        <select id="wl-subject" name="subject">
+          {% for k, n in subjects %}<option value="{{ k }}" {{ 'selected' if edit and edit['subject'] == k }}>{{ n }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="wl-level">Level</label>
+        <select id="wl-level" name="level">
+          {% for k, n, d in levels %}<option value="{{ k }}" {{ 'selected' if edit and edit['level'] == k }}>{{ n }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <label for="wl-about">About this course</label>
+    <textarea id="wl-about" name="about" rows="4" maxlength="2000" placeholder="Who it's for, how long it takes, and why we recommend it.">{{ (edit['about'] or '') if edit else '' }}</textarea>
+
+    <label class="admin-check">
+      <input type="checkbox" name="featured" {{ 'checked' if edit and edit['featured'] }}>
+      <span>Feature on the Watch page</span>
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" style="width:auto;">{{ "Save changes" if edit else "Add course" }}</button>
+      {% if edit %}<a href="{{ url_for('admin_watch_library') }}" class="btn-ghost">Cancel</a>{% endif %}
+    </div>
+  </form>
+
+  <h2 class="section-label" style="margin-top:2.5rem;">“Latest from” channels</h2>
+  <p class="empty-sub">The newest videos from these channels show on Watch → Courses.</p>
+  <div class="admin-table">
+    {% for ch in channels %}
+      <div class="admin-row">
+        <div class="admin-row-main">
+          <strong>{{ ch['name'] }}{% if not ch['active'] %} (off){% endif %}</strong>
+          <span class="admin-row-loc">{{ ch['video_list']|length }} recent videos{% if ch['problem'] %} · {{ ch['problem'] }}{% endif %}</span>
+        </div>
+        <div class="admin-row-actions">
+          <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ ch['id'] }}">
+            <button type="submit" name="action" value="{{ 'channel_off' if ch['active'] else 'channel_on' }}" class="btn-ghost small">{{ 'Turn off' if ch['active'] else 'Turn on' }}</button></form>
+          <form method="post" onsubmit="return confirm('Remove this channel?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ ch['id'] }}">
+            <button type="submit" name="action" value="channel_delete" class="btn-danger small">Remove</button></form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <form method="post" class="event-form" style="margin-top:1rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="add_channel">
+    <div class="form-row">
+      <div><label for="wl-ch">Channel link</label><input type="text" id="wl-ch" name="channel" placeholder="https://www.youtube.com/@bibleproject"></div>
+      <div><label for="wl-chn">Name to show</label><input type="text" id="wl-chn" name="channel_name" maxlength="80" placeholder="BibleProject"></div>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto;">Add channel</button></div>
+  </form>
+</main>
+{% endblock %}

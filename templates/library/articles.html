@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ info.title }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(info.title, url_for('library_hub'), "Library", "Library") }}
+  <p class="bible-lede">{{ info.about }}</p>
+  <div class="lib-search">
+    {{ icon('search', 18) }}<input type="search" id="artFilter" placeholder="Find in {{ items|length }} {{ info.title|lower }}…" aria-label="Filter {{ info.title|lower }}" autocomplete="off">
+  </div>
+  <ul class="art-list" id="artList">
+    {% for it in items %}
+    <li data-t="{{ it.title|lower }}"><a href="{{ url_for(kind ~ '_page', slug=it.slug) }}"><b>{{ it.title }}</b>{% if it.summary and kind != 'term' %}<span>{{ it.summary }}</span>{% endif %}</a></li>
+    {% endfor %}
+  </ul>
+  <p class="lib-note" id="artNone" hidden>Nothing matches. Try the <a href="{{ url_for('library_search') }}">Library search</a>.</p>
+  <p class="lib-source">{{ source.credit }}</p>
+</main>
+<script>
+(function () {
+  var f = document.getElementById("artFilter"), items = document.querySelectorAll("#artList li"), none = document.getElementById("artNone");
+  f.addEventListener("input", function () {
+    var q = f.value.trim().toLowerCase(), shown = 0;
+    Array.prototype.forEach.call(items, function (li) { var on = !q || li.getAttribute("data-t").indexOf(q) >= 0; li.hidden = !on; if (on) shown++; });
+    none.hidden = shown > 0;
+  });
+})();
+</script>
+{% endblock %}

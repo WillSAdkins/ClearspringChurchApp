@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% set show_back = false %}{# this page draws its own back link #}
+{% from "icons.html" import icon %}
+{% block title %}Your account · Clearspring{% endblock %}
+{% block content %}
+<main class="bible">
+  <header class="bible-head">
+    <a href="{{ url_for('more_hub') }}" class="bible-back" aria-label="Back">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Your account</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+
+  <section class="ac-head">
+    <span class="gp-avatar ac-avatar" aria-hidden="true">{{ (m['name'] or m['email'])[:1]|upper }}</span>
+    <div>
+      <p class="ac-name">{{ m['name'] or 'Add your name' }}</p>
+      <p class="ac-email">{{ m['email'] }}</p>
+    </div>
+  </section>
+
+  <details class="gw-more ac-namebox" {{ 'open' if not m['name'] }}>
+    <summary>{{ 'Change your name' if m['name'] else 'Add your name' }}</summary>
+    <form method="post" action="{{ url_for('account_name') }}" class="ps-thanks">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="name" maxlength="60" value="{{ m['name'] or '' }}" placeholder="Your name" aria-label="Your name">
+      <button type="submit">Save</button>
+    </form>
+    <p class="gw-note">This is what people see in your groups. Your email address is never shown to them.</p>
+  </details>
+
+  <a class="ac-sync" href="{{ url_for('account_data') }}">
+    <span class="ac-sync-k">On your account</span>
+    <span class="ac-sync-t">{{ total }} thing{{ 's' if total != 1 }} kept safe{% if last_sync %} · last saved {{ last_sync|ago }}{% endif %}</span>
+    <span class="ac-sync-s">Your notes, plans, prayers and settings follow you to any phone or computer you sign in on.</span>
+    <span class="ac-sync-cta">Sync now or download a copy →</span>
+  </a>
+
+  <nav class="bible-list" style="margin-top:1rem;">
+    <a href="{{ url_for('groups_index') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('users', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Your groups</span>
+        <span class="bible-row-sub">{% if groups %}{{ groups|map(attribute='name')|join(', ')|truncate(60) }}{% else %}Read, pray and learn together{% endif %}</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    <a href="{{ url_for('discipleship') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('target', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">My discipleship</span>
+        <span class="bible-row-sub">Prayer, scripture and study, week by week</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    <a href="{{ url_for('member_progress') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('trophy', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Your progress</span>
+        <span class="bible-row-sub">Streak and badges</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    <a href="{{ url_for('my_study') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('notebook', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">My study</span>
+        <span class="bible-row-sub">Notes, highlights, saved verses and journal</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    <a href="{{ url_for('prayer_journal') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('hands', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">My prayers</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    <a href="{{ url_for('account_password') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('settings', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Password</span>
+        <span class="bible-row-sub">Change it, or set one if you sign in by email link</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    <a href="{{ url_for('notification_settings') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('settings', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Notifications</span>
+        <span class="bible-row-sub">Including news from your groups</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+  </nav>
+
+  {% if blocked %}
+  <section class="acct-blocked" id="blocked">
+    <h2 class="bible-h2">People you’ve hidden</h2>
+    <p class="lib-note">You don’t see their posts in groups. They aren’t told.</p>
+    <ul>
+      {% for b in blocked %}
+      <li><span>{{ b.name or 'A member' }}</span>
+        <form method="post" action="{{ url_for('account_unblock', blocked_id=b.blocked_id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="ps-link">Show again</button></form></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('signout') }}" style="margin-top:2.5rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn-ghost" style="width:100%;">Sign out</button>
+  </form>
+
+  <details style="margin-top:2.5rem;">
+    <summary style="cursor:pointer; opacity:.65; font-size:var(--fs-base);">Delete my account</summary>
+    <form method="post" action="{{ url_for('account_delete') }}" style="margin-top:1rem;"
+          onsubmit="return confirm('This permanently deletes your account, saved verses, notes, journal, scores and everything you have posted in groups. There is no undo. Delete it?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p style="font-size:var(--fs-base); opacity:.75; margin:0 0 .75rem;">
+        This permanently removes your account and everything saved to it:
+        saved verses, notes, prayers, reading progress, game scores, and everything you have posted in groups. You will leave all your groups.
+        It cannot be undone.
+      </p>
+      {% if member.password_hash %}
+        <label style="display:block; font-size:var(--fs-base); margin-bottom:.375rem;" for="del-pw">Confirm your password</label>
+        <input id="del-pw" type="password" name="password" required autocomplete="current-password"
+               style="width:100%; margin-bottom:.75rem;">
+      {% else %}
+        {# No password on this account — they sign in by emailed link. Typing
+           the address is the confirmation instead, so deletion stays possible. #}
+        <label style="display:block; font-size:var(--fs-base); margin-bottom:.375rem;" for="del-em">
+          Type your email address to confirm
+        </label>
+        <input id="del-em" type="email" name="confirm_email" required
+               placeholder="{{ member.email }}" autocomplete="off"
+               style="width:100%; margin-bottom:.75rem;">
+      {% endif %}
+      <button type="submit" class="btn-ghost" style="width:100%; color:var(--danger); border-color:var(--danger);">
+        Permanently delete my account
+      </button>
+    </form>
+  </details>
+</main>
+{% endblock %}

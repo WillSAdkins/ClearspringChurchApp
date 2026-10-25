@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, chip_person, chip_place %}
+{% block title %}{{ label ~ ' · ' if found }}Study a passage · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib ps2" id="ps2">
+  {{ head(label if found else 'Study a passage', url_for('bible_tab', tab='study'), 'Study', 'Passage study' if found else 'Study') }}
+
+  <form class="ps2-pick" action="{{ url_for('passage_study_page') }}" method="get" role="search">
+    <label class="sr-only" for="ps2Ref">Passage</label>
+    <input id="ps2Ref" name="ref" type="text" value="{{ raw }}" placeholder="e.g. John 3:1-21 or Psalm 23" autocomplete="off" enterkeyhint="go">
+    {% if codes != ['bsb'] %}<input type="hidden" name="t" value="{{ codes|join(',') }}">{% endif %}
+    <button type="submit" class="ps-go">Study</button>
+  </form>
+
+  {% if not found %}
+    {% if bad %}<p class="lib-note">Couldn’t find “{{ raw }}”. Try something like “Romans 8:28-39”.</p>{% endif %}
+    <p class="bible-lede">Pick a passage and study it properly: the text in several translations side by side, modern study notes, the key Greek or Hebrew words, cross references, what the early church said, and a guided way to work through it, on your own or with a group.</p>
+    <div class="ps2-suggest">{% for s in suggestions %}<a class="filter-pill" href="{{ url_for('passage_study_page', ref=s) }}">{{ s }}</a>{% endfor %}</div>
+    <section class="lib-section" id="ps2Recent" hidden>
+      <h2 class="bible-h2">Your recent studies</h2>
+      <div class="ps2-suggest" id="ps2RecentList"></div>
+    </section>
+  {% else %}
+
+  <div class="ps2-trans" role="group" aria-label="Translations (choose up to three)">
+    {% for code, name in translations.items() %}
+      {% set on = code in codes %}
+      {% set next = (codes|reject('equalto', code)|list) if on else (codes + [code])[-3:] %}
+      <a class="filter-pill{{ ' on' if on }}" {% if on %}aria-current="true"{% endif %}
+         href="{{ url_for('passage_study_page', ref=label, t=(next or ['bsb'])|join(',')) }}">{{ name }}{% if on %}<span class="sr-only"> (shown, tap to hide)</span>{% endif %}</a>
+    {% endfor %}
+  </div>
+  <nav class="ps2-links" aria-label="More on this passage">
+    <a href="{{ url_for('bible_read_chapter', book_slug=book.slug, chapter=chapters[0]) }}">Read in context</a>
+    <a href="{{ url_for('interlinear', book_slug=book.slug, chapter=chapters[0]) }}{% if found.verse %}#v{{ found.verse }}{% endif %}">Word by word</a>
+    {% if has_intro %}<a href="{{ url_for('book_intro', book_slug=book.slug) }}">Introducing {{ book.name }}</a>{% endif %}
+    {% if section %}<a href="{{ url_for('passage_study_page', ref=label, whole=1, t=codes|join(',')) }}">Study the whole section</a>{% endif %}
+    {% if parallels %}<a href="{{ url_for('compare_passages', r=[label] + parallels, t=label) }}">Compare with {{ parallels|join(', ') }}</a>{% endif %}
+  </nav>
+  {% if bp_video %}
+  <a class="bp-link bp-inline" href="{{ bp_video.url }}" rel="noopener" target="_blank"><span class="bp-play" aria-hidden="true">▶</span><span><b>Watch: {{ bp_video.title }}</b><small>BibleProject overview, opens bibleproject.com. BibleProject is the author and owner of this content.</small></span></a>
+  {% endif %}
+
+  <section class="ps2-text{{ ' ps2-multi' if codes|length > 1 }}" aria-label="The passage">
+    {% set ns = namespace(ch=None) %}
+    {% for r in rows %}
+      {% if chapters|length > 1 and r.c != ns.ch %}<h2 class="ps2-ch">Chapter {{ r.c }}</h2>{% set ns.ch = r.c %}{% endif %}
+      <div class="ps2-v" id="v{{ r.c }}-{{ r.v }}">
+        <a class="ps2-n" href="{{ url_for('verse_page', book_slug=book.slug, chapter=r.c, verse=r.v) }}">{{ r.v }}</a>
+        <div class="ps2-lines">
+          {% for code, name, text in r.lines %}
+            <p class="ps2-line ps2-{{ code }}">{% if codes|length > 1 %}<span class="ps2-tl">{{ name }}</span>{% endif %}{{ text or '—' }}</p>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+    {% if capped %}<p class="lib-note">That’s the first 80 verses. For a longer passage, study it a section at a time.</p>{% endif %}
+  </section>
+
+  <div class="ps2-tabs" role="tablist" aria-label="Study tools">
+    <button type="button" role="tab" data-tab="study" aria-selected="true">Study it</button>
+    {% if notes %}<button type="button" role="tab" data-tab="notes" aria-selected="false">Notes <small>{{ notes|length }}</small></button>{% endif %}
+    {% if words %}<button type="button" role="tab" data-tab="words" aria-selected="false">Key words</button>{% endif %}
+    {% if xrefs %}<button type="button" role="tab" data-tab="xrefs" aria-selected="false">Cross references</button>{% endif %}
+    {% if early %}<button type="button" role="tab" data-tab="early" aria-selected="false">Early church</button>{% endif %}
+    {% if people or places or related %}<button type="button" role="tab" data-tab="more" aria-selected="false">People &amp; more</button>{% endif %}
+  </div>
+
+  <section class="ps2-panel" data-panel="study" role="tabpanel">
+    <p class="gw-note">Work through the passage step by step. Your answers are kept on this device as you type, and you can save them to your study journal.</p>
+    {% for step in guide %}
+    <div class="ps2-step" data-step="{{ step.key }}">
+      <h3><span>{{ loop.index }}</span>{{ step.title }} <small>{{ step.lead }}</small></h3>
+      <ul class="ps2-prompts">{% for p in step.prompts %}<li>{{ p }}</li>{% endfor %}</ul>
+      {% if step.key == 'observe' and (repeated or people) %}
+      <div class="ps2-hints"><b>Notice:</b>
+        {% for w in repeated %}<span class="ps2-hint">“{{ w }}”</span>{% endfor %}
+        {% for p in people[:5] %}<a class="ps2-hint" href="{{ url_for('person_page', slug=p.slug) }}">{{ p.name }}</a>{% endfor %}
+      </div>
+      {% elif step.key == 'interpret' and words %}
+      <div class="ps2-hints"><b>Key words:</b>
+        {% for w in words[:5] %}<a class="ps2-hint" href="{{ url_for('word_page', code=w.strong) }}">{{ w.gloss or w.meaning }}</a>{% endfor %}
+        {% if notes %}<button type="button" class="ps2-hint ps2-go" data-goto="notes">Read the notes</button>{% endif %}
+      </div>
+      {% endif %}
+      <label class="sr-only" for="ps2A{{ step.key }}">Your notes: {{ step.title }}</label>
+      <textarea id="ps2A{{ step.key }}" class="jx-area" rows="3" data-answer="{{ step.key }}" placeholder="Your thoughts…"></textarea>
+    </div>
+    {% endfor %}
+    <div class="ps2-actions">
+      <button type="button" class="ps-go" id="ps2Save">Save to my study journal</button>
+      <button type="button" class="ps-link" id="ps2Group">Leading a group? Show discussion questions</button>
+    </div>
+    <p class="ps2-status" id="ps2Status" aria-live="polite"></p>
+
+    <div class="ps2-group" id="ps2GroupBox" hidden>
+      <h3>Discussion questions: {{ label }}</h3>
+      <ol>
+        <li>What stands out to you as we read {{ label }}?</li>
+        {% for step in guide if step.key != 'pray' %}{% for p in step.prompts[:2] %}<li>{{ p }}</li>{% endfor %}{% endfor %}
+        {% if words %}<li>The word translated “{{ words[0].gloss or words[0].meaning }}” matters here. What does it add?</li>{% endif %}
+        <li>How can we pray for each other this week in the light of this passage?</li>
+      </ol>
+      <div class="ps2-actions"><button type="button" class="ps-link" id="ps2Print">Print</button><button type="button" class="ps-link" id="ps2Copy">Copy the questions</button></div>
+    </div>
+
+    {% if can_ask %}
+    <div class="ps2-ask">
+      <h3>Ask about this passage</h3>
+      <p class="gw-note">Answers come only from the study notes and articles in this app, with the sources shown. It’s a study aid: your pastor is the place for what Clearspring teaches.</p>
+      <form id="ps2AskForm">
+        <label class="sr-only" for="ps2Q">Your question</label>
+        <textarea id="ps2Q" class="jx-area" rows="2" maxlength="500" placeholder="e.g. Why did Nicodemus come at night?"></textarea>
+        <button type="submit" class="ps-go">Ask</button>
+      </form>
+      <div class="ps2-answer" id="ps2Answer" aria-live="polite"></div>
+    </div>
+    {% endif %}
+  </section>
+
+  {% if notes %}
+  <section class="ps2-panel" data-panel="notes" role="tabpanel">
+    {% for n in notes %}
+    <article class="sn-note sn-{{ n.source }}">
+      <h3 class="sn-ref"><a href="{{ url_for('notes_chapter', book_slug=book.slug, chapter=n.c1) }}#v{{ n.v1 }}">{{ n.title }}</a>{% if n.source == 'biblica' %}<span class="sn-kind">Section</span>{% endif %}</h3>
+      <div class="lib-article sn-body">{{ n.html }}</div>
+    </article>
+    {% endfor %}
+    <p class="lib-source">Tyndale Open Study Notes (adapted by Mission Mutual) and Biblica Study Notes, CC BY-SA 4.0.</p>
+  </section>
+  {% endif %}
+
+  {% if words %}
+  <section class="ps2-panel" data-panel="words" role="tabpanel">
+    <p class="gw-note">The words that carry this passage: used here more than you’d expect from how often they appear in the Bible.</p>
+    <ul class="ps2-words">
+      {% for w in words %}
+      <li><a href="{{ url_for('word_page', code=w.strong) }}"><b lang="{{ 'he' if w.strong.startswith('H') else 'grc' }}">{{ w.lemma }}</b> <i>{{ w.translit }}</i><span>{{ w.meaning }}</span><small>{{ w.here }}× here · {{ w.total }}× in the Bible</small></a></li>
+      {% endfor %}
+    </ul>
+    <a class="lib-card-link" href="{{ url_for('interlinear', book_slug=book.slug, chapter=chapters[0]) }}"><b>See every word, with grammar</b><span>{{ book.name }} {{ chapters[0] }} word by word</span></a>
+  </section>
+  {% endif %}
+
+  {% if xrefs %}
+  <section class="ps2-panel" data-panel="xrefs" role="tabpanel">
+    <nav class="bible-list">
+      {% for x in xrefs %}
+      <a class="bible-row vp-xref" href="{{ url_for('verse_page', book_slug=x.slug, chapter=x.chapter, verse=x.verse) }}">
+        <span class="bible-row-body"><span class="bible-row-title">{{ x.ref }} <small class="ps2-from">from v{{ x.from_v.split(':')[1] }}</small></span><span class="vp-xref-text">{{ x.text }}</span></span>
+        {{ icon('chevron-right', 18) }}
+      </a>
+      {% endfor %}
+    </nav>
+  </section>
+  {% endif %}
+
+  {% if early %}
+  <section class="ps2-panel" data-panel="early" role="tabpanel">
+    {% for f in early %}
+    <blockquote class="ps2-quote"><p>{{ f.quote|truncate(600) }}</p><footer><b>{{ f.author }}</b>{% if f.year %}, {{ f.year }}{% endif %} · on verse {{ f.ref }}</footer></blockquote>
+    {% endfor %}
+    <a class="lib-card-link" href="{{ url_for('fathers_chapter', book_slug=book.slug, chapter=chapters[0]) }}"><b>More from the early church</b><span>{{ book.name }} {{ chapters[0] }}</span></a>
+  </section>
+  {% endif %}
+
+  {% if people or places or related %}
+  <section class="ps2-panel" data-panel="more" role="tabpanel">
+    {% if people %}<h3 class="ps2-h">People</h3><div class="lib-chips">{% for p in people %}{{ chip_person(p) }}{% endfor %}</div>{% endif %}
+    {% if places %}<h3 class="ps2-h">Places</h3><div class="lib-chips">{% for p in places %}{{ chip_place(p) }}{% endfor %}</div>{% endif %}
+    {% if related %}<h3 class="ps2-h">Read more</h3><div class="vp-read">{% for r in related %}<a class="lib-chip" href="{{ url_for(r.kind ~ '_page', slug=r.slug) }}">{{ r.title }}<small>{{ notes_kinds[r.kind].one }}</small></a>{% endfor %}</div>{% endif %}
+  </section>
+  {% endif %}
+
+  {% endif %}
+</main>
+{% if found %}<script type="application/json" id="ps2Data">{{ study_data|tojson }}</script>{% endif %}
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='passage.js') }}"></script>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% set show_back = false %}{# draws its own back link #}
+{% from "icons.html" import icon %}
+{% from "_fathers.html" import father %}
+{% block title %}{{ ref }} · Clearspring{% endblock %}
+{% block content %}
+
+<main class="bible vp">
+
+  <header class="bible-head">
+    <a href="{{ url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter) }}?v={{ verse }}" class="bible-back" aria-label="Back to {{ book.name }} {{ chapter }}">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title vp-title">{{ ref }}</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+
+  {% if texts %}
+    {% set main = texts[0] %}
+    <section class="vp-main">
+      <p class="vp-main-text">{{ main.text }}</p>
+      <div class="vp-main-foot">
+        <span class="vp-code">{{ main.name }}</span>
+        <div class="vp-tools">
+          <a class="vp-tool" href="{{ url_for('memorise_add', book_slug=book.slug, chapter=chapter, verse=verse) }}" aria-label="Learn this verse by heart">
+            {{ icon('target', 18) }}<span>Learn</span>
+          </a>
+          <button type="button" class="vp-tool" id="vpShare" data-ref="{{ ref }}" data-text="{{ main.text }}" aria-label="Share this verse">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7 8l5-5 5 5"/></svg><span>Share</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="vp-section vp-mine" id="vpMine" data-slug="{{ book.slug }}" data-chapter="{{ chapter }}" data-verse="{{ verse }}" data-ref="{{ ref }}" data-text="{{ main.text }}" data-translation="{{ main.code }}">
+      <div class="bible-block-head">
+        <h2 class="bible-h2">Your notes</h2>
+        <button type="button" class="vp-addnote" id="vpAddNote">{{ icon('pen', 16) }}<span>Add a note</span></button>
+      </div>
+      <div id="vpNotes" class="vp-notes"><p class="vp-hint">Private to you. Anything you write on this verse, here or while reading, shows up here and in My study.</p></div>
+    </section>
+
+    {% if my_groups %}
+    <details class="gw-more vp-group-share">
+      <summary>{{ icon('users', 16) }} Share with a group</summary>
+      <form method="post" action="{{ url_for('group_share_verse') }}" class="gr-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="kind" value="verse"><input type="hidden" name="ref" value="{{ ref }}">
+        <label>Group<select name="group_id">{% for x in my_groups %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}</select></label>
+        <label>Why it matters to you (optional)<textarea name="body" rows="2" maxlength="2000"></textarea></label>
+        <button type="submit" class="ps-go">Share {{ ref }}</button>
+      </form>
+    </details>
+    {% endif %}
+
+    {% if texts|length > 1 %}
+    <section class="vp-section">
+      <h2 class="bible-h2">Other translations</h2>
+      <div class="vp-trans">
+        {% for t in texts[1:] %}
+          <div class="vp-trans-row">
+            <span class="vp-trans-code">{{ t.code | upper }}</span>
+            <p class="vp-trans-text">{{ t.text }}</p>
+          </div>
+        {% endfor %}
+      </div>
+      {% set notices = texts|selectattr('licensed')|list %}
+      {% for t in notices %}<p class="reader-copyright">{{ t.licensed }}: {{ t.copyright }}{% if t.copyright_url %} <a href="{{ t.copyright_url }}" rel="noopener" target="_blank">{{ t.copyright_url|replace('https://www.', '') }}</a>{% endif %}</p>{% endfor %}
+    </section>
+    {% endif %}
+  {% else %}
+    <p class="bible-lede">The text of this verse couldn't be loaded just now.</p>
+  {% endif %}
+
+  <nav class="vp-paging" aria-label="Nearby verses">
+    {% if prev %}<a class="vp-page" href="{{ url_for('verse_page', book_slug=prev[0], chapter=prev[1], verse=prev[2]) }}">{{ icon('chevron-left', 16) }}<span>{{ prev_label }}</span></a>{% else %}<span></span>{% endif %}
+    <a class="vp-page vp-page-mid" href="{{ url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter) }}?v={{ verse }}">{{ icon('book', 16) }}<span>Read chapter</span></a>
+    {% if nxt %}<a class="vp-page" href="{{ url_for('verse_page', book_slug=nxt[0], chapter=nxt[1], verse=nxt[2]) }}"><span>{{ nxt_label }}</span>{{ icon('chevron-right', 16) }}</a>{% else %}<span></span>{% endif %}
+  </nav>
+
+  {% if words %}
+  <section class="vp-section" id="words">
+    <div class="bible-block-head">
+      <h2 class="bible-h2">Original {{ language }}</h2>
+      <a class="bible-more" href="{{ url_for('words_hub') }}">Look up a word</a>
+    </div>
+    <p class="vp-hint">Tap a word to see what it means and everywhere else it's used. <a href="{{ url_for('interlinear', book_slug=book.slug, chapter=chapter) }}#v{{ verse }}">See the whole chapter word by word, with the grammar explained →</a></p>
+    <div class="vp-interlinear {{ 'rtl' if language == 'Hebrew' }}" {% if language == 'Hebrew' %}dir="rtl"{% endif %}>
+      {% for w in words %}
+        {% if w.strong %}<a class="il-word" href="{{ url_for('word_page', code=w.strong) }}" dir="ltr">{% else %}<span class="il-word" dir="ltr">{% endif %}
+          <span class="il-orig" lang="{{ 'he' if language == 'Hebrew' else 'grc' }}" {% if language == 'Hebrew' %}dir="rtl"{% endif %}>{{ w.word }}</span>
+          <span class="il-tr">{{ w.translit }}</span>
+          <span class="il-gloss">{{ w.gloss }}</span>
+          {% if w.grammar %}<span class="il-gram">{{ w.grammar }}</span>{% endif %}
+          {% if w.strong_display %}<span class="il-num">{{ w.strong_display }}</span>{% endif %}
+        {% if w.strong %}</a>{% else %}</span>{% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <a class="lib-card-link vp-study" href="{{ url_for('passage_study_page', ref=ref, whole=1) }}"><b>Study this passage</b><span>The verses around {{ ref }}: translations side by side, notes, key words and a guided study</span></a>
+
+  {% if study_notes %}
+  <section class="vp-section vp-notes" id="notes">
+    <div class="bible-block-head">
+      <h2 class="bible-h2">Study notes</h2>
+      <a class="bible-more" href="{{ url_for('notes_chapter', book_slug=book.slug, chapter=chapter) }}#v{{ verse }}">Whole chapter</a>
+    </div>
+    {% for n in study_notes %}
+    <div class="sn-note sn-{{ n.source }}">
+      {% set single = n.c1 == chapter and n.c2 == chapter and n.v1 == verse and n.v2 == verse %}
+      {% if study_notes|length > 1 or n.source == 'biblica' %}<p class="sn-ref">{% if n.source == 'biblica' %}On this section <span class="sn-kind">{{ n.title }}</span>{% elif single %}On this verse{% else %}On {{ n.title }}{% endif %}</p>{% endif %}
+      <div class="lib-article sn-body">{{ n.html }}</div>
+    </div>
+    {% endfor %}
+    <p class="lib-source">Tyndale Open Study Notes (adapted by Mission Mutual) and Biblica Study Notes, CC BY-SA 4.0.</p>
+  </section>
+  {% endif %}
+
+  {% if related %}
+  <section class="vp-section" id="read-more">
+    <h2 class="bible-h2">Read more</h2>
+    <div class="vp-read">
+      {% for r in related %}<a class="lib-chip" href="{{ url_for(r.kind ~ '_page', slug=r.slug) }}">{{ r.title }}<small>{{ notes_kinds[r.kind].one }}</small></a>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if early %}
+  <section class="vp-section" id="early">
+    <div class="bible-block-head">
+      <h2 class="bible-h2">The early church</h2>
+      {% if early_count > early|length %}<a class="bible-more" href="{{ url_for('fathers_chapter', book_slug=book.slug, chapter=chapter) }}#v{{ verse }}">All {{ early_count }}</a>{% endif %}
+    </div>
+    {% for f in early %}{{ father(f) }}{% endfor %}
+  </section>
+  {% endif %}
+
+  {% if lib.commentary or more_commentary %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Commentary</h2>
+    {% for c in lib.commentary %}
+    <article class="vp-cm">
+      <p class="vp-cm-head"><b>{{ c.name }}</b> · {{ c.label }}</p>
+      <div class="vp-cm-body lib-article cm-body">{{ c.html|safe }}</div>
+      <a class="lib-more" href="{{ url_for('commentary_page', source=c.source, book_slug=book.slug, chapter=chapter) }}#v{{ c.v1 }}">Read {{ c.name }} on {{ book.name if book.slug != 'psalms' else 'Psalm' }} {{ chapter }} →</a>
+    </article>
+    {% endfor %}
+    {% if more_commentary %}
+    <p class="vp-cm-more-h">What other commentators say on this verse</p>
+    <div class="vp-cm-more">
+      {% for c in more_commentary %}<a href="{{ url_for('commentary_page', source=c.source, book_slug=book.slug, chapter=chapter) }}#v{{ c.v1 }}"><b>{{ c.name }}</b><span>{{ c.label }}</span></a>{% endfor %}
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if lib.parallels %}
+  <section class="vp-section">
+    <div class="bible-block-head"><h2 class="bible-h2">Parallel passages</h2><span class="vp-count">{{ lib.parallels|length }}</span></div>
+    <p class="vp-hint">The same words or events elsewhere{% if lib.parallels|selectattr('kind', 'equalto', 'quote')|list %}, including Old Testament passages quoted in the New{% endif %}.</p>
+    <div class="lib-chips">
+      {% for x in lib.parallels %}<a class="lib-chip {{ 'lib-chip-quote' if x.kind == 'quote' }}" href="{{ url_for('compare_passages', t=ref, r=[ref, x.label]) }}">{{ x.label }}</a>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if xrefs %}
+  <section class="vp-section" id="xrefs">
+    <div class="bible-block-head">
+      <h2 class="bible-h2">Cross-references</h2>
+      <span class="vp-count">{{ xrefs|length }}</span>
+    </div>
+    <nav class="bible-list vp-xrefs">
+      {% for x in xrefs %}
+        <a class="bible-row vp-xref {{ 'vp-more' if loop.index > 12 }}" href="{{ url_for('verse_page', book_slug=x.slug, chapter=x.chapter, verse=x.verse) }}">
+          <span class="bible-row-body">
+            <span class="bible-row-title">{{ x.ref }}</span>
+            {% if x.text %}<span class="vp-xref-text">{{ x.text }}</span>{% endif %}
+          </span>
+          {{ icon('chevron-right', 18) }}
+        </a>
+      {% endfor %}
+    </nav>
+    {% if xrefs|length > 12 %}
+      <button type="button" class="btn-ghost vp-showall" id="vpShowAll">Show all {{ xrefs|length }}</button>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if lib.people or lib.places %}
+  <section class="vp-section">
+    <h2 class="bible-h2">People &amp; places</h2>
+    <div class="lib-chips">
+      {% for x in lib.people %}<a class="lib-chip lib-chip-person" href="{{ url_for('person_page', slug=x.slug) }}">{{ x.name }}</a>{% endfor %}
+      {% for x in lib.places %}<a class="lib-chip lib-chip-place" href="{{ url_for('place_page', slug=x.slug) }}">{{ x.name }}</a>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if lib.topics %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Topics</h2>
+    <div class="lib-chips">{% for t in lib.topics %}<a class="lib-chip" href="{{ url_for('topic_page', slug=t.slug) }}">{{ t.name }}</a>{% endfor %}</div>
+  </section>
+  {% endif %}
+
+  {% if talks %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Preached at Clearspring</h2>
+    {% for t in talks %}
+    <a class="ch-talk" href="{{ url_for('sermon_detail', sermon_id=t.id) }}">{{ icon('play', 16) }}<span><b>{{ t.title }}</b><small>{% if t.speaker %}{{ t.speaker }} · {% endif %}{{ t.passage }} · {{ t.preached_on|pretty_date }}</small></span></a>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <p class="ws-credit">Cross-references: Treasury of Scripture Knowledge. {{ attribution }} Library: <a href="{{ url_for('library_licenses') }}">sources</a>.</p>
+</main>
+
+<script src="{{ url_for('static', filename='verse-share.js') }}"></script>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+document.querySelectorAll(".vp-cm-body").forEach(function (b) {
+  if (b.scrollHeight <= b.clientHeight + 12) { b.classList.add("open"); return; }
+  var btn = document.createElement("button");
+  btn.type = "button"; btn.className = "vp-cm-more"; btn.textContent = "Show more";
+  btn.addEventListener("click", function () { var o = b.classList.toggle("open"); btn.textContent = o ? "Show less" : "Show more"; });
+  b.parentNode.insertBefore(btn, b.nextSibling);
+});
+</script>
+<script>
+(function () {
+  var all = document.getElementById("vpShowAll");
+  if (all) all.addEventListener("click", function () {
+    document.querySelectorAll(".vp-more").forEach(function (el) { el.classList.remove("vp-more"); });
+    all.remove();
+  });
+  var share = document.getElementById("vpShare");
+  if (share) share.addEventListener("click", function () {
+    if (window.VerseShare) window.VerseShare.share({ text: share.dataset.text, ref: share.dataset.ref, url: location.href });
+  });
+})();
+</script>
+<script src="{{ url_for('bible_refs_data') }}"></script>
+<script src="{{ url_for('static', filename='bible-refs.js') }}"></script>
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='note-editor.js') }}"></script>
+<script>
+(function () {
+  var box = document.getElementById("vpMine");
+  if (!box || !window.Study) return;
+  var d = box.dataset, slug = d.slug, ch = +d.chapter, v = +d.verse;
+  var list = document.getElementById("vpNotes"), hint = list.innerHTML;
+  function render() {
+    var notes = window.Study.notesFor(slug, ch, v);
+    if (!notes.length) { list.innerHTML = hint; return; }
+    list.textContent = "";
+    notes.forEach(function (n) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "vp-note";
+      var r = document.createElement("span"); r.className = "vp-note-ref"; r.textContent = n.ref;
+      var t = document.createElement("span"); t.className = "vp-note-text"; t.textContent = n.note || "";
+      b.append(r, t);
+      if (n.tags && n.tags.length) {
+        var g = document.createElement("span"); g.className = "vp-note-tags";
+        g.textContent = n.tags.map(function (x) { return "#" + x; }).join("  ");
+        b.appendChild(g);
+      }
+      b.addEventListener("click", function () { window.NoteEditor.open({ id: n.id }, render); });
+      list.appendChild(b);
+    });
+  }
+  document.getElementById("vpAddNote").addEventListener("click", function () {
+    window.NoteEditor.open({ slug: slug, chapter: ch, verse: v, endVerse: v, ref: d.ref, text: d.text, translation: d.translation }, render);
+  });
+  render();
+  window.Study.merge("vnote").then(function (s) { if (s) render(); });
+})();
+</script>
+{% endblock %}

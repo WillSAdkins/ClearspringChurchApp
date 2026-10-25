@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}My discipleship · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw dp">
+  {{ head('My discipleship', url_for('grow_hub'), 'Back to Grow') }}
+
+  <section class="dp-hero" aria-labelledby="dpHello">
+    <p class="gw-k" id="dpWeekOf">This week</p>
+    <h2 class="gw-h1" id="dpHello">Your week with God</h2>
+    <p class="dp-summary" id="dpSummary">Working it out…</p>
+    <div class="dp-rings" id="dpRings"></div>
+  </section>
+
+  {% if not data.signedIn %}
+  <div class="dp-signin">
+    <p><b>This is from this device only.</b> Sign in to keep it safe and see the same picture on your phone and computer.</p>
+    <a class="ps-link" href="{{ url_for('signin') }}">Sign in</a>
+  </div>
+  {% endif %}
+
+  <section class="dp-log" aria-labelledby="dpLogH">
+    <h2 class="bible-h2" id="dpLogH">Today</h2>
+    <p class="gw-note dp-log-note">Most of this fills in by itself as you use the app. Prayed on a walk or read a paper Bible? Tick it here too.</p>
+    <div class="dp-log-row" id="dpLog"></div>
+  </section>
+
+  <section aria-labelledby="dpNextH">
+    <h2 class="bible-h2" id="dpNextH">Next steps for you</h2>
+    <ul class="dp-next" id="dpNext"></ul>
+  </section>
+
+  <section aria-labelledby="dpHabitsH">
+    <h2 class="bible-h2" id="dpHabitsH">Your habits</h2>
+    <div class="dp-habits" id="dpHabits"></div>
+  </section>
+
+  <section aria-labelledby="dpCalH">
+    <h2 class="bible-h2" id="dpCalH">The last twelve weeks</h2>
+    <div class="dp-filter" id="dpFilter" role="group" aria-label="Show">
+      <button type="button" data-h="all" aria-pressed="true">All</button>
+      <button type="button" data-h="prayer" aria-pressed="false">Prayer</button>
+      <button type="button" data-h="scripture" aria-pressed="false">Scripture</button>
+      <button type="button" data-h="study" aria-pressed="false">Study</button>
+    </div>
+    <div class="dp-cal-wrap"><div class="dp-cal" id="dpCal" role="img"></div></div>
+    <div class="dp-cal-key" id="dpCalKey"></div>
+  </section>
+
+  <section aria-labelledby="dpBibleH">
+    <h2 class="bible-h2" id="dpBibleH">How much of the Bible you’ve read</h2>
+    <div class="dp-testaments" id="dpTestaments"></div>
+    <div class="dp-books" id="dpBooks"></div>
+    <p class="gw-note">Each square is a book: the fuller it is, the more chapters you’ve read. Tap one to carry on reading it. Read some before you had the app? Mark it in the reader’s chapter list.</p>
+  </section>
+
+  <section aria-labelledby="dpPathH">
+    <h2 class="bible-h2" id="dpPathH">Your discipleship path</h2>
+    <p class="gw-note">Not a race, and not in a fixed order. Just the next faithful step.</p>
+    <ol class="dp-path" id="dpPath"></ol>
+  </section>
+
+  <section aria-labelledby="dpCheckH">
+    <h2 class="bible-h2" id="dpCheckH">How you said you’re doing</h2>
+    <div id="dpCheck"></div>
+  </section>
+
+  <details class="dp-goals" id="dpGoalsBox">
+    <summary>Your weekly goals</summary>
+    <p class="gw-note">How many days a week you’d like to make room for each. Aim for something you can keep; you can always raise it.</p>
+    <div id="dpGoals"></div>
+  </details>
+
+  <p class="dp-foot">Only you can see this page. It’s a mirror to help you grow, not a score. Missing a day doesn’t break a streak. Miss two in a row and it starts again, but your days this month never reset. <a href="{{ url_for('member_progress') }}">Badges and streaks</a></p>
+</main>
+<script type="application/json" id="dpData">{{ data|tojson }}</script>
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+  <script src="{{ url_for('static', filename='prayer-cards.js') }}"></script>
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='memorise.js') }}"></script>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script src="{{ url_for('static', filename='discipleship.js') }}"></script>
+{% endblock %}

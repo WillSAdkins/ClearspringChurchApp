@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}{{ f.title }} · Family devotions{% endblock %}
+{% block content %}
+<main class="bible gw gw-read">
+  {{ head('Story ' ~ n ~ ' of ' ~ total, url_for('family_hub'), 'Back to Family devotions') }}
+  <article class="gw-article">
+    <p class="gw-k">Family devotions</p>
+    <h2 class="gw-h1">{{ f.title }}</h2>
+    <p class="gw-p gw-lead">{{ f.story }}</p>
+    <h3 class="gw-h3">Read</h3>
+    {{ scripture(text) }}
+    <h3 class="gw-h3">Talk</h3>
+    <div class="fm-qs">
+      <p><span class="fm-tag">Little ones</span>{{ f.little }}</p>
+      <p><span class="fm-tag">Older ones</span>{{ f.older }}</p>
+    </div>
+    <h3 class="gw-h3">Pray</h3>
+    <p class="ps-prayer">{{ f.pray }}</p>
+    {% if f.do %}<section class="gw-try"><h3>Do</h3><p>{{ f.do }}</p></section>{% endif %}
+    <button type="button" class="gw-done" data-section="family" data-slug="{{ n }}" data-off-label="We’ve done this one">We’ve done this one</button>
+  </article>
+  <nav class="gw-pager">
+    {% if n > 1 %}<a href="{{ url_for('family_page', n=n - 1) }}" class="gw-pg">{{ icon('chevron-left', 16) }} Previous</a>{% else %}<span></span>{% endif %}
+    {% if n < total %}<a href="{{ url_for('family_page', n=n + 1) }}" class="gw-pg next">Next story {{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+</main>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+{% endblock %}

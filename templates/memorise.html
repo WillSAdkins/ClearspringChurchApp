@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% from "_scene.html" import banner with context %}
+{% set show_back = false %}{# draws its own back link #}
+{% from "icons.html" import icon %}
+{% block title %}Memorise · Clearspring{% endblock %}
+{% block content %}
+
+<main class="bible mz">
+
+  <header class="bible-head">
+    <a href="{{ url_for('bible_hub') }}" class="bible-back" aria-label="Back to Study">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Memorise</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+  {{ banner('memorise') }}
+
+
+  <!-- Today -->
+  <section class="mz-stats" aria-label="Your progress">
+    <div class="mz-stat mz-streak" id="mzStreak">
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2.5 1.2-4 2.5-5 .2 2 1.2 3 2.2 3C11 8 10.5 5 12 2z" fill="currentColor"/></svg>
+      <b id="mzStreakN">0</b><span>day streak</span>
+    </div>
+    <div class="mz-stat mz-goal">
+      <svg class="mz-ring" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
+        <circle cx="22" cy="22" r="18" class="mz-ring-bg"/>
+        <circle cx="22" cy="22" r="18" class="mz-ring-fg" id="mzRing" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
+      </svg>
+      <b id="mzDaily">0 / 30</b><span>XP today</span>
+    </div>
+    <div class="mz-stat mz-level">
+      <b id="mzLevel">1</b><span>level</span>
+      <i class="mz-lvbar"><i id="mzLvFill"></i></i>
+    </div>
+  </section>
+
+  <!-- Reviews due -->
+  <a class="mz-review" id="mzReview" hidden href="#">
+    <span class="mz-review-icon">{{ icon('sunrise', 22) }}</span>
+    <span class="mz-review-body">
+      <b id="mzReviewTitle">Review</b>
+      <small id="mzReviewSub">Keep these verses fresh</small>
+    </span>
+    <span class="mz-review-go">Start</span>
+  </a>
+
+  <!-- The path -->
+  {% for unit in path %}
+  {% set u = loop.index %}
+  <section class="mz-unit">
+    <div class="mz-unit-head">
+      <span class="mz-unit-n">Unit {{ u }}</span>
+      <h2 class="mz-unit-title">{{ unit.title }}</h2>
+    </div>
+    <ol class="mz-path">
+      {% for v in unit.verses %}
+        <li class="mz-node-wrap" style="--i: {{ loop.index0 }}">
+          <a class="mz-node locked" href="{{ url_for('memorise_lesson', ref=v.key) }}" data-key="{{ v.key }}" data-label="{{ v.label }}" aria-label="{{ v.label }}">
+            <span class="mz-node-disc">
+              <svg class="mz-ico-lock" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+              <svg class="mz-ico-star" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="currentColor"/></svg>
+              <svg class="mz-ico-book" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="mz-node-label">{{ v.label }}</span>
+            <span class="mz-pips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          </a>
+        </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endfor %}
+
+  <!-- Collections: open from the start -->
+  <section class="mz-colls">
+    <h2 class="bible-h2">Collections</h2>
+    <p class="mz-colls-sub">Verses gathered by theme. Start any of them, in any order.</p>
+    {% for c in collections %}
+    <details class="mz-coll">
+      <summary><span class="mz-coll-emoji" aria-hidden="true">{{ c.emoji }}</span><span class="mz-coll-title">{{ c.title }}</span><span class="mz-coll-count" data-keys="{{ c.verses|map(attribute='key')|join(',') }}">{{ c.verses|length }} verses</span></summary>
+      <nav class="bible-list">
+        {% for v in c.verses %}
+        <a class="bible-row mz-crow" href="{{ url_for('memorise_lesson', ref=v.key) }}" data-key="{{ v.key }}">
+          <span class="bible-row-body"><span class="bible-row-title">{{ v.label }}</span><span class="bible-row-sub mz-crow-sub">Not learned yet</span></span>
+          <span class="mz-pips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        </a>
+        {% endfor %}
+      </nav>
+    </details>
+    {% endfor %}
+  </section>
+
+  <!-- Your own verses -->
+  <section class="mz-unit" id="mzMine" hidden>
+    <div class="mz-unit-head">
+      <span class="mz-unit-n">Your verses</span>
+      <h2 class="mz-unit-title">Added from the Bible</h2>
+    </div>
+    <nav class="bible-list" id="mzMineList"></nav>
+  </section>
+
+  <section class="mz-howto">
+    <h2 class="bible-h2">How it works</h2>
+    <p>Each lesson builds a verse up a little at a time: put the words in order, fill the gaps, then type the first letter of every word from memory.</p>
+    <p>Learned verses come back for a quick review just before you'd forget them: after a day, then three, a week, a fortnight, a month. The six dots under each verse show how firmly it's fixed.</p>
+    <p>To learn any verse, tap it in the Bible and choose <b>Learn</b>.</p>
+    <p>Every verse is in the World English Bible, modern English that's easy to learn and free to use.</p>
+    <p class="mz-local">Your progress is kept on this device, and on your account when you’re signed in.</p>
+  </section>
+</main>
+
+<script src="{{ url_for('static', filename='memorise.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+  var M = window.Memory, s = M.load();
+  var learnUrl = "{{ url_for('memorise_lesson') }}";
+
+  // Today
+  document.getElementById("mzStreakN").textContent = s.streak.count;
+  document.getElementById("mzStreak").classList.toggle("lit", s.streak.last === M.today());
+  document.getElementById("mzDaily").textContent = Math.min(s.daily.xp, M.DAILY_GOAL) + " / " + M.DAILY_GOAL;
+  document.getElementById("mzRing").style.strokeDashoffset = 113.1 * (1 - Math.min(1, s.daily.xp / M.DAILY_GOAL));
+  var lv = M.level(s.xp);
+  document.getElementById("mzLevel").textContent = lv.level;
+  document.getElementById("mzLvFill").style.width = Math.round(lv.into / lv.need * 100) + "%";
+
+  // Path: everything up to and including the first unlearned verse is open
+  var foundCurrent = false;
+  document.querySelectorAll(".mz-node").forEach(function (a) {
+    var v = s.verses[a.dataset.key];
+    a.classList.remove("locked");
+    if (v && v.box >= 1) {
+      a.classList.add(M.isDue(v) ? "due" : "done");
+      a.querySelectorAll(".mz-pips i").forEach(function (p, i) { p.classList.toggle("on", i < v.box); });
+      if (M.isDue(v)) a.href = learnUrl + "?ref=" + encodeURIComponent(a.dataset.key) + "&mode=review";
+    } else if (!foundCurrent) {
+      a.classList.add("current");
+      foundCurrent = true;
+    } else {
+      a.classList.add("locked");
+      a.removeAttribute("href");
+      a.setAttribute("aria-disabled", "true");
+    }
+  });
+  var cur = document.querySelector(".mz-node.current");
+
+  // Reviews due
+  var due = M.dueList(s);
+  var rv = document.getElementById("mzReview");
+  if (due.length) {
+    rv.hidden = false;
+    rv.href = learnUrl + "?ref=" + encodeURIComponent(due[0]) + "&mode=review";
+    document.getElementById("mzReviewTitle").textContent = due.length === 1 ? "1 verse to review" : due.length + " verses to review";
+    document.getElementById("mzReviewSub").textContent = "Starting with " + (s.verses[due[0]].label || due[0]);
+  }
+
+  // Your own verses (anything not on the starter path)
+  var pathKeys = {};
+  document.querySelectorAll(".mz-node").forEach(function (a) { pathKeys[a.dataset.key] = 1; });
+  // Collections
+  document.querySelectorAll(".mz-crow").forEach(function (a) {
+    var k = a.dataset.key, v = s.verses[k];
+    pathKeys[k] = 1;
+    if (!v || !(v.box >= 1)) return;
+    a.querySelector(".mz-crow-sub").textContent = M.isDue(v) ? "Ready to review" : "Learned · next review " + v.due;
+    a.querySelectorAll(".mz-pips i").forEach(function (p, i) { p.classList.toggle("on", i < v.box); });
+    if (M.isDue(v)) a.href = learnUrl + "?ref=" + encodeURIComponent(k) + "&mode=review";
+  });
+  document.querySelectorAll(".mz-coll-count").forEach(function (c) {
+    var keys = c.dataset.keys.split(","), n = keys.filter(function (k) { return s.verses[k] && s.verses[k].box >= 1; }).length;
+    if (n) c.textContent = n + " of " + keys.length + " learned";
+  });
+
+  var mine = Object.keys(s.verses).filter(function (k) { return !pathKeys[k]; });
+  if (mine.length) {
+    document.getElementById("mzMine").hidden = false;
+    var list = document.getElementById("mzMineList");
+    mine.forEach(function (k) {
+      var v = s.verses[k];
+      var a = document.createElement("a");
+      a.className = "bible-row";
+      a.href = learnUrl + "?ref=" + encodeURIComponent(k) + (v.box >= 1 ? "&mode=review" : "");
+      var body = document.createElement("span"); body.className = "bible-row-body";
+      var t = document.createElement("span"); t.className = "bible-row-title"; t.textContent = v.label || k;
+      var sub = document.createElement("span"); sub.className = "bible-row-sub";
+      sub.textContent = v.box >= 1 ? (M.isDue(v) ? "Ready to review" : "Next review " + v.due) : "Not learned yet";
+      body.appendChild(t); body.appendChild(sub); a.appendChild(body);
+      var pips = document.createElement("span"); pips.className = "mz-pips";
+      for (var i = 0; i < 6; i++) { var p = document.createElement("i"); if (i < (v.box || 0)) p.className = "on"; pips.appendChild(p); }
+      a.appendChild(pips);
+      list.appendChild(a);
+    });
+  }
+
+  if (cur && !due.length && s.xp > 0) cur.scrollIntoView({ block: "center" });
+
+  // Progress made on another device: bring it in, then redraw once.
+  var before = JSON.stringify(s.verses);
+  if (M.syncWithAccount) M.syncWithAccount().then(function () {
+    var after = JSON.stringify(M.load().verses);
+    if (after !== before && !sessionStorage.getItem("cs_mz_synced")) { sessionStorage.setItem("cs_mz_synced", "1"); location.reload(); }
+  });
+})();
+</script>
+{% endblock %}

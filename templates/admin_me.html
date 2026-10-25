@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}My account · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">Staff area</p><h1>{{ st['name'] }}</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Board</a></div>
+  </div>
+  <p style="max-width:36rem;line-height:1.6">You can update: {{ areas|join(', ') if areas else 'nothing yet. Ask the app owner to give you access.' }}</p>
+  <form method="post" class="event-form" style="max-width:26rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h2 style="font-size:var(--fs-md)">Change your password</h2>
+    <label for="current">Current password</label>
+    <input type="password" id="current" name="current" required autocomplete="current-password">
+    <label for="password">New password</label>
+    <input type="password" id="password" name="password" required minlength="10" autocomplete="new-password">
+    <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto">Change password</button></div>
+  </form>
+</main>
+{% endblock %}

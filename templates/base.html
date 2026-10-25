@@ -1,0 +1,194 @@
+{% from "icons.html" import icon %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  // Fade-in animations: hide sections only while the animation script is
+  // running. If it hasn't started within 2.5s, show everything as normal.
+  (function () {
+    try {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var r = document.documentElement; r.classList.add("motion-ok");
+      setTimeout(function () { if (!window.csMotion) r.classList.remove("motion-ok"); }, 2500);
+    } catch (e) {}
+  })();
+</script>
+<script>
+// Applied before anything renders, so switching theme never flashes.
+(function () {
+  try {
+    var t = localStorage.getItem("cs_theme") || "auto";
+    document.documentElement.setAttribute("data-theme", t);
+    var sz = localStorage.getItem("cs_text_size") || "normal";
+    document.documentElement.setAttribute("data-text-size", sz);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "auto");
+  }
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="member-signed-in" content="{{ 'true' if member else 'false' }}">
+<meta name="theme-color" content="#F5F8F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#061719" media="(prefers-color-scheme: dark)">
+<script>
+// Match the phone's status bar to the theme the person picked in Settings,
+// not just the phone's own setting.
+(function () {
+  try {
+    var t = localStorage.getItem("cs_theme") || "auto";
+    if (t === "auto") return;
+    var c = t === "dark" ? "#061719" : "#F5F8F7";
+    document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+      m.setAttribute("content", c);
+    });
+  } catch (e) {}
+})();
+</script>
+<title>{% block title %}Clearspring Church, Cheltenham{% endblock %}</title>
+
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-512.png', v='2') }}">
+<link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png', v='2') }}">
+
+<link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ url_for('static', filename='fonts/literata.woff2') }}" as="font" type="font/woff2" crossorigin>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='43') }}">
+<script>
+// Attach the CSRF token to every same-origin state-changing fetch, so
+// individual scripts don't each have to remember to do it.
+(function () {
+  const TOKEN = "{{ csrf_token() }}";
+  const original = window.fetch;
+  window.fetch = function (input, init) {
+    init = init || {};
+    const method = (init.method || "GET").toUpperCase();
+    const url = typeof input === "string" ? input : (input && input.url) || "";
+    const sameOrigin = url.startsWith("/") || url.startsWith(window.location.origin);
+
+    if (sameOrigin && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+      const headers = new Headers(init.headers || {});
+      if (!headers.has("X-CSRF-Token")) headers.set("X-CSRF-Token", TOKEN);
+      init.headers = headers;
+      if (!init.credentials) init.credentials = "same-origin";
+    }
+    return original.call(this, input, init);
+  };
+})();
+</script>
+<script src="{{ url_for('static', filename='sync.js') }}"></script>
+<script src="{{ url_for('static', filename='prefs-sync.js') }}" defer></script>
+</head>
+{% set nav_endpoints = ['index', 'watch_hub', 'sermon_detail', 'community_hub', 'calendar_page', 'questions', 'ask_question', 'prayer_wall', 'prayer_new', 'prayer_journal', 'prayer_practices', 'bible_hub', 'bible_books', 'bible_chapters', 'bible_read_chapter', 'verse_page', 'word_page', 'memorise_hub', 'library_hub', 'library_search', 'dictionary_index', 'dictionary_page', 'topics_index', 'topic_page', 'people_index', 'person_page', 'places_index', 'place_page', 'bible_map', 'journeys', 'journey_page', 'timeline_page', 'harmony_page', 'compare_passages', 'ot_in_nt_page', 'creeds_index', 'creed_page', 'commentary_page', 'library_licenses', 'bible_search', 'saved_verses', 'my_study', 'soap_editor', 'talk_editor', 'reading_plans', 'reading_plan_detail', 'plan_builder', 'custom_plan', 'bible_today', 'reading_stats', 'devotionals', 'devotional_detail', 'more_hub', 'plan_visit', 'giving', 'campaign_detail', 'store', 'product_detail', 'gift_aid_info', 'ministries', 'ministry_detail', 'resources', 'resource_detail', 'notification_settings', 'settings', 'account', 'signin', 'signup', 'magic_link_request', 'magic_link_sent', 'games_hub', 'memory_game', 'trivia_challenge', 'trivia_football', 'manna_maze', 'giant_slayer', 'chess_game', 'verse_builder', 'books_sprint', 'lost_sheep', 'game_leaderboard', 'grow_hub', 'grow_first_steps', 'grow_step', 'grow_course', 'grow_session', 'grow_checkin', 'grow_gifts', 'grow_story', 'grow_stories', 'grow_rhythm', 'grow_next_steps', 'family_hub', 'family_page', 'faith_hub', 'faith_gospel', 'faith_story', 'faith_questions', 'faith_question', 'faith_words', 'faith_share', 'sunday_page', 'sermon_group', 'prayer_fasting', 'prayer_world', 'feelings_index', 'feeling_page', 'groups_index', 'group_join', 'group_page', 'account_data'] %}
+<body class="{{ 'has-tabbar' if request.endpoint in nav_endpoints }}">
+
+<div id="app-splash" class="app-splash">
+  <video class="app-splash-video" autoplay muted playsinline>
+    <source src="{{ url_for('static', filename='loading-screen.mp4') }}" type="video/mp4">
+  </video>
+</div>
+<script>
+(function () {
+  var splash = document.getElementById("app-splash");
+  if (sessionStorage.getItem("cs_splash_shown")) {
+    splash.remove();
+    return;
+  }
+  sessionStorage.setItem("cs_splash_shown", "1");
+
+  var MAX_MS = 6000; // safety net if the video can't play or load never fires
+  var hidden = false;
+  var pageLoaded = false;
+  var videoPlayedThrough = false;
+
+  function hide() {
+    if (hidden) return;
+    hidden = true;
+    splash.classList.add("app-splash-hide");
+    setTimeout(function () { splash.remove(); }, 400);
+  }
+
+  function maybeHide() {
+    if (pageLoaded && videoPlayedThrough) hide();
+  }
+
+  var video = splash.querySelector("video");
+  // One playthrough is the minimum time the splash stays up. If the page is
+  // still loading when the clip finishes, replay it rather than freezing on
+  // the last frame while we wait.
+  video.addEventListener("ended", function () {
+    videoPlayedThrough = true;
+    maybeHide();
+    if (!pageLoaded) {
+      video.currentTime = 0;
+      video.play().catch(function () {});
+    }
+  });
+  video.addEventListener("error", function () { videoPlayedThrough = true; maybeHide(); });
+  window.addEventListener("load", function () { pageLoaded = true; maybeHide(); });
+  setTimeout(hide, MAX_MS);
+})();
+</script>
+
+{% if request.endpoint in nav_endpoints %}
+<nav class="site-nav">
+  <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">{{ icon('home', 22) }}<span>Home</span></a>
+  <a href="{{ url_for('watch_hub') }}" class="{{ 'active' if request.endpoint in ['watch_hub','sermon_detail','sunday_page','sermon_group'] }}">{{ icon('play', 22) }}<span>Watch</span></a>
+  <a href="{{ url_for('community_hub') }}" class="{{ 'active' if request.endpoint in ['community_hub','calendar_page','questions','ask_question','groups_index','group_join','group_page','grow_hub','grow_first_steps','grow_step','grow_course','grow_session','grow_checkin','grow_gifts','grow_story','grow_stories','grow_rhythm','grow_next_steps','family_hub','family_page','faith_hub','faith_gospel','faith_story','faith_questions','faith_question','faith_words','faith_share'] }}">{{ icon('users', 22) }}<span>Community</span></a>
+  <a href="{{ url_for('prayer_journal') }}" class="{{ 'active' if request.endpoint in ['prayer_wall','prayer_new','prayer_journal','prayer_practices','prayer_fasting','prayer_world'] }}">{{ icon('hands', 22) }}<span>Prayer</span></a>
+  <a href="{{ url_for('bible_tab') }}" id="bibleTab" class="{{ 'active' if request.endpoint in ['bible_read_chapter', 'bible_books', 'bible_chapters'] }}">{{ icon('bible-tab', 22) }}<span>Bible</span></a>
+  <a href="{{ url_for('bible_hub') }}" class="{{ 'active' if request.endpoint in ['bible_hub', 'verse_page', 'word_page', 'memorise_hub', 'memorise_lesson', 'bible_search', 'saved_verses', 'my_study', 'soap_editor', 'talk_editor', 'reading_plans', 'reading_plan_detail', 'plan_builder', 'custom_plan', 'bible_today', 'reading_stats', 'devotionals', 'devotional_detail', 'feelings_index', 'feeling_page', 'library_hub', 'library_search', 'dictionary_index', 'dictionary_page', 'topics_index', 'topic_page', 'people_index', 'person_page', 'places_index', 'place_page', 'bible_map', 'journeys', 'journey_page', 'timeline_page', 'harmony_page', 'compare_passages', 'ot_in_nt_page', 'creeds_index', 'creed_page', 'commentary_page', 'library_licenses'] }}">{{ icon('notebook', 22) }}<span>Study</span></a>
+  <a href="{{ url_for('more_hub') }}" class="{{ 'active' if request.endpoint in ['more_hub', 'plan_visit', 'giving', 'campaign_detail', 'store', 'product_detail', 'gift_aid_info', 'ministries', 'ministry_detail', 'resources', 'resource_detail', 'notification_settings', 'settings', 'account', 'signin', 'signup', 'magic_link_request', 'magic_link_sent','games_hub','memory_game','trivia_challenge','trivia_football','manna_maze', 'giant_slayer', 'chess_game', 'game_leaderboard'] }}">{{ icon('more', 22) }}<span>More</span></a>
+</nav>
+{% endif %}
+
+{#  Back navigation.
+
+    The five tab roots don't get one — there's nowhere above them, and the tab
+    bar already handles moving between them. Everything else does.
+
+    Pages that already draw their own back link inside their header set
+    show_back to false, so this doesn't appear twice. New pages get one by
+    default, which is the safer way round: forgetting the flag gives an extra
+    button rather than a dead end.  #}
+{% set root_endpoints = ['index', 'watch_hub', 'community_hub', 'bible_hub', 'more_hub'] %}
+{% if request.endpoint not in root_endpoints and show_back is not defined %}
+<button type="button" class="global-back" id="globalBack" aria-label="Go back">
+  {{ icon('chevron-left', 20) }}<span>Back</span>
+</button>
+{% endif %}
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash">
+      {% for m in messages %}<p>{{ m }}</p>{% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
+  });
+}
+</script>
+<script src="{{ url_for('static', filename='leaderboard.js') }}"></script>
+<script src="{{ url_for('static', filename='navigation.js') }}"></script>
+<script src="{{ url_for('static', filename='motion.js') }}"></script>
+<script src="{{ url_for('static', filename='parallax.js') }}"></script>
+<script src="{{ url_for('static', filename='native-bridge.js') }}"></script>
+<script src="{{ url_for('static', filename='keep-place.js') }}"></script>
+<script src="{{ url_for('static', filename='game-feel.js') }}"></script>
+<script src="{{ url_for('static', filename='back-nav.js') }}"></script>
+<script src="{{ url_for('static', filename='bible-tab.js') }}"></script>
+{% if request.endpoint in nav_endpoints and request.endpoint != 'bible_read_chapter' and request.endpoint not in ('group_page', 'soap_editor', 'talk_editor') and not (request.endpoint or '').startswith(('game', 'chess', 'memory_', 'trivia', 'manna', 'giant', 'lost_', 'rock_', 'verse_builder', 'books_sprint')) and guide_on() %}
+{% include "_guide.html" %}
+{% endif %}
+{% if request.endpoint in nav_endpoints %}{% include "_popup.html" %}{% endif %}
+</body>
+</html>

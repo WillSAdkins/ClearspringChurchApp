@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Your data · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Your data', url_for('account'), 'Back to your account') }}
+  <p class="bible-lede">Everything you save in the app is kept on this device first, so it works offline. While you’re signed in, it’s also kept on your account, so it follows you to any phone or computer.</p>
+
+  <section class="sy-now">
+    <button type="button" class="ps-go" id="syGo">Sync everything now</button>
+    <p class="gw-note" id="syStatus" aria-live="polite"></p>
+    <ul class="sy-list" id="syList"></ul>
+  </section>
+
+  <h2 class="bible-h2">On your account</h2>
+  <table class="sy-table">
+    <tbody>
+      {% for k, label, n in counts %}<tr><th scope="row">{{ label }}</th><td>{{ n }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  {% if last_sync %}<p class="gw-note">Last saved {{ last_sync|ago }}.</p>{% endif %}
+
+  <h2 class="bible-h2">Take a copy</h2>
+  <div class="pp-list">
+    <a class="pp-card" href="{{ url_for('account_export') }}" download><span class="pp-emoji" aria-hidden="true">☁️</span><span class="pp-body"><b>Download from your account</b><span>Everything kept on your account, as one file</span></span>{{ icon('download', 18) }}</a>
+    <button type="button" class="pp-card sh-invite" id="syLocal"><span class="pp-emoji" aria-hidden="true">📱</span><span class="pp-body"><b>Download from this device</b><span>What’s saved in this browser, including anything not yet synced</span></span>{{ icon('download', 18) }}</button>
+  </div>
+  <p class="gw-note">The files are JSON, a plain format other apps can read. Keep them somewhere safe: they contain your private notes and prayers.</p>
+</main>
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script src="{{ url_for('static', filename='memorise.js') }}"></script>
+<script src="{{ url_for('static', filename='saved-verses.js') }}"></script>
+<script src="{{ url_for('static', filename='reading-position.js') }}"></script>
+<script src="{{ url_for('static', filename='highlights.js') }}"></script>
+<script src="{{ url_for('static', filename='college.js') }}"></script>
+<script src="{{ url_for('static', filename='sync-all.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Stories · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area</p>
+      <h1>Stories</h1>
+    </div>
+    <div class="admin-actions">
+      <a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a>
+      <a href="{{ url_for('grow_stories') }}" class="btn-ghost">View page</a>
+    </div>
+  </div>
+  <p class="empty-sub" style="margin-bottom:1.5rem;">People can send their story from Grow → Write your story. Nothing appears in the app until you publish it here. You can tidy the wording before publishing; please keep it in their voice.</p>
+
+  <h2 class="section-label">Waiting ({{ pending|length }})</h2>
+  {% if not pending %}<p class="empty-sub">Nothing waiting.</p>{% endif %}
+  {% for st in pending %}
+  <article class="qa-admin-card">
+    <p class="qa-meta">{% if st['author_name'] %}From {{ st['author_name'] }} · {% else %}Anonymous · {% endif %}sent {{ st['submitted_at']|pretty_datetime }}</p>
+    {% if st['hold_reason'] %}<p class="qa-meta" style="color:#B3261E"><b>Please read carefully:</b> mentions {{ st['hold_reason'] }}. Consider contacting them, and think about whether it should be public.</p>{% endif %}
+    <form method="post" action="{{ url_for('admin_story_action', story_id=st['id'], action='publish') }}" class="qa-answer-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Title <input type="text" name="title" maxlength="120" value="{{ st['title'] or '' }}"></label>
+      <textarea name="body" rows="8">{{ st['body'] }}</textarea>
+      <div class="qa-admin-actions">
+        <button type="submit" class="btn-primary small" style="width:auto;">Publish</button>
+      </div>
+    </form>
+    <form method="post" action="{{ url_for('admin_story_action', story_id=st['id'], action='delete') }}" onsubmit="return confirm('Delete this story?');" style="margin-top:.5rem">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn-ghost small">Delete</button>
+    </form>
+  </article>
+  {% endfor %}
+
+  <h2 class="section-label" style="margin-top:2.5rem;">Published ({{ live|length }})</h2>
+  {% for st in live %}
+  <article class="qa-admin-card">
+    <p class="qa-question">{{ st['title'] or 'Untitled' }}</p>
+    <p class="qa-meta">{{ st['author_name'] or 'Anonymous' }} · published {{ st['published_at']|pretty_datetime }}</p>
+    <div class="qa-answer">{{ st['body']|truncate(300) }}</div>
+    <form method="post" action="{{ url_for('admin_story_action', story_id=st['id'], action='hide') }}" onsubmit="return confirm('Take this story down?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn-danger small">Take down</button>
+    </form>
+  </article>
+  {% endfor %}
+</main>
+{% endblock %}

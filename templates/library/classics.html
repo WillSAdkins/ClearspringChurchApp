@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Classic books · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib" id="clShelf">
+  {{ head("Classic books", url_for('library_hub'), "Library", "Read in the app") }}
+  <p class="bible-lede">Books Christians have read and loved for centuries, complete and free: {{ books|length }} of them, from Augustine to Chesterton. Read a chapter at a time; the app remembers where you are{% if not member %}, and keeps your place across your devices if you sign in{% endif %}.</p>
+  <div class="cl-continue" id="clContinue" hidden>
+    <p class="cl-k">Carry on reading</p>
+    <div id="clContinueList"></div>
+  </div>
+  <nav class="cl-jump" aria-label="Shelves">
+    {% for key, name, bs in shelves %}<a href="#shelf-{{ key }}">{{ name }}</a>{% endfor %}
+  </nav>
+  {% set ns = namespace(i=0) %}
+  {% for key, name, bs in shelves %}
+  <section class="cl-section" id="shelf-{{ key }}" aria-labelledby="shelf-{{ key }}-h">
+    <h2 class="cl-shelf-h" id="shelf-{{ key }}-h">{{ name }} <span>{{ bs|length }}</span></h2>
+    <div class="cl-shelf">
+      {% for b in bs %}
+      <a class="cl-book" href="{{ url_for('classics_book', slug=b.slug) }}" data-book="{{ b.slug }}" data-total="{{ b.chapters }}">
+        <span class="cl-spine cl-c{{ ns.i % 6 }}" aria-hidden="true"><span>{{ b.title }}</span></span>
+        <span class="cl-info">
+          <b>{{ b.title }}</b>
+          <span class="cl-by">{{ b.author }} · {{ b.year }}</span>
+          <span class="cl-about">{{ b.about|truncate(150) }}</span>
+          <span class="cl-meta">{{ b.chapters }} chapters · {{ b.time }}<span class="cl-prog"></span></span>
+        </span>
+      </a>
+      {% set ns.i = ns.i + 1 %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+  <p class="lib-source">All public domain: texts from <a href="https://standardebooks.org" rel="noopener" target="_blank">Standard Ebooks</a> (CC0) and Project Gutenberg. <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+<script src="{{ url_for('static', filename='classics.js') }}"></script>
+{% endblock %}

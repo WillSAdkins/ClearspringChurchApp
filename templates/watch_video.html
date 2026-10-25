@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}{{ v['title'] }} · Watch · Clearspring{% endblock %}
+{% block content %}
+<main class="bible wc">
+  <header class="bible-head">
+    <a href="{{ url_for('watch_learn') }}" class="bible-back" aria-label="Back to Courses">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title wc-headt">{{ ch['name'] }}</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+  <div class="wc-player" id="wvPlayer">
+    <button type="button" class="wc-poster" id="wvPoster" aria-label="Play {{ v['title'] }}">
+      <img src="https://i.ytimg.com/vi/{{ v['id'] }}/hqdefault.jpg" alt="">
+      <span class="wc-play">{{ icon('play', 30) }}</span>
+    </button>
+  </div>
+  <section class="wc-head">
+    <h2 class="wc-title">{{ v['title'] }}</h2>
+    <p class="wc-by">{{ ch['name'] }}{% if v['date'] %} · {{ v['date']|pretty_date }}{% endif %}</p>
+  </section>
+  {% if others %}
+  <section aria-labelledby="wvMoreH">
+    <h3 class="wl-h" id="wvMoreH">More from {{ ch['name'] }}</h3>
+    <div class="wl-row">
+      {% for o in others %}
+      <a class="wl-vid" href="{{ url_for('watch_video', video_id=o['id'], ch=ch['id']) }}">
+        <span class="wl-thumb"><img src="https://i.ytimg.com/vi/{{ o['id'] }}/mqdefault.jpg" alt="" loading="lazy"></span>
+        <span class="wl-vid-t">{{ o['title'] }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  <p class="wc-yt"><a href="https://www.youtube.com/watch?v={{ v['id'] }}" target="_blank" rel="noopener" data-external>Open on YouTube</a> · Plays in YouTube’s privacy-enhanced mode.</p>
+</main>
+<script>
+document.getElementById("wvPoster").addEventListener("click", function () {
+  var f = document.createElement("iframe");
+  f.src = "https://www.youtube-nocookie.com/embed/{{ v['id'] }}?autoplay=1&rel=0&playsinline=1";
+  f.title = {{ v['title']|tojson }};
+  f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+  f.setAttribute("allowfullscreen", "");
+  f.referrerPolicy = "strict-origin-when-cross-origin";
+  document.getElementById("wvPlayer").replaceChildren(f);
+});
+</script>
+{% endblock %}

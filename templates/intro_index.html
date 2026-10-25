@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Book introductions · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Book introductions", url_for('library_hub'), "Library", "Library") }}
+  <p class="bible-lede">Before you read a book of the Bible, get your bearings: who wrote it, when and why, how it fits the whole story, and what to look for.</p>
+  {% for title, books in [('Old Testament', ot), ('New Testament', nt)] %}
+  <section class="lib-section">
+    <h2 class="bible-h2">{{ title }}</h2>
+    <ul class="lib-index lib-index-cols">
+      {% for b in books %}<li><a href="{{ url_for('book_intro', book_slug=b.slug) }}">{{ b.name }}</a></li>{% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+  <p class="lib-source">Tyndale Open Study Notes (adapted by Mission Mutual) and Biblica Study Notes, CC BY-SA 4.0.</p>
+</main>
+{% endblock %}

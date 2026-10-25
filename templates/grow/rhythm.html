@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Your rhythm of life · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Rhythm of life', url_for('grow_hub'), 'Back to Grow') }}
+
+  <section class="rh-today" id="rhToday" hidden>
+    <p class="gw-k" id="rhDate"></p>
+    <h2 class="gw-h1">Today</h2>
+    <ul class="rh-ticks" id="rhTicks"></ul>
+    <p class="gw-note" id="rhWeek"></p>
+  </section>
+
+  <section class="rh-mine" id="rhMine" hidden>
+    <h2 class="bible-h2">My rhythm</h2>
+    <div id="rhSummary" class="rh-summary"></div>
+    <button type="button" class="ps-link" id="rhEdit">Change my rhythm</button>
+  </section>
+
+  <section id="rhBuild">
+    <p class="bible-lede">{{ about }}</p>
+    {% for key, label, items in groups %}
+    <fieldset class="rh-group" data-freq="{{ key }}">
+      <legend>{{ label }}</legend>
+      <div class="rh-chips">
+        {% for it in items %}<button type="button" class="pr-cat rh-chip" data-text="{{ it }}" aria-pressed="false">{{ it }}</button>{% endfor %}
+      </div>
+      <form class="ps-thanks rh-add"><input type="text" maxlength="80" placeholder="Add your own" aria-label="Add your own {{ label|lower }} habit"><button type="submit">Add</button></form>
+    </fieldset>
+    {% endfor %}
+    <button type="button" class="ps-go" id="rhSave">Save my rhythm</button>
+    <p class="gw-note">Start with two or three things. A rhythm you keep is better than an ideal one you don’t.</p>
+  </section>
+</main>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+  var G = window.Grow, $ = function (id) { return document.getElementById(id); };
+  var LABEL = { daily: "Every day", weekly: "Every week", monthly: "Every month", yearly: "Every year" };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function id(text) { return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40); }
+  function weekKey(d) { var m = new Date(d); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m.toISOString().slice(0, 10); }
+
+  function chip(fs, text, on) {
+    var b = el("button", "pr-cat rh-chip" + (on ? " on" : ""), text); b.type = "button"; b.dataset.text = text; b.setAttribute("aria-pressed", on ? "true" : "false");
+    fs.querySelector(".rh-chips").appendChild(b); return b;
+  }
+  document.querySelectorAll(".rh-group").forEach(function (fs) {
+    fs.addEventListener("click", function (e) {
+      var b = e.target.closest(".rh-chip"); if (!b) return;
+      b.classList.toggle("on"); b.setAttribute("aria-pressed", b.classList.contains("on") ? "true" : "false");
+    });
+    fs.querySelector(".rh-add").addEventListener("submit", function (e) {
+      e.preventDefault(); var inp = e.target.querySelector("input"), v = inp.value.trim(); if (!v) return;
+      chip(fs, v, true); inp.value = "";
+    });
+  });
+
+  function loadChips() {
+    var items = G.load().rhythm.items;
+    document.querySelectorAll(".rh-group").forEach(function (fs) {
+      var f = fs.dataset.freq;
+      fs.querySelectorAll(".rh-chip").forEach(function (b) { var on = items.some(function (x) { return x.freq === f && x.text === b.dataset.text; }); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+      items.filter(function (x) { return x.freq === f && !fs.querySelector('.rh-chip[data-text="' + CSS.escape(x.text) + '"]'); }).forEach(function (x) { chip(fs, x.text, true); });
+    });
+  }
+  $("rhSave").addEventListener("click", function () {
+    var items = [];
+    document.querySelectorAll(".rh-group").forEach(function (fs) {
+      fs.querySelectorAll(".rh-chip.on").forEach(function (b) { items.push({ id: fs.dataset.freq + ":" + id(b.dataset.text), text: b.dataset.text, freq: fs.dataset.freq }); });
+    });
+    G.update("rhythm", function (r) { r.items = items; });
+    show(); window.scrollTo(0, 0);
+  });
+  $("rhEdit").addEventListener("click", function () { $("rhBuild").hidden = false; $("rhMine").hidden = true; loadChips(); $("rhBuild").scrollIntoView({ behavior: "smooth" }); });
+
+  function show() {
+    var r = G.load().rhythm, t = G.today();
+    var has = r.items.length > 0;
+    $("rhBuild").hidden = has; $("rhMine").hidden = !has;
+    var daily = r.items.filter(function (x) { return x.freq === "daily" || x.freq === "weekly"; });
+    $("rhToday").hidden = !daily.length;
+    $("rhDate").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+    var ul = $("rhTicks"); ul.textContent = "";
+    var wk = weekKey(new Date());
+    daily.forEach(function (x) {
+      var key = x.freq === "daily" ? t : "w" + wk;
+      var on = ((r.ticks[key] || []).indexOf(x.id) >= 0);
+      var li = el("li"), b = el("button", "rh-tick" + (on ? " on" : "")); b.type = "button"; b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.appendChild(el("i", null, on ? "✓" : "")); b.appendChild(el("span", null, x.text)); if (x.freq === "weekly") b.appendChild(el("small", null, "this week"));
+      b.addEventListener("click", function () {
+        G.update("rhythm", function (rr) {
+          var l = rr.ticks[key] = rr.ticks[key] || [], i = l.indexOf(x.id);
+          if (i >= 0) l.splice(i, 1); else l.push(x.id);
+          // keep about two months of ticks
+          Object.keys(rr.ticks).sort().slice(0, -70).forEach(function (k) { delete rr.ticks[k]; });
+        });
+        show();
+      });
+      li.appendChild(b); ul.appendChild(li);
+    });
+    // a gentle line about the week (daily items only)
+    var dItems = r.items.filter(function (x) { return x.freq === "daily"; });
+    if (dItems.length) {
+      var days = 0, m = new Date(); m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+      for (var i = 0; i < 7; i++) { var d = new Date(m); d.setDate(m.getDate() + i); var k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); if ((r.ticks[k] || []).length) days++; }
+      $("rhWeek").textContent = days ? "You’ve kept some of your rhythm on " + days + " day" + (days === 1 ? "" : "s") + " this week." : "A new week. Grace, not guilt: start where you are.";
+    }
+    var sum = $("rhSummary"); sum.textContent = "";
+    ["daily", "weekly", "monthly", "yearly"].forEach(function (f) {
+      var its = r.items.filter(function (x) { return x.freq === f; }); if (!its.length) return;
+      var box = el("div", "rh-sum"); box.appendChild(el("b", null, LABEL[f]));
+      var u = el("ul"); its.forEach(function (x) { u.appendChild(el("li", null, x.text)); }); box.appendChild(u); sum.appendChild(box);
+    });
+  }
+  loadChips(); show();
+  G.sync().then(function (ch) { if (ch) { loadChips(); show(); } });
+})();
+</script>
+{% endblock %}

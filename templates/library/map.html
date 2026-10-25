@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Map of the Bible · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib lib-mappage">
+  {{ head("Map", url_for('library_hub'), "Library", "The Bible world") }}
+  <div class="lib-map lib-map-full" id="worldMap"></div>
+  <p class="lib-note">Pinch or use + and − to zoom; the most-mentioned places are labelled first. Tap a place to open it. <a href="{{ url_for('journeys') }}">Journeys →</a></p>
+</main>
+<script src="{{ url_for('static', filename='bible-map.js') }}"></script>
+<script>
+fetch("/api/map/places").then(function (r) { return r.json(); }).then(function (d) {
+  BibleMap.mount(document.getElementById("worldMap"), {
+    markers: d.places.map(function (p) { return { label: p[1], lat: p[2], lon: p[3], rank: p[4], href: "/bible/places/" + p[0], note: p[4] + " verses" }; }),
+    fit: { lat: 32.3, lon: 35.4, span: 3.2 }
+  });
+});
+</script>
+{% endblock %}

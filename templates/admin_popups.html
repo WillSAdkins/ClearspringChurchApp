@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Pop-ups · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">Staff area</p><h1>Pop-ups</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Board</a><a href="{{ url_for('admin_popup_edit') }}" class="btn-primary">+ New pop-up</a>{% if settings.sponsors_on %}<a href="{{ url_for('admin_popup_edit', kind='sponsor') }}" class="btn-ghost">+ Sponsor pop-up</a>{% endif %}</div>
+  </div>
+  <h2 class="section-label">Church notices{% if settings.sponsors_on %} and sponsors{% endif %}</h2>
+  <p class="pu-admin-lead">A pop-up appears a couple of seconds after someone opens the pages you choose, between the dates you set. Each person sees each pop-up once, and never more than one per visit, so use them for things that really matter: Christmas services, a new course, an appeal.</p>
+  {% if not popups %}<p class="empty-sub">No pop-ups yet.</p>{% endif %}
+  <div class="admin-table">
+    {% for p in popups %}
+    {% set live = p['active'] and p['starts'] <= today <= p['ends'] %}
+    <div class="admin-row">
+      <div class="admin-row-date"><span class="mono">{{ p['starts']|pretty_date_short_day }}</span></div>
+      <div class="admin-row-main">
+        <span class="card-tag">{{ 'Showing now' if live and (p['kind'] != 'sponsor' or settings.sponsors_on) else ('Finished' if p['ends'] < today else ('Waiting: sponsors are off' if p['kind'] == 'sponsor' and not settings.sponsors_on else ('Scheduled' if p['active'] else 'Switched off'))) }}</span>
+        {% if p['kind'] == 'sponsor' %}<span class="card-tag">Sponsor: {{ p['sponsor_name'] }}</span>{% endif %}
+        <strong>{{ p['title'] }}</strong>
+        <span class="admin-row-loc">{{ p['starts']|pretty_date }} to {{ p['ends']|pretty_date }} · {{ pages[p['pages']][0] }} · {{ audiences[p['audience']] }}{% set tt = totals.get('p' ~ p['id']) %}{% if tt %} · last 30 days: seen {{ tt[0] }}, tapped {{ tt[1] }}{% endif %}</span>
+      </div>
+      <div class="admin-row-actions"><a href="{{ url_for('admin_popup_edit', popup_id=p['id']) }}" class="btn-ghost small">Edit</a></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <section class="pu-admin-sec" aria-labelledby="tipsH">
+    <h2 class="section-label" id="tipsH">Feature tips: the app advertising itself</h2>
+    <p class="pu-admin-lead">When there's no church notice to show, the app can point people to a part of it they haven't tried. It only shows a tip on the main tabs, never on someone's first day, at most one pop-up per visit, and never for something they already use. Each tip shows at most twice, and anyone can tap “Don’t show tips”.</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="tips">
+      <label class="admin-check"><input type="checkbox" name="tips_on" value="1" {{ 'checked' if settings.tips_on }}><span>Show feature tips</span></label>
+      <label for="tipsEvery" style="display:block;margin:.75rem 0 .3rem;font-weight:600">How often</label>
+      <select id="tipsEvery" name="tips_every">{% for k, v in often.items() %}<option value="{{ k }}" {{ 'selected' if settings.tips_every == k }}>{{ v }}</option>{% endfor %}</select>
+      <ul class="pu-admin-tips">
+        {% for f in features %}{% set tt = totals.get('f-' ~ f.id) %}
+        <li>
+          <input type="checkbox" id="tip_{{ f.id }}" name="tip_{{ f.id }}" value="1" {{ 'checked' if f.id not in settings.tips_off }}>
+          <label for="tip_{{ f.id }}"><b>{{ f.emoji }} {{ f.title }}</b><br><small>{{ f.body }}{% if f.audience == 'guests' %} (only people not signed in){% elif f.audience == 'members' %} (only signed-in members){% endif %}</small></label>
+          <span class="pu-admin-n">{% if tt %}seen {{ tt[0] }}<br>tapped {{ tt[1] }}{% endif %}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <button type="submit" class="btn-primary" style="width:auto">Save tips</button>
+    </form>
+  </section>
+
+  <section class="pu-admin-sec" aria-labelledby="sponH">
+    <h2 class="section-label" id="sponH">Sponsor pop-ups</h2>
+    <p class="pu-admin-lead">For later, if the church decides to promote a local business or partner charity. They're made here like any pop-up, carry a “Sponsored” label with the sponsor's name, and follow the same rules: once per person, never more than one per visit. There's no ad network and nothing tracks anyone; you'll see anonymous totals (seen and tapped) to report back to a sponsor. Before switching this on, check it with the trustees, update the privacy page and the app store listings (which say “no adverts”), and keep sponsors suitable for children.</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="sponsors">
+      <label class="admin-check"><input type="checkbox" name="sponsors_on" value="1" {{ 'checked' if settings.sponsors_on }}><span>Allow sponsor pop-ups</span></label>
+      <button type="submit" class="btn-ghost" style="width:auto;margin-top:.5rem">Save</button>
+    </form>
+  </section>
+</main>
+<style>.pu-admin-lead { max-width: 42rem; color: var(--muted); line-height: 1.6; margin: 0 0 1.25rem; }</style>
+{% endblock %}

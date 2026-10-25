@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Today · Clearspring{% endblock %}
+{% block content %}
+<main class="bible td">
+  <header class="bible-head">
+    <a href="{{ url_for('bible_hub') }}" class="bible-back" aria-label="Back to Study">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Today</h1>
+    <a href="{{ url_for('reading_stats') }}" class="pls-stats" aria-label="Your reading">{{ icon('trophy', 20) }}</a>
+  </header>
+  <p class="td-date" id="tdDate"></p>
+
+  <section class="td-rhythm" id="tdRhythm">
+    <div class="td-rhythm-week" id="tdWeek" aria-label="This week"></div>
+    <p class="td-rhythm-text" id="tdRhythmText"></p>
+  </section>
+
+  {% if church %}
+  <a class="church-plan" href="{{ url_for('reading_plan_detail', plan_slug=church.slug) }}" id="churchPlan" data-slug="{{ church.slug }}" data-start="{{ church.start }}">
+    <span class="church-plan-k">Reading together · Clearspring</span>
+    <span class="church-plan-t">{{ church.emoji }} {{ church.title }}</span>
+    <span class="church-plan-today" id="churchToday"></span>
+    <span class="church-plan-cta" id="churchCta">Join in</span>
+  </a>
+  {% endif %}
+
+  <section class="pls-mine" id="plsMine" hidden>
+    <h2 class="bible-h2">Your plans</h2>
+    <div id="plsMineList" class="pls-mine-list"></div>
+  </section>
+  <a class="pls-make" id="tdNoPlan" href="{{ url_for('reading_plans') }}" hidden>
+    <span class="pls-make-icon">{{ icon('calendar', 22) }}</span>
+    <span><b>Choose a reading plan</b><small>A little each day: the whole Bible in a year, or something shorter</small></span>
+    {{ icon('chevron-right', 18) }}
+  </a>
+
+  <a class="td-card" id="tdContinue" hidden href="#">
+    <span class="td-card-k">Carry on reading</span>
+    <span class="td-card-t" id="tdContinueRef"></span>
+  </a>
+
+  {% if season and (season.key != 'ordinary' or season.countdown) %}{% include "_season.html" %}{% endif %}
+
+  {% if sunday and section_on('sunday') %}
+  <a class="td-card" href="{{ url_for('sunday_page') }}">
+    <span class="td-card-k">This Sunday at Clearspring</span>
+    <span class="td-card-t">{{ sunday['title'] }}{% if sunday['passage'] %} · {{ sunday['passage'] }}{% endif %}</span>
+  </a>
+  {% endif %}
+
+  <a class="td-card" id="tdRhythm2" hidden href="{{ url_for('grow_rhythm') }}">
+    <span class="td-card-k">Your rhythm</span>
+    <span class="td-card-t" id="tdRhythmLeft"></span>
+  </a>
+
+  <a class="td-card" id="tdPray" href="{{ url_for('prayer_session') }}">
+    <span class="td-card-k">Pray</span>
+    <span class="td-card-t" id="tdPrayText">A few quiet minutes with God</span>
+  </a>
+
+  <a class="td-card" id="tdMemory" hidden href="{{ url_for('memorise_hub') }}">
+    <span class="td-card-k">Verses to review</span>
+    <span class="td-card-t" id="tdMemoryText"></span>
+  </a>
+
+  <section class="votd td-votd">
+    <p class="votd-label">Verse of the day</p>
+    <p class="votd-text">{{ verse.text }}</p>
+    <div class="votd-foot">
+      <span class="votd-ref">{{ verse.ref }}</span>
+      <a href="{{ verse.ref | verse_url }}" class="votd-action">Study this verse</a>
+    </div>
+  </section>
+
+  <p class="td-links"><a href="{{ url_for('reading_stats') }}">Your reading so far</a> · <a href="{{ url_for('notification_settings') }}">Daily reminders</a></p>
+</main>
+<script src="{{ url_for('static', filename='reading-position.js') }}"></script>
+<script src="{{ url_for('static', filename='memorise.js') }}"></script>
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script src="{{ url_for('static', filename='plans-mine.js') }}"></script>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script>
+  (function () {
+    function paint() {
+      var r = window.Grow.load().rhythm, t = window.Grow.today();
+      var daily = r.items.filter(function (x) { return x.freq === "daily"; });
+      if (!daily.length) return;
+      var done = (r.ticks[t] || []).length, left = daily.filter(function (x) { return (r.ticks[t] || []).indexOf(x.id) < 0; });
+      document.getElementById("tdRhythmLeft").textContent = left.length ? left.map(function (x) { return x.text; }).slice(0, 3).join(" · ") : "All done today. Well done!";
+      document.getElementById("tdRhythm2").hidden = false;
+    }
+    paint(); window.Grow.sync().then(function (ch) { if (ch) paint(); });
+  })();
+</script>
+<script>
+  (function () {
+    var n = window.Prayers ? Prayers.forToday().length : 0;
+    if (n) document.getElementById("tdPrayText").textContent = n + (n === 1 ? " prayer" : " prayers") + " on your list for today";
+  })();
+</script>
+<script>
+(function () {
+  var P = window.Plans;
+  document.getElementById("tdDate").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  // This week, gently: a dot for each day you read. No "streak broken" here.
+  var week = document.getElementById("tdWeek"), log = P.readLog(), now = new Date();
+  var monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  var count = 0;
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(monday); d.setDate(monday.getDate() + i);
+    var k = P.iso(d), on = !!log.days[k], isToday = k === P.today();
+    if (on) count++;
+    var c = document.createElement("span");
+    c.className = "td-dot" + (on ? " on" : "") + (isToday ? " now" : "") + (k > P.today() ? " future" : "");
+    c.innerHTML = "<i></i><small>" + d.toLocaleDateString(undefined, { weekday: "narrow" }) + "</small>";
+    c.setAttribute("aria-label", d.toLocaleDateString(undefined, { weekday: "long" }) + (on ? ": read" : ""));
+    week.appendChild(c);
+  }
+  var s = P.streak();
+  var t = count === 0 ? "A fresh week. Read a little today." :
+          count === 7 ? "You’ve read every day this week." :
+          "You’ve read on " + count + " day" + (count === 1 ? "" : "s") + " this week" + (s.current >= 3 ? ", " + s.current + " days in a row." : ".");
+  document.getElementById("tdRhythmText").textContent = t;
+
+  if (!P.active().length) document.getElementById("tdNoPlan").hidden = false;
+
+  var pos = window.ReadingPosition && ReadingPosition.getPosition();
+  if (pos && pos.bookSlug) {
+    var c2 = document.getElementById("tdContinue");
+    c2.href = "/bible/read/" + pos.bookSlug + "/" + pos.chapter + (pos.translation ? "?translation=" + pos.translation : "");
+    document.getElementById("tdContinueRef").textContent = pos.book + " " + pos.chapter;
+    c2.hidden = false;
+  }
+  if (window.Memory) {
+    try {
+      var m = { due: Memory.dueList(Memory.load()).length };
+      if (m.due) { document.getElementById("tdMemoryText").textContent = m.due + (m.due === 1 ? " verse is" : " verses are") + " ready to practise"; document.getElementById("tdMemory").hidden = false; }
+    } catch (e) {}
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}Timeline · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Timeline", url_for('library_hub'), "Library", "From Creation to the early church") }}
+  <nav class="lib-chips tl-jump">{% for era, items in eras %}<a class="lib-chip" href="#era-{{ loop.index }}">{{ era }}</a>{% endfor %}</nav>
+  <p class="lib-note">Dates before the kings of Israel follow one traditional reckoning and are approximate; scholars date many of these events differently.</p>
+  {% for era, items in eras %}
+  <section class="tl-era" id="era-{{ loop.index }}">
+    <h2 class="tl-era-title">{{ era }}</h2>
+    <ol class="tl">
+      {% for e in items %}
+      <li class="tl-item">
+        <span class="tl-when">{{ e.when }}</span>
+        <div class="tl-body">
+          {% if e.href %}<a class="tl-title" href="{{ e.href }}">{{ e.title }}</a>{% else %}<span class="tl-title">{{ e.title }}</span>{% endif %}
+          {% if e.ref %}<span class="tl-ref">{{ e.ref }}</span>{% endif %}
+          {% if e.names %}<span class="tl-people">{% for s, n in e.names %}<a href="{{ url_for('person_page', slug=s) }}">{{ n }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endfor %}
+  {{ source("Events: Theographic Bible Metadata (CC BY-SA 4.0).") }}
+</main>
+{% endblock %}

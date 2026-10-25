@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ book.name }} {{ chapter }} study notes · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib sn">
+  {{ head(book.name ~ ' ' ~ chapter, url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter), "the chapter", "Study notes") }}
+
+  {% if has_intro %}
+  <a class="lib-card-link sn-intro" href="{{ url_for('book_intro', book_slug=book.slug) }}"><b>Introducing {{ book.name }}</b><span>Who wrote it, when, why, and what to look for as you read</span></a>
+  {% endif %}
+
+  {% if items %}
+  <div class="sn-filter" role="group" aria-label="Show notes from">
+    <button type="button" data-src="all" aria-pressed="true">All</button>
+    {% if tyndale %}<button type="button" data-src="tyndale" aria-pressed="false">Verse notes ({{ tyndale }})</button>{% endif %}
+    {% if biblica %}<button type="button" data-src="biblica" aria-pressed="false">Section notes ({{ biblica }})</button>{% endif %}
+  </div>
+  <div class="sn-list" id="snList">
+    {% for n in items %}
+    <article class="sn-note sn-{{ n.source }}" id="{{ n.anchor }}" data-src="{{ n.source }}">
+      <h2 class="sn-ref">
+        <a href="{{ url_for('verse_page', book_slug=book.slug, chapter=n.c1, verse=n.v1 or 1) }}">{{ n.label }}</a>
+        {% if n.source == 'biblica' %}<span class="sn-kind">Section</span>{% endif %}
+      </h2>
+      <div class="lib-article sn-body">{{ n.html }}</div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="lib-note">There are no study notes for this chapter yet.</p>
+  {% endif %}
+
+  <nav class="vp-paging lib-paging">
+    {% if prev_ch %}<a class="vp-page" href="{{ url_for('notes_chapter', book_slug=prev_ch[0], chapter=prev_ch[1]) }}">{{ icon('chevron-left', 16) }}<span>{{ prev_ch[2] }}</span></a>{% else %}<span></span>{% endif %}
+    {% if next_ch %}<a class="vp-page" href="{{ url_for('notes_chapter', book_slug=next_ch[0], chapter=next_ch[1]) }}"><span>{{ next_ch[2] }}</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  <p class="lib-source">Verse notes: {{ sources.tyndale.credit }} Section notes: {{ sources.biblica.credit }} <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+<script>
+(function () {
+  var bar = document.querySelector(".sn-filter"); if (!bar) return;
+  bar.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-src]"); if (!b) return;
+    var src = b.getAttribute("data-src");
+    Array.prototype.forEach.call(bar.querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    Array.prototype.forEach.call(document.querySelectorAll(".sn-note"), function (n) { n.hidden = src !== "all" && n.getAttribute("data-src") !== src; });
+  });
+})();
+</script>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

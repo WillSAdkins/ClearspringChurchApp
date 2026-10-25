@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clearspring</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #F5F8F7;
+    color: #2b2723;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    padding: 2rem;
+    text-align: center;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #061719; color: #ece7e0; }
+  }
+  h1 { font-size: 1.35rem; font-weight: 600; margin: 0 0 .6rem; }
+  .small { font-size: .9rem; margin-top: 1rem; min-height: 1.4em; }
+  p { margin: 0 0 1.6rem; opacity: .75; line-height: 1.5; max-width: 30ch; }
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: .8rem 1.8rem;
+    border: 0;
+    border-radius: 999px;
+    background: #2b2723;
+    color: #F5F8F7;
+    cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) {
+    button { background: #ece7e0; color: #061719; }
+  }
+</style>
+</head>
+<body>
+  <main>
+    <h1>No connection</h1>
+    <p>Clearspring needs an internet connection to load. Check your signal and try again.</p>
+    <button id="retry" type="button">Try again</button>
+    <p class="small" id="msg" role="status" aria-live="polite"></p>
+  </main>
+<script>
+  // This page ships inside the app, so it shows even with no signal. "Try
+  // again" goes back to the live site; if that still fails, the app lands
+  // here again.
+  var SITE = "https://clearspringchurchapp.onrender.com/";
+  document.getElementById("retry").addEventListener("click", function () {
+    document.getElementById("msg").textContent = "Trying…";
+    location.href = SITE;
+  });
+  window.addEventListener("online", function () { location.href = SITE; });
+</script>
+</body>
+</html>

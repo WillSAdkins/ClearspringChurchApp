@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% set show_back = false %}{# this page draws its own back link #}
+{% from "icons.html" import icon %}
+{% block title %}Kids games · Clearspring{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='arcade.css', v='41') }}">
+<script>document.body.classList.add("arcade");</script>
+<header class="gh">
+  <a href="{{ url_for('more_hub') }}" class="gh-back" aria-label="Back to More">{{ icon('chevron-left', 20) }}</a>
+  <div class="gh-text">
+    <p class="gh-k">Kids Games</p>
+    <h1 class="gh-title">Clearspring Arcade</h1>
+    <p class="gh-tag">Play together. No sign-in needed: that's only for putting a score on the high-score table.</p>
+  </div>
+</header>
+
+<main class="bible quest-main">
+
+  {#  Tiles rather than a list.
+
+      This was eighteen near-identical rows — nine games and nine leaderboard
+      links — which is a wall of text for a seven-year-old who doesn't read
+      quickly yet. Each game now has its own colour and symbol, so it can be
+      recognised before it can be read, and the leaderboard sits as a small
+      cup in the corner instead of taking a whole row of its own.  #}
+
+  {% set featured = games|selectattr('key', 'equalto', 'rock_slinger')|first %}
+  {% if featured %}
+  {# Finn's game: the one made by someone in the church, drawn in his own pixel art. #}
+  <div class="game-feature-cell">
+    <a href="{{ url_for(featured.endpoint) }}" class="game-feature">
+      <span class="gf-badge">A game by Finn</span>
+      <span class="gf-army" aria-hidden="true">{% for i in range(5) %}<i></i>{% endfor %}</span>
+      <span class="gf-title">Rock Slinger</span>
+      <span class="gf-sub">Five smooth stones. One whole army.</span>
+      <span class="gf-david" aria-hidden="true"></span>
+      <span class="gf-play">Play</span>
+    </a>
+    <a href="{{ url_for('game_leaderboard', game_key='rock_slinger') }}" class="game-cup" aria-label="Rock Slinger high scores">{{ icon('trophy', 14) }}</a>
+  </div>
+  {% endif %}
+
+  <div class="game-grid">
+    {% for g in games if g.key != 'rock_slinger' %}
+    <div class="game-cell">
+      <a href="{{ url_for(g.endpoint) }}" class="game-tile arc-tile" style="--g1:{{ g.c1 }}; --g2:{{ g.c2 }}; --acc:{{ g.acc }};">
+        {% if g.sprite %}<img class="arc-tile-sprite" src="{{ url_for('static', filename='games/arcade/' ~ g.sprite ~ '.png') }}" alt="" width="56">{% else %}<span class="game-emoji" aria-hidden="true">{{ g.emoji }}</span>{% endif %}
+        <span class="game-name">{{ g.name }}</span>
+        <span class="game-desc">{{ g.desc }}</span>
+      </a>
+      <a href="{{ url_for('game_leaderboard', game_key=g.key) }}"
+         class="game-cup" aria-label="{{ g.name }} high scores">{{ icon('trophy', 14) }}</a>
+    </div>
+    {% endfor %}
+  </div>
+
+</main>
+
+{% endblock %}

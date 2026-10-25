@@ -1,0 +1,7 @@
+{# One comment from the early church. #}
+{% macro father(f, ref_label=None) -%}
+<figure class="ef">
+  <blockquote class="ef-q">{{ f.quote }}</blockquote>
+  <figcaption class="ef-by"><b>{{ f.author }}</b>{% if f.year %} · d. {{ f.year }}{% endif %}<span>{{ f.work }}{% if ref_label %} · {{ ref_label }}{% endif %}</span></figcaption>
+</figure>
+{%- endmacro %}

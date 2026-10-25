@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, source %}
+{% block title %}{{ r.title }} · Morning and Evening{% endblock %}
+{% block content %}
+<main class="bible lib me">
+  {{ head(r.part|capitalize ~ ", " ~ label, url_for('bible_tab', tab='study'), "Study", "Spurgeon · Morning and Evening") }}
+  <nav class="me-switch" aria-label="Morning or evening">
+    <a href="{{ url_for('morning_evening', day=r.day, part='morning') }}" class="{{ 'on' if r.part == 'morning' }}" {% if r.part == 'morning' %}aria-current="page"{% endif %}>Morning</a>
+    <a href="{{ url_for('morning_evening', day=r.day, part='evening') }}" class="{{ 'on' if r.part == 'evening' }}" {% if r.part == 'evening' %}aria-current="page"{% endif %}>Evening</a>
+  </nav>
+  <blockquote class="me-verse"><p>{{ r.verse }}</p>{% if r.ref %}<cite>{{ r.ref|scripture_links }}</cite>{% endif %}</blockquote>
+  <article class="lib-article me-body">{{ r.html }}</article>
+  <nav class="vp-paging lib-paging">
+    <a class="vp-page" href="{{ url_for('morning_evening', day=prev[0], part=prev[1]) }}">{{ icon('chevron-left', 16) }}<span>{{ prev[2] }}</span></a>
+    <a class="vp-page" href="{{ url_for('morning_evening', day=nxt[0], part=nxt[1]) }}"><span>{{ nxt[2] }}</span>{{ icon('chevron-right', 16) }}</a>
+  </nav>
+  {% if not is_today %}<p class="lib-note"><a href="{{ url_for('morning_evening') }}">Go to today’s reading →</a></p>{% endif %}
+  {{ source(info.author ~ ", " ~ info.full ~ " (" ~ info.year ~ "). Public domain, from the CrossWire SWORD module.") }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

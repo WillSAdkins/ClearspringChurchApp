@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Study journal · Clearspring{% endblock %}
+{% block content %}
+<main class="bible jx" data-kind="soap">
+
+  <header class="bible-head">
+    <a href="{{ url_for('my_study', f='soap') }}" class="bible-back" aria-label="Back to My study">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Study journal</h1>
+    <span class="jx-status" id="jxStatus" aria-live="polite"></span>
+  </header>
+
+  <p class="jx-intro">Four steps, the <b>SOAP</b> way: read the <b>S</b>cripture, write what you <b>O</b>bserve, how it <b>A</b>pplies to you, and a <b>P</b>rayer.</p>
+
+  <section class="jx-step">
+    <div class="jx-step-head"><span class="jx-letter">S</span><label for="jxRef" class="jx-step-title">Scripture</label></div>
+    <div class="jx-ref-row">
+      <input type="text" id="jxRef" class="jx-input" placeholder="e.g. John 15:1-8" autocomplete="off" data-field="ref">
+      <select id="jxTrans" class="jx-select" aria-label="Translation" data-field="translation">
+        <option value="web">WEB</option><option value="webbe">WEBBE</option><option value="bsb">BSB</option><option value="asv">ASV</option>
+      </select>
+      <button type="button" class="jx-btn" id="jxLookup">Fill in</button>
+    </div>
+    <p class="jx-error" id="jxRefError" hidden></p>
+    <textarea id="jxPassage" class="jx-area jx-passage" rows="4" placeholder="The passage text appears here, or type or paste it yourself." data-field="passage"></textarea>
+    <p class="jx-links" id="jxRefLinks"></p>
+  </section>
+
+  <section class="jx-step">
+    <div class="jx-step-head"><span class="jx-letter">O</span><label for="jxObs" class="jx-step-title">Observation</label></div>
+    <details class="jx-help"><summary>Questions to get you started</summary>
+      <ul><li>Who is speaking, and to whom?</li><li>What words or ideas are repeated?</li><li>What does this show about God: Father, Son or Spirit?</li><li>Is there a promise, a command, a warning or an example?</li><li>What comes just before and after?</li></ul>
+    </details>
+    <textarea id="jxObs" class="jx-area" rows="5" placeholder="What does it say? What do you notice?" data-field="observation"></textarea>
+  </section>
+
+  <section class="jx-step">
+    <div class="jx-step-head"><span class="jx-letter">A</span><label for="jxApp" class="jx-step-title">Application</label></div>
+    <details class="jx-help"><summary>Questions to get you started</summary>
+      <ul><li>What is God asking me to believe, or to do?</li><li>Is there something to stop, start, or keep doing?</li><li>Who could I share this with this week?</li><li>Where does this meet what I'm facing right now?</li></ul>
+    </details>
+    <textarea id="jxApp" class="jx-area" rows="5" placeholder="What does it mean for you today?" data-field="application"></textarea>
+  </section>
+
+  <section class="jx-step">
+    <div class="jx-step-head"><span class="jx-letter">P</span><label for="jxPray" class="jx-step-title">Prayer</label></div>
+    <textarea id="jxPray" class="jx-area" rows="4" placeholder="Talk to God about what you've read." data-field="prayer"></textarea>
+  </section>
+
+  <section class="jx-step">
+    <p class="jx-step-title jx-plain">Tags</p>
+    <div id="jxTags"></div>
+  </section>
+
+  <div class="jx-foot">
+    <button type="button" class="jx-delete" id="jxDelete" hidden>{{ icon('trash', 18) }}<span>Delete</span></button>
+    <a class="jx-done" href="{{ url_for('my_study', f='soap') }}">Done</a>
+  </div>
+</main>
+<script src="{{ url_for('bible_refs_data') }}"></script>
+<script src="{{ url_for('static', filename='bible-refs.js') }}"></script>
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='tag-field.js') }}"></script>
+<script src="{{ url_for('static', filename='journal-editor.js') }}"></script>
+{% endblock %}

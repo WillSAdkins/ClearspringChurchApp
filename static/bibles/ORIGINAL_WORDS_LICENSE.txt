@@ -1,0 +1,15 @@
+original_words.sqlite — Hebrew and Greek word study data
+
+Built from STEPBible-Data by Tyndale House, Cambridge (STEPBible.org):
+  TAHOT  Translators Amalgamated Hebrew OT
+  TAGNT  Translators Amalgamated Greek NT
+  TBESH  Translators Brief lexicon of Extended Strongs for Hebrew
+  TBESG  Translators Brief lexicon of Extended Strongs for Greek
+
+Licence: Creative Commons Attribution 4.0 (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Source: https://github.com/STEPBible/STEPBible-Data
+
+The app shows this credit under every word study, which the licence requires.
+Changes made: cantillation marks removed, entries trimmed for length,
+data compressed per chapter. Rebuild with tools/build_original_words.py.

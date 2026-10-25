@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ s.title }} · {{ c.title }}{% endblock %}
+{% block content %}
+<main class="bible lib bc" data-course="{{ c.id }}" data-n="{{ s.n }}">
+  {{ head(s.title, url_for('college_course', cid=c.id), c.title, 'Session ' ~ s.n ~ ' of ' ~ total) }}
+  <p class="bc-meta">{{ c.title }}{% if s.session_date %} · {{ s.session_date|pretty_date }}, 8pm{% endif %}</p>
+
+  {% if passage %}
+  <section class="vp-section">
+    <div class="bible-block-head"><h2 class="bible-h2">Read: {{ passage.label }}</h2><a class="bible-more" href="{{ passage.study }}">Study it</a></div>
+    <div class="ps2-text bc-passage">
+      {% for v in passage.verses %}<p class="ps2-line"><sup>{{ v.v }}</sup> {{ v.t }}</p>{% endfor %}
+    </div>
+    <p class="lib-source">Berean Standard Bible (public domain). <a href="{{ passage.notes }}">Study notes on this chapter</a></p>
+  </section>
+  {% endif %}
+
+  {% if readings %}
+  <p class="bc-also"><b>Also read:</b> {% for r in readings %}{% if r.href %}<a href="{{ r.href }}">{{ r.ref }}</a>{% else %}{{ r.ref }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+  {% endif %}
+
+  {% if s.teaching %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Teaching</h2>
+    <div class="lib-article">{{ s.teaching|college_text }}</div>
+  </section>
+  {% endif %}
+
+  {% if s.link_url %}<a class="lib-card-link" href="{{ s.link_url }}" rel="noopener" target="_blank"><b>{{ s.link_label or 'Slides and resources' }}</b><span>Opens in your browser</span></a>{% endif %}
+
+  {% if questions %}
+  <section class="vp-section">
+    <h2 class="bible-h2">To talk about</h2>
+    <ol class="bc-qs">{% for q in questions %}<li>{{ q }}</li>{% endfor %}</ol>
+  </section>
+  {% endif %}
+
+  <section class="vp-section">
+    <h2 class="bible-h2">My notes</h2>
+    <label class="sr-only" for="bcNotes">My notes for this session</label>
+    <textarea id="bcNotes" class="jx-area" rows="5" placeholder="Anything you want to remember from tonight…"></textarea>
+    <p class="gw-note" id="bcSaved">Kept on this device, and in your account when you’re signed in.</p>
+    <button type="button" class="ps-go bc-done" id="bcDone" aria-pressed="false">Mark this session as done</button>
+  </section>
+
+  <nav class="vp-paging lib-paging">
+    {% if prev_s %}<a class="vp-page" href="{{ url_for('college_session', cid=c.id, n=prev_s.n) }}">{{ icon('chevron-left', 16) }}<span>{{ prev_s.title }}</span></a>{% else %}<span></span>{% endif %}
+    {% if next_s %}<a class="vp-page" href="{{ url_for('college_session', cid=c.id, n=next_s.n) }}"><span>{{ next_s.title }}</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  {% if staff %}<p class="lib-note"><a href="{{ url_for('admin_college_session', cid=c.id, sid=s.id) }}">Edit this session in Admin →</a></p>{% endif %}
+</main>
+<script src="{{ url_for('static', filename='college.js') }}"></script>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

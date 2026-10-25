@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Members · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">Staff area</p><h1>Member accounts</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a></div>
+  </div>
+  <p class="empty-sub" style="line-height:1.6;max-width:44rem;margin-bottom:1rem">
+    Everyone who has made an account in the app. This is for running the app and helping people, such as sorting out a sign-in
+    or deleting an account when someone asks. It shows only their name, email, when they joined and last used the app, and their groups.
+    What people save privately (notes, journal, prayer list) is never shown here. Please don't copy this list elsewhere or use it to contact people about other things.
+  </p>
+  <div class="mb-stats">
+    <div><strong>{{ stats.total }}</strong><span>accounts</span></div>
+    <div><strong>{{ stats.new30 }}</strong><span>joined in the last 30 days</span></div>
+    <div><strong>{{ stats.active30 }}</strong><span>used the app in the last 30 days</span></div>
+  </div>
+  <form method="get" class="mb-search" role="search">
+    <label for="mbq" class="sr-only">Search by name or email</label>
+    <input type="search" id="mbq" name="q" value="{{ q }}" placeholder="Search by name or email">
+    <button type="submit" class="btn-ghost small">Search</button>
+    {% if q %}<a href="{{ url_for('admin_members') }}" class="btn-ghost small">Clear</a>{% endif %}
+  </form>
+  {% if q %}<p class="empty-sub">{{ total }} found</p>{% endif %}
+  <div class="admin-table">
+    {% for r in rows %}
+    <a class="admin-row mb-row" href="{{ url_for('admin_member', member_id=r['id']) }}">
+      <div class="admin-row-main">
+        <strong>{{ r['name'] or 'No name given' }}</strong>
+        <span class="admin-row-loc">{{ r['email'] }}</span>
+        <span class="admin-row-loc">Joined {{ r['created_at'][:10]|pretty_date }}{% if r['last_active'] %} · last used {{ r['last_active']|pretty_date }}{% elif r['last_login'] %} · last signed in {{ r['last_login'][:10]|pretty_date }}{% endif %}{% if r['groups'] %} · {{ r['groups'] }} group{{ 's' if r['groups'] != 1 }}{% endif %}</span>
+      </div>
+    </a>
+    {% else %}
+    <p class="empty-sub">{{ 'Nobody matches that.' if q else 'Nobody has made an account yet.' }}</p>
+    {% endfor %}
+  </div>
+  {% if pages > 1 %}
+  <nav class="mb-pages" aria-label="Pages">
+    {% if page > 1 %}<a class="btn-ghost small" href="{{ url_for('admin_members', q=q or None, page=page-1) }}">← Newer</a>{% endif %}
+    <span>Page {{ page }} of {{ pages }}</span>
+    {% if page < pages %}<a class="btn-ghost small" href="{{ url_for('admin_members', q=q or None, page=page+1) }}">Older →</a>{% endif %}
+  </nav>
+  {% endif %}
+</main>
+<style>
+  .mb-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: 0 0 1.25rem; max-width: 40rem; }
+  .mb-stats div { padding: .8rem; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); display: grid; }
+  .mb-stats strong { font: 600 var(--fs-xl) var(--display); }
+  .mb-stats span { font-size: var(--fs-2xs); color: var(--muted); }
+  .mb-search { display: flex; gap: .5rem; margin: 0 0 1rem; max-width: 30rem; flex-wrap: wrap; }
+  .mb-search input { flex: 1; min-width: 12rem; padding: .6rem .8rem; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--ink); font: inherit; }
+  .mb-row { text-decoration: none; color: inherit; }
+  .mb-row .admin-row-main { min-width: 0; overflow-wrap: anywhere; }
+  .mb-pages { display: flex; gap: .75rem; align-items: center; margin-top: 1rem; }
+</style>
+{% endblock %}

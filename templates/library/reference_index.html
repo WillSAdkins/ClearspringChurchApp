@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, letters_bar %}
+{% block title %}{{ info.full }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head(info.name|capitalize, url_for('reference_hub'), "Reference shelf", info.full ~ " (" ~ info.year ~ ")") }}
+  <p class="bible-lede">{{ info.about }}</p>
+  {{ letters_bar(url_for('reference_index', work=work), letters, letter) }}
+  <ul class="lib-index ref-index">
+    {% for it in items %}
+    <li><a href="{{ url_for('reference_entry', work=work, slug=it.slug) }}"><b>{{ it.title }}</b>{% if work != 'torrey' %}<small>{{ it.summary|truncate(90) }}</small>{% endif %}</a></li>
+    {% endfor %}
+  </ul>
+  {% if not items %}<p class="lib-note">Nothing under {{ letter|upper }}.</p>{% endif %}
+</main>
+{% endblock %}

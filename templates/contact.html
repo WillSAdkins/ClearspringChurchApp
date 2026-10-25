@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Contact us · Clearspring{% endblock %}
+{% block content %}
+{{ head('Contact us', url_for('more_hub')) }}
+<main class="board ct">
+
+  <section class="ct-block">
+    <h2 class="ct-h">{{ icon('mail', 18) }} Get in touch</h2>
+    {% if info.visit_contact_email or info.visit_contact_phone %}
+    <div class="ct-actions">
+      {% if info.visit_contact_email %}<a class="ct-btn" href="mailto:{{ info.visit_contact_email }}">{{ icon('mail', 16) }} {{ info.visit_contact_email }}</a>{% endif %}
+      {% if info.visit_contact_phone %}<a class="ct-btn" href="tel:{{ info.visit_contact_phone|replace(' ', '') }}">{{ icon('message', 16) }} {{ info.visit_contact_phone }}</a>{% endif %}
+    </div>
+    {% endif %}
+    <p class="ct-p">{{ 'Or send' if info.visit_contact_email or info.visit_contact_phone else 'Send' }} a message to the pastors from here. A real person reads every one.</p>
+    <a class="ct-link" href="{{ url_for('ask_question') }}">Send a message or ask a question →</a>
+  </section>
+
+  <section class="ct-block">
+    <h2 class="ct-h">{{ icon('calendar', 18) }} When and where we meet</h2>
+    <p class="ct-strong">{{ info.visit_service_times }}</p>
+    {% for m in info.weekly %}<p class="ct-p"><b>{{ m.when }}</b>{% if m.what %} · {{ m.what.split(':')[0] }}{% endif %}</p>{% endfor %}
+    {% if info.full_address %}
+    <p class="ct-p">{{ info.visit_address }}{% if info.visit_postcode %}, {{ info.visit_postcode }}{% endif %}</p>
+    <div class="ct-actions">
+      <a class="ct-btn" href="{{ info.maps_google }}" target="_blank" rel="noopener" data-external>Google Maps</a>
+      <a class="ct-btn" href="{{ info.maps_apple }}" target="_blank" rel="noopener" data-external>Apple Maps</a>
+    </div>
+    {% endif %}
+    <a class="ct-link" href="{{ url_for('plan_visit') }}">Planning your first visit →</a>
+  </section>
+
+  <section class="ct-block">
+    <h2 class="ct-h">{{ icon('heart', 18) }} Prayer</h2>
+    <p class="ct-p">You can ask for prayer publicly on the prayer wall, or privately so only the prayer team or the pastors see it.</p>
+    <a class="ct-link" href="{{ url_for('prayer_new') }}">Ask for prayer →</a>
+  </section>
+
+  <section class="ct-block ct-safe">
+    <h2 class="ct-h">{{ icon('check', 18) }} Safeguarding</h2>
+    <p class="ct-p">If you're worried about a child or an adult at risk, please talk to us.{% if info.safeguarding_name %} Our safeguarding lead is <b>{{ info.safeguarding_name }}</b>.{% endif %}</p>
+    {% if info.safeguarding_email or info.safeguarding_phone %}
+    <div class="ct-actions">
+      {% if info.safeguarding_email %}<a class="ct-btn" href="mailto:{{ info.safeguarding_email }}">{{ icon('mail', 16) }} {{ info.safeguarding_email }}</a>{% endif %}
+      {% if info.safeguarding_phone %}<a class="ct-btn" href="tel:{{ info.safeguarding_phone|replace(' ', '') }}">{{ icon('message', 16) }} {{ info.safeguarding_phone }}</a>{% endif %}
+    </div>
+    {% endif %}
+    {% if info.safeguarding_policy_url %}<a class="ct-link" href="{{ info.safeguarding_policy_url }}" target="_blank" rel="noopener" data-external>Read our safeguarding policy →</a>{% endif %}
+    <p class="ct-note">If someone is in immediate danger, call 999. For advice about a child, the NSPCC helpline is 0808 800 5000.</p>
+  </section>
+
+  <p class="ct-foot"><a href="{{ url_for('privacy_page') }}">Privacy notice</a></p>
+</main>
+<style>
+  .ct-block { padding: 1rem 0; border-bottom: 1px solid var(--line); }
+  .ct-h { font-family: var(--label); font-size: var(--fs-xs); font-weight: 700; color: var(--muted); margin: 0 0 .5rem; display: flex; align-items: center; gap: .5rem; }
+  .ct-strong { font-family: var(--display); font-size: var(--fs-lg); margin: 0 0 .375rem; line-height: 1.25; }
+  .ct-p { font-size: var(--fs-base); line-height: 1.6; margin: 0 0 .375rem; max-width: 34rem; }
+  .ct-note { font-size: var(--fs-sm); color: var(--muted); line-height: 1.5; margin: .75rem 0 0; }
+  .ct-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 .75rem; }
+  .ct-btn { display: inline-flex; align-items: center; gap: .375rem; min-width: 0; font-size: var(--fs-sm); font-weight: 600; text-decoration: none; padding: .5rem 1rem; border-radius: var(--r-full); border: 1px solid var(--line); background: var(--surface); color: var(--ink); overflow-wrap: anywhere; }
+  .ct-link { display: inline-block; margin-top: .25rem; font-size: var(--fs-sm); font-weight: 600; color: var(--accent); text-decoration: none; }
+  .ct-safe { border-bottom: 0; }
+  .ct-foot { font-size: var(--fs-sm); margin: 1rem 0 2rem; }
+  .ct-foot a { color: var(--muted); }
+</style>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}My study · Clearspring{% endblock %}
+{% block content %}
+<main class="bible ms">
+
+  <header class="bible-head">
+    <a href="{{ url_for('bible_hub') }}" class="bible-back" aria-label="Back to Study">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">My study</h1>
+    <details class="ms-export">
+      <summary class="ms-export-btn" aria-label="Export and back up">{{ icon('download', 20) }}</summary>
+      <div class="ms-export-menu">
+        <button type="button" data-export="md"><b>Download as a document</b><span>What's showing, as a Markdown (.md) file</span></button>
+        <button type="button" data-export="print"><b>Print or save as PDF</b><span>What's showing, laid out for paper</span></button>
+        <button type="button" data-export="json"><b>Back up everything</b><span>A file you can restore later</span></button>
+        <label class="ms-restore"><b>Restore from a backup</b><span>Adds anything missing; nothing is overwritten</span><input type="file" accept="application/json,.json" id="msRestore" hidden></label>
+      </div>
+    </details>
+  </header>
+
+  <div class="ms-new">
+    <a href="{{ url_for('soap_editor') }}" class="ms-new-btn">{{ icon('notebook', 18) }}<span>Journal entry</span></a>
+    <a href="{{ url_for('talk_editor') }}" class="ms-new-btn">{{ icon('mic', 18) }}<span>Sermon notes</span></a>
+  </div>
+
+  <div class="ms-search">
+    {{ icon('search', 18) }}
+    <input type="search" id="msQuery" placeholder="Search notes, verses and tags" aria-label="Search your study" autocomplete="off">
+  </div>
+
+  <nav class="ms-filters" id="msFilters" aria-label="Show">
+    <button type="button" data-f="all" class="on">All</button>
+    <button type="button" data-f="vnote">Notes</button>
+    <button type="button" data-f="highlight">Highlights</button>
+    <button type="button" data-f="saved">Saved</button>
+    <button type="button" data-f="soap">Journal</button>
+    <button type="button" data-f="talk">Sermon notes</button>
+  </nav>
+
+  <div class="ms-sub">
+    <div class="ms-colors" id="msColors" hidden>
+      <button type="button" data-c="" class="on">Any colour</button>
+      {% for c, label in [('sun','Yellow'),('spring','Green'),('sky','Blue'),('rose','Pink'),('lilac','Purple')] %}
+      <button type="button" data-c="{{ c }}" class="ms-dot ms-dot-{{ c }}" aria-label="{{ label }}"></button>
+      {% endfor %}
+    </div>
+    <div class="ms-tags" id="msTags"></div>
+    <div class="ms-sort">
+      <span id="msCount" class="ms-count"></span>
+      <button type="button" id="msSort" class="ms-sort-btn">Newest first</button>
+    </div>
+  </div>
+
+  <div id="msList" class="ms-list"></div>
+
+  <div id="msEmpty" class="saved-empty" hidden>
+    <span class="saved-empty-icon">{{ icon('notebook', 26) }}</span>
+    <p class="saved-empty-title" id="msEmptyTitle">Nothing here yet</p>
+    <p class="saved-empty-sub" id="msEmptySub">While reading, tap a verse to highlight it, save it, or write a note. Your journal and sermon notes live here too.</p>
+    <a href="{{ url_for('bible_books') }}" class="saved-empty-cta">Start reading</a>
+  </div>
+
+  <p class="ms-privacy">Kept on this device{% if member %} and in your account{% else %}. <a href="{{ url_for('signin') }}">Sign in</a> to keep it safe across your devices{% endif %}.</p>
+</main>
+
+<div class="ms-print" id="msPrint" aria-hidden="true"></div>
+
+<script src="{{ url_for('bible_refs_data') }}"></script>
+<script src="{{ url_for('static', filename='bible-refs.js') }}"></script>
+<script src="{{ url_for('static', filename='saved-verses.js') }}"></script>
+<script src="{{ url_for('static', filename='highlights.js') }}"></script>
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='note-editor.js') }}"></script>
+<script src="{{ url_for('static', filename='my-study.js') }}"></script>
+{% endblock %}

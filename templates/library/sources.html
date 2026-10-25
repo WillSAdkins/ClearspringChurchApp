@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Where the library comes from · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Where this comes from", url_for('library_hub'), "Library", "Sources and licences") }}
+  <article class="lib-article lib-sources">
+    <p>Everything in the library is free to use. The old works are in the public domain; the modern datasets are shared under Creative Commons licences, which ask us to say where they come from. Thank you to everyone who made them.</p>
+    {% if licensed %}
+    <h3 id="translations">Copyrighted Bible translations</h3>
+    <p>These translations are shown by permission, under their publishers’ terms for churches and non-commercial use. The app never stores more of their text than those terms allow, and doesn’t keep it on your phone for offline reading.</p>
+    <ul>
+      {% if 'esv' in licensed %}<li>{{ esv_notice }} <a href="https://www.esv.org" rel="noopener" target="_blank">esv.org</a></li>{% endif %}
+      {% for code, name in licensed.items() if code != 'esv' %}
+      <li><b>{{ name }}</b>{% if licensed_notes.get(code) %}: {{ licensed_notes[code] }}{% else %}: used by permission of the copyright holder, via API.Bible.{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <h3>Audio Bible</h3>
+    <ul><li>The <b>Berean Standard Bible</b> read by Bob Souer and Barry Hays, which its publishers have dedicated to the public domain (CC0 1.0). Recordings hosted by OpenBible.com, with a copy kept by the Free Use Bible API (bible.helloao.org).</li></ul>
+    <h3>Videos</h3>
+    <ul><li>Book overview videos are BibleProject’s, linked from their website and never copied or changed. BibleProject is the author and owner of this content. bibleproject.com</li></ul>
+    <h3>Free for non-commercial use</h3>
+    <ul><li><b>A. T. Robertson’s Word Pictures in the New Testament</b> (1930–33), from the CrossWire SWORD module, which its copyright holder allows to be shared freely for non-commercial use. This app is free and carries no advertising.</li></ul>
+    <h3>Public domain</h3>
+    <ul>
+      <li><b>Matthew Henry’s Concise Commentary</b> (1706) and <b>C. H. Spurgeon’s Treasury of David</b> (1869–85), from the CrossWire Bible Society’s SWORD modules.</li>
+      <li><b>Commentaries</b>, each from the CrossWire Bible Society’s SWORD module of the same name, marked public domain: Matthew Henry’s Commentary on the Whole Bible (1706–21); Jamieson, Fausset and Brown (1871); Albert Barnes’ Notes on the New Testament (1834–85); Adam Clarke’s Commentary (1810–26); John Calvin’s Commentaries (tr. 1840s–50s); John Wesley’s Explanatory Notes (1754–65); the Geneva Bible notes (1599); B. W. Johnson’s People’s New Testament (1891); the Scofield Reference Notes (1917 edition). The modules were gathered at github.com/lisasdungeon/the-gift.</li>
+      <li><b>Reference works</b> from the same SWORD modules: the International Standard Bible Encyclopedia (ed. James Orr, 1915), Smith’s Bible Dictionary (William Smith, 1863), R. A. Torrey’s New Topical Text Book (1897), Easton’s Bible Dictionary (1897), Nave’s Topical Bible (1896), and C. H. Spurgeon’s Morning and Evening (1865–68).</li>
+      <li><b>Classic books</b>: The Pilgrim’s Progress, The Imitation of Christ (tr. William Benham), The City of God (tr. Marcus Dods and others), Orthodoxy, The Everlasting Man, The Way to God, Unspoken Sermons, On the Making of Man (tr. William Moore and H. A. Wilson), Paradise Lost, The Art of Illustration, The Consolation of Philosophy (tr. H. R. James), The Divine Comedy (tr. Longfellow), John Donne’s poetry, Heretics, The Man Who Was Thursday, The Brothers Karamazov (tr. Constance Garnett), Ben-Hur, Quo Vadis (tr. Jeremiah Curtin) and four books by George MacDonald from <b>Standard Ebooks</b>, who dedicate their editions to the public domain (CC0). The Practice of the Presence of God (Revell edition), Revelations of Divine Love (ed. Grace Warrack, 1901), In His Steps, Augustine’s Confessions (tr. E. B. Pusey), Grace Abounding, three books by Andrew Murray, three by E. M. Bounds and Jonathan Edwards’s Selected Sermons from <b>Project Gutenberg</b>, with Project Gutenberg’s name and licence removed as its terms ask when a text is shared without them. Every author and translator died before 1956, so these are public domain in the UK as well as the US.</li>
+      <li><b>Nave’s Topical Bible</b> (Orville J. Nave, 1896), from the CrossWire SWORD module.</li>
+      <li><b>Easton’s Bible Dictionary</b> (M. G. Easton, 1897).</li>
+      <li><b>Hitchcock’s Bible Names Dictionary</b> (Roswell D. Hitchcock, 1869), via BibleData by Brady Stephenson (CC BY 4.0).</li>
+      <li>The <b>creeds, confessions and catechisms</b>, from the Creeds.json project (only the texts it marks as public domain).</li>
+      <li>The <b>Gospel harmony</b> is built from the section headings of the Berean Standard Bible (public domain).</li>
+      <li>The <b>map</b> is drawn from Natural Earth (public domain), with no modern borders.</li>
+    </ul>
+    <h3>Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)</h3>
+    <ul>
+      <li><b>People, places, events and the Easton’s text</b>: Theographic Bible Metadata by Robert Rouse (theographic.com), github.com/robertrouse/theographic-bible-metadata. Locations draw on the OpenBible.info Bible Geocoding Data (CC BY 4.0).</li>
+      <li><b>Parallel passages and the Old Testament in the New</b>: UBS Parallel Passage Database, © 2023 United Bible Societies.</li>
+      <li><b>Journeys</b>: UBS Project MARBLE Bible Routes by Dr Leen Ritmeyer, © United Bible Societies 2023.</li>
+      <li><b>Study notes, book introductions, themes and people profiles</b>: Aquifer Open Study Notes © 2026 Mission Mutual, an adaptation of <i>Tyndale Open Study Notes</i> © 2023 Tyndale House Publishers. github.com/BibleAquifer.</li>
+      <li><b>Bible dictionary</b>: Aquifer Open Bible Dictionary © 2026 Mission Mutual, an adaptation of <i>Tyndale Open Bible Dictionary</i> © 2023 Tyndale House Publishers.</li>
+      <li><b>Section notes, short book introductions and key terms</b>: Biblica Study Notes and Biblica Bible Dictionary © 2023 Biblica, Inc., via BibleAquifer.</li>
+    </ul>
+    <p>Changes made for Clearspring to the study notes and dictionary: formatting simplified, Bible references and cross-references turned into links within the app, “see” entries turned into redirects. Our adapted file, <code>static/bibles/notes.sqlite</code>, is shared under CC BY-SA 4.0, and can be rebuilt with <code>tools/build_notes.py</code>.</p>
+    <p>We have reshaped these datasets (for example, merging them into one file and linking references). Our adapted versions of the CC BY-SA data, in <code>static/bibles/library.sqlite</code>, are shared under the same licence: creativecommons.org/licenses/by-sa/4.0.</p>
+  </article>
+</main>
+{% endblock %}

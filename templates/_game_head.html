@@ -1,0 +1,33 @@
+{# A compact header for game pages: back to the games, the title, one line
+   of how to play. With a sprite, the page also gets the Clearspring Arcade
+   look (static/arcade.css) and a pixel title screen before the game. #}
+{% macro game_head(title, tagline, emoji='', sprite=None, accent='#F3C623', shade='#8E1B1B', ground='#4A4038', key=None, cab=True, start_hint='') -%}
+{% from "icons.html" import icon %}
+{% if sprite %}<link rel="stylesheet" href="{{ url_for('static', filename='arcade.css', v='41') }}">{% endif %}
+<header class="gh">
+  <a href="{{ url_for('games_hub') }}" class="gh-back" aria-label="Back to Kids Games">{{ icon('chevron-left', 20) }}</a>
+  <div class="gh-text">
+    <p class="gh-k">{{ 'Clearspring Arcade' if sprite else 'Kids Games' }}</p>
+    <h1 class="gh-title">{% if emoji %}<span class="gh-emoji" aria-hidden="true">{{ emoji }}</span> {% endif %}{{ title }}</h1>
+    {% if tagline %}<p class="gh-tag">{{ tagline }}</p>{% endif %}
+  </div>
+</header>
+{% if sprite and cab %}
+<div class="arc-wrap">
+  <section class="arc-cab" id="arcCab" aria-labelledby="arcLogo" style="--acc: {{ accent }}; --shade: {{ shade }}; --ground: {{ ground }}; --ground2: color-mix(in srgb, {{ ground }} 80%, #000);">
+    <p class="arc-by"><span>Clearspring Arcade</span></p>
+    <img class="arc-sprite" src="{{ url_for('static', filename='games/arcade/' ~ sprite ~ '.png') }}" alt="" width="112">
+    <h2 class="arc-logo" id="arcLogo">{% for w in title.split(' ') %}<span>{{ w }}</span>{% endfor %}</h2>
+    {% if tagline %}<p class="arc-tag">{{ tagline }}</p>{% endif %}
+    <button type="button" class="arc-play" id="arcPlay">Play</button>
+    <p class="arc-press" aria-hidden="true">{{ start_hint or 'PRESS PLAY' }}</p>
+    {% if key %}<a class="arc-lb" href="{{ url_for('game_leaderboard', game_key=key) }}">High scores</a>{% endif %}
+    <div class="arc-ground" aria-hidden="true"></div>
+  </section>
+</div>
+{% endif %}
+{% if sprite %}
+<style>body.arcade { --acc: {{ accent }}; --shade: {{ shade }}; }</style>
+<script src="{{ url_for('static', filename='arcade.js') }}"></script>
+{% endif %}
+{%- endmacro %}

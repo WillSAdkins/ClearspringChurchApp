@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "_scene.html" import banner with context %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, chip_person, chip_place %}
+{% block title %}Library · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib">
+  {{ head("Library", url_for('bible_hub'), "Bible", "Bible reference") }}
+
+  {{ banner('library') }}
+
+  <form class="lib-search" action="{{ url_for('library_search') }}" method="get" role="search">
+    {{ icon('search', 18) }}
+    <input type="search" name="q" id="libQ" placeholder="People, places, topics, words…" autocomplete="off" aria-label="Search the library">
+  </form>
+  <div class="lib-suggest" id="libSuggest" hidden></div>
+
+  <nav class="lib-grid lib-new">
+    <a href="{{ url_for('classics_shelf') }}" class="lib-tile lib-tile-feature"><b>Classic books</b><span>The Pilgrim’s Progress, The Imitation of Christ, Augustine, Chesterton and more, complete</span></a>
+    <a href="{{ url_for('reference_hub') }}" class="lib-tile"><b>Reference shelf</b><span>The Bible encyclopedia (ISBE), Easton’s and Smith’s dictionaries, Nave’s and Torrey’s topics</span></a>
+    <a href="{{ url_for('morning_evening') }}" class="lib-tile"><b>Morning and Evening</b><span>Spurgeon’s daily readings, twice a day</span></a>
+  </nav>
+  <nav class="lib-grid">
+    <a href="{{ url_for('words_hub') }}" class="lib-tile st-tile-words"><b><span class="st-glyph" aria-hidden="true">α א</span> Greek &amp; Hebrew</b><span>Search 17,000 original words, with every place they're used</span></a>
+    <a href="{{ url_for('fathers_index') }}" class="lib-tile"><b>The early church</b><span>18,000 comments from the church fathers, verse by verse</span></a>
+    <a href="{{ url_for('bible_3d_hub') }}" class="lib-tile"><b>3D Bible world</b><span>Models built to the Bible's measurements, and the land in relief</span></a>
+    <a href="{{ url_for('intro_index') }}" class="lib-tile st-tile-notes"><b>Book introductions</b><span>Who wrote each book, when, why, and what to look for</span></a>
+    <a href="{{ url_for('notes_chapter', book_slug='john', chapter=1) }}" class="lib-tile"><b>Study notes</b><span>17,000 modern notes, verse by verse, through the whole Bible</span></a>
+    <a href="{{ url_for('themes_index') }}" class="lib-tile"><b>Themes</b><span>300 short articles on the Bible’s big ideas</span></a>
+    <a href="{{ url_for('profiles_index') }}" class="lib-tile"><b>People of the Bible</b><span>124 profiles: their lives, and what we learn</span></a>
+    <a href="{{ url_for('dictionary_index') }}" class="lib-tile"><b>Dictionary</b><span>Tyndale Open Bible Dictionary · 6,000 articles, with Easton’s</span></a>
+    <a href="{{ url_for('terms_index') }}" class="lib-tile"><b>Key terms</b><span>550 words and numbers explained simply</span></a>
+    <a href="{{ url_for('topics_index') }}" class="lib-tile"><b>Topics</b><span>Nave’s Topical Bible · 5,300 subjects</span></a>
+    <a href="{{ url_for('people_index') }}" class="lib-tile"><b>People</b><span>Everyone named in the Bible, with family trees</span></a>
+    <a href="{{ url_for('places_index') }}" class="lib-tile"><b>Places</b><span>1,200 places on the map</span></a>
+    <a href="{{ url_for('bible_map') }}" class="lib-tile"><b>Map</b><span>The Bible world, every place</span></a>
+    <a href="{{ url_for('journeys') }}" class="lib-tile"><b>Journeys</b><span>From Abram to Paul’s voyage to Rome</span></a>
+    <a href="{{ url_for('timeline_page') }}" class="lib-tile"><b>Timeline</b><span>450 events, Creation to the early church</span></a>
+    <a href="{{ url_for('harmony_page') }}" class="lib-tile"><b>The four Gospels</b><span>A harmony of the life of Jesus</span></a>
+    <a href="{{ url_for('ot_in_nt_page') }}" class="lib-tile"><b>Old Testament in the New</b><span>Where the NT quotes the OT</span></a>
+    <a href="{{ url_for('creeds_index') }}" class="lib-tile"><b>Creeds &amp; confessions</b><span>Apostles’, Nicene and more</span></a>
+  </nav>
+
+  <section class="lib-section">
+    <h2 class="bible-h2">Commentaries</h2>
+    <p class="lib-note">Twelve classic commentaries, from the Geneva Bible notes of 1599 to Robertson’s Word Pictures. Open any chapter and tap <b>Study this chapter</b>, or start here:</p>
+    <div class="cm-list">
+      {% for code, c in commentaries.items() %}
+      <a href="{{ url_for('commentary_page', source=code, book_slug=('psalms' if c.covers == 'psalms' else ('romans' if c.covers == 'nt' else 'john')), chapter=(23 if c.covers == 'psalms' else (8 if c.covers == 'nt' else 1))) }}"><b>{{ c.full }}</b><span>{{ c.year }} · {{ {'all': 'Whole Bible', 'nt': 'New Testament', 'psalms': 'Psalms'}[c.covers] }}</span></a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="lib-section">
+    <div class="bible-block-head"><h2 class="bible-h2">Topics</h2><a class="lib-more" href="{{ url_for('topics_index') }}">All topics</a></div>
+    <div class="lib-chips">{% for t in topics %}<a class="lib-chip" href="{{ url_for('topic_page', slug=t.slug) }}">{{ t.name }}</a>{% endfor %}</div>
+  </section>
+
+  <section class="lib-section">
+    <div class="bible-block-head"><h2 class="bible-h2">People</h2><a class="lib-more" href="{{ url_for('people_index') }}">Everyone</a></div>
+    <div class="lib-chips">{% for p in people %}{{ chip_person(p) }}{% endfor %}</div>
+  </section>
+
+  <section class="lib-section">
+    <div class="bible-block-head"><h2 class="bible-h2">Places</h2><a class="lib-more" href="{{ url_for('places_index') }}">All places</a></div>
+    <div class="lib-chips">{% for p in places %}{{ chip_place(p) }}{% endfor %}</div>
+  </section>
+
+  <p class="lib-credits"><a href="{{ url_for('library_licenses') }}">Where this comes from</a></p>
+</main>
+<script>
+(function () {
+  var q = document.getElementById("libQ"), box = document.getElementById("libSuggest"), t, seq = 0;
+  var LABEL = { people: "People", places: "Places", topics: "Topics", dictionary: "Dictionary" };
+  var HREF = { people: "/bible/people/", places: "/bible/places/", topics: "/bible/topics/", dictionary: "/bible/dictionary/" };
+  q.addEventListener("input", function () {
+    clearTimeout(t);
+    var v = q.value.trim();
+    if (v.length < 2) { box.hidden = true; return; }
+    t = setTimeout(function () {
+      var my = ++seq;
+      fetch("/api/library/search?q=" + encodeURIComponent(v)).then(function (r) { return r.json(); }).then(function (d) {
+        if (my !== seq) return;
+        box.textContent = "";
+        var any = false;
+        ["people", "places", "topics", "dictionary"].forEach(function (k) {
+          var items = d[k] || []; if (!items.length) return; any = true;
+          var h = document.createElement("p"); h.className = "lib-suggest-h"; h.textContent = LABEL[k]; box.appendChild(h);
+          items.forEach(function (it) {
+            var a = document.createElement("a"); a.href = HREF[k] + it.slug; a.className = "lib-suggest-row";
+            a.textContent = it.title || it.name || it.term;
+            if (it.verses) { var s = document.createElement("small"); s.textContent = it.verses + " verses"; a.appendChild(s); }
+            box.appendChild(a);
+          });
+        });
+        if (!any) { var p = document.createElement("p"); p.className = "lib-suggest-none"; p.textContent = "Nothing found for “" + v + "”."; box.appendChild(p); }
+        box.hidden = false;
+      }).catch(function () {});
+    }, 160);
+  });
+})();
+</script>
+{% endblock %}

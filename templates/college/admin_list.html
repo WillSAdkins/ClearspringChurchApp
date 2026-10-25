@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Bible College · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">Staff area</p><h1>Bible College</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Board</a><a href="{{ url_for('admin_college_edit') }}" class="btn-primary">+ New course</a></div>
+  </div>
+  <p class="pu-admin-lead">Courses for Monday evenings. Each course has weekly sessions: a passage, teaching notes and questions. People can read ahead in the app, keep notes and tick sessions off. Keep a course as a draft until it’s ready.</p>
+  {% if not courses %}<p class="empty-sub">No courses yet.</p>{% endif %}
+  <div class="admin-table">
+    {% for c in courses %}
+    <div class="admin-row">
+      <div class="admin-row-date"><span class="mono">{{ c.first_date|pretty_date_short_day if c.first_date else '—' }}</span></div>
+      <div class="admin-row-main">
+        <span class="card-tag">{{ 'Published' if c.status == 'published' else 'Draft' }}</span>
+        <strong>{{ c.title }}</strong>
+        <span class="admin-row-loc">{{ c.sessions }} session{{ 's' if c.sessions != 1 }}{% if c.term %} · {{ c.term }}{% endif %}</span>
+      </div>
+      <div class="admin-row-actions"><a href="{{ url_for('college_course', cid=c.id) }}" class="btn-ghost small">View</a><a href="{{ url_for('admin_college_edit', cid=c.id) }}" class="btn-ghost small">Edit</a></div>
+    </div>
+    {% endfor %}
+  </div>
+</main>
+<style>.pu-admin-lead { max-width: 42rem; color: var(--muted); line-height: 1.6; margin: 0 0 1.25rem; }</style>
+{% endblock %}

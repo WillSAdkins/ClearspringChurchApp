@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Offline study · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib op" id="op">
+  {{ head("Read offline", url_for('bible_tab', tab='study'), "Study", "Study packs") }}
+  <p class="bible-lede">Save a whole book of the Bible onto this phone, with its study notes and introduction, so you can read and study with no signal: on a plane, abroad, or somewhere the signal drops.</p>
+  <p class="op-unsupported lib-note" id="opNo" hidden>This browser can’t save books for offline use. Try adding the app to your home screen, or a different browser.</p>
+
+  <section class="lib-section" id="opSaved" hidden>
+    <h2 class="bible-h2">Saved on this device</h2>
+    <ul class="op-list" id="opSavedList"></ul>
+    <p class="gw-note" id="opSpace"></p>
+  </section>
+
+  <section class="lib-section">
+    <h2 class="bible-h2">Save a book</h2>
+    <label class="admin-check op-opt"><input type="checkbox" id="opWords"><span>Include word by word in Hebrew or Greek (about three times the space)</span></label>
+    <label class="sr-only" for="opBook">Book</label>
+    <div class="op-pick">
+      <select id="opBook">
+        <optgroup label="Old Testament">{% for b in books if not b.nt %}<option value="{{ b.slug }}" data-ch="{{ b.chapters }}" data-name="{{ b.name }}" {{ 'selected' if b.slug == start }}>{{ b.name }} ({{ b.chapters }} chapter{{ 's' if b.chapters != 1 }})</option>{% endfor %}</optgroup>
+        <optgroup label="New Testament">{% for b in books if b.nt %}<option value="{{ b.slug }}" data-ch="{{ b.chapters }}" data-name="{{ b.name }}" {{ 'selected' if b.slug == start or (not start and b.slug == 'john') }}>{{ b.name }} ({{ b.chapters }} chapter{{ 's' if b.chapters != 1 }})</option>{% endfor %}</optgroup>
+      </select>
+      <button type="button" class="ps-go" id="opSave">Save</button>
+    </div>
+    <div class="op-progress" id="opProgress" hidden><span class="dp-bar"><i></i></span><small id="opProgressText"></small></div>
+    <p class="ps2-status" id="opStatus" aria-live="polite"></p>
+  </section>
+  <p class="gw-note">Each book is saved in this browser on this device only. Pages you’ve opened recently are also kept for offline reading automatically.</p>
+</main>
+<script src="{{ url_for('static', filename='packs.js') }}"></script>
+{% endblock %}

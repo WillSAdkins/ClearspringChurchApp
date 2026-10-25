@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Your reading · Clearspring{% endblock %}
+{% block content %}
+<main class="bible rs">
+  <header class="bible-head">
+    <a href="{{ url_for('bible_today') }}" class="bible-back" aria-label="Back to Today">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Your reading</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+
+  <section class="rs-hero">
+    <div class="rs-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="rs-ring-bg"/><circle cx="60" cy="60" r="52" class="rs-ring-fg" id="rsRing"/></svg>
+      <div class="rs-ring-in"><b id="rsPct">0%</b><small>of the Bible</small></div></div>
+    <dl class="rs-nums">
+      <div><dt>Chapters read</dt><dd id="rsCh">0</dd></div>
+      <div><dt>Books finished</dt><dd id="rsBooks">0</dd></div>
+      <div><dt>Days read this year</dt><dd id="rsDays">0</dd></div>
+      <div><dt>Longest run of days</dt><dd id="rsBest">0</dd></div>
+    </dl>
+  </section>
+
+  <section class="rs-section">
+    <h2 class="bible-h2">The last 20 weeks</h2>
+    <div class="rs-heat" id="rsHeat" aria-label="Days you read in the last 20 weeks"></div>
+    <p class="rs-legend"><span>Less</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><span>More</span></p>
+  </section>
+
+  <section class="rs-section">
+    <div class="bible-block-head">
+      <h2 class="bible-h2">Through the Bible</h2>
+      <button type="button" class="rs-edit" id="rsEdit" aria-pressed="false">Mark earlier reading</button>
+    </div>
+    <p class="rs-hint" id="rsHint">Each square is a chapter. Tap one to read it.</p>
+    <div class="rs-map" id="rsMap"></div>
+  </section>
+
+  <p class="rs-note">Chapters count as read when you reach the end of them in the reader, or tick them off in a plan. Kept on this device{% if member %} and your account{% endif %}.</p>
+</main>
+<script id="rsBooksData" type="application/json">{{ books|tojson }}</script>
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script>
+(function () {
+  var P = window.Plans, books = JSON.parse(document.getElementById("rsBooksData").textContent);
+  var editing = false;
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+
+  function draw() {
+    var log = P.readLog(), chs = log.chapters, total = 0, read = 0, finished = 0;
+    var map = document.getElementById("rsMap"); map.textContent = "";
+    books.forEach(function (b, bi) {
+      if (bi === 0 || bi === 39) map.appendChild(el("p", "rs-testament", bi === 0 ? "Old Testament" : "New Testament"));
+      var row = el("div", "rs-book"), n = 0;
+      var cells = el("div", "rs-cells");
+      for (var c = 1; c <= b.chapters; c++) {
+        var on = !!chs[b.slug + "." + c]; if (on) n++;
+        var a = el("a", "rs-cell" + (on ? " on" : ""));
+        a.href = "/bible/read/" + b.slug + "/" + c;
+        a.setAttribute("aria-label", b.name + " " + c + (on ? ", read" : ""));
+        a.dataset.slug = b.slug; a.dataset.ch = c;
+        cells.appendChild(a);
+      }
+      total += b.chapters; read += n; if (n === b.chapters) finished++;
+      var name = el("a", "rs-book-name" + (n === b.chapters ? " done" : ""), b.name); name.href = "/bible/read/" + b.slug;
+      row.append(name, el("span", "rs-book-n", n + "/" + b.chapters), cells);
+      map.appendChild(row);
+    });
+    var pct = Math.round(read * 1000 / total) / 10;
+    document.getElementById("rsPct").textContent = (pct >= 10 ? Math.round(pct) : pct) + "%";
+    var C = 2 * Math.PI * 52; var ring = document.getElementById("rsRing");
+    ring.style.strokeDasharray = C; ring.style.strokeDashoffset = C * (1 - read / total);
+    document.getElementById("rsCh").textContent = read.toLocaleString() + " of " + total.toLocaleString();
+    document.getElementById("rsBooks").textContent = finished + " of 66";
+    var y = String(new Date().getFullYear());
+    document.getElementById("rsDays").textContent = Object.keys(log.days).filter(function (d) { return d.indexOf(y) === 0 && log.days[d] > 0; }).length;
+    var best = P.streak().best; document.getElementById("rsBest").textContent = best + (best === 1 ? " day" : " days");
+
+    // heatmap: 20 weeks, Monday-first columns
+    var heat = document.getElementById("rsHeat"); heat.textContent = "";
+    var now = new Date(), start = new Date(now); start.setDate(now.getDate() - ((now.getDay() + 6) % 7) - 19 * 7);
+    for (var w = 0; w < 20; w++) {
+      var col = el("div", "rs-week");
+      for (var d = 0; d < 7; d++) {
+        var day = new Date(start); day.setDate(start.getDate() + w * 7 + d);
+        var k = P.iso(day), cnt = log.days[k] || 0, future = k > P.today();
+        var cell = el("i", "rs-h " + (future ? "f" : "l" + (cnt === 0 ? 0 : cnt === 1 ? 1 : cnt < 4 ? 2 : 3)));
+        cell.title = day.toLocaleDateString(undefined, { day: "numeric", month: "short" }) + (cnt ? ": " + cnt + " chapter" + (cnt === 1 ? "" : "s") : "");
+        col.appendChild(cell);
+      }
+      heat.appendChild(col);
+    }
+  }
+
+  document.getElementById("rsEdit").addEventListener("click", function () {
+    editing = !editing;
+    this.setAttribute("aria-pressed", editing ? "true" : "false");
+    this.textContent = editing ? "Done" : "Mark earlier reading";
+    document.getElementById("rsHint").textContent = editing ? "Tap chapters you’ve read before to mark them. Tap again to unmark." : "Each square is a chapter. Tap one to read it.";
+    document.getElementById("rsMap").classList.toggle("editing", editing);
+  });
+  document.getElementById("rsMap").addEventListener("click", function (e) {
+    var a = e.target.closest(".rs-cell"); if (!a || !editing) return;
+    e.preventDefault();
+    var l = P.readLog(), k = a.dataset.slug + "." + a.dataset.ch;
+    if (l.chapters[k]) P.unmarkRead(a.dataset.slug, +a.dataset.ch);
+    else P.markEarlier(a.dataset.slug, +a.dataset.ch);
+    a.classList.toggle("on");
+    clearTimeout(window.__rsT); window.__rsT = setTimeout(draw, 600);
+  });
+  draw();
+  P.syncAll().then(function (ok) { if (ok) draw(); });
+})();
+</script>
+{% endblock %}

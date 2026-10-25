@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Privacy notice · Clearspring{% endblock %}
+{% block content %}
+{{ head('Privacy notice', url_for('more_hub')) }}
+<main class="board pv">
+  <p class="pv-lead">This explains what the Clearspring app keeps about you, why, how long for, and what you can do about it. We've tried to write it plainly. If anything isn't clear, <a href="{{ url_for('contact_page') }}">ask us</a>.</p>
+  <p class="pv-meta">Last updated {{ updated }}</p>
+
+  <h2>Who we are</h2>
+  <p>The app is run by Clearspring Church, Cheltenham, a registered charity (CIO no. {{ charity_number }}). We are the "data controller" for what you share in it.{% if info.visit_contact_email %} You can reach us at <a href="mailto:{{ info.visit_contact_email }}">{{ info.visit_contact_email }}</a>.{% endif %}</p>
+
+  <h2>Using the app without an account</h2>
+  <p>You can read the Bible, watch talks and use almost everything without signing in. Your notes, highlights, reading plans and settings are then kept only on your own phone or computer, not by us.</p>
+
+  <h2>What we keep, and why</h2>
+  <dl class="pv-list">
+    <dt>Your account</dt>
+    <dd>Your email, the name you give (optional) and your password, stored scrambled so nobody can read it. We use these to let you sign in and, if you ask, to email you a sign-in link.</dd>
+
+    <dt>Who at the church can see your account</dt>
+    <dd>A small number of staff the church has given access can see a list of accounts: your name, email, when you joined and last used the app, and which groups you're in. They use it only to run the app and help you, for example with signing in, or deleting your account if you ask. They can't see your password, or anything you save privately.</dd>
+
+    <dt>Things you choose to save</dt>
+    <dd>If you're signed in, your notes, highlights, journal, reading plans, memory verses and settings are copied to our server so they appear on all your devices. Only you can see them.</dd>
+
+    <dt>Prayer requests</dt>
+    <dd>What you write, and your name only if you tick to show it. You choose who sees a request: everyone on the prayer wall, just the prayer team, or just the pastors. Because a prayer request can say something about your faith or your health, the law treats it as especially sensitive. We only keep it because you've chosen to send it, and we use it only to pray for you. Requests on the wall are screened, and some are held for a person to check before they appear.</dd>
+
+    <dt>Questions and stories</dt>
+    <dd>What you send, and your name if you give it. If a question is answered on the Q&amp;A page, your name is shown with it only if you gave one. Stories only appear after a pastor has read them.</dd>
+
+    <dt>Groups</dt>
+    <dd>Your name, the groups you join, and what you post. Group posts are seen only by the group's members. Church staff can't read them unless a post is reported to them. If you choose, the group can see how far you've got in a shared reading plan.</dd>
+
+    <dt>Notifications</dt>
+    <dd>If you turn them on, your phone gives us an address we can send notifications to, and we keep the topics you've picked. Turn them off and we stop.</dd>
+  </dl>
+
+  <h2>How long we keep it</h2>
+  <ul>
+    <li>Prayer requests stay on the wall for {{ wall_days }} days, and every prayer request is deleted after {{ (keep_days / 365)|round|int }} year.</li>
+    <li>Your account and what's saved in it are kept until you delete them. You can do that at any time from <a href="{{ url_for('account') }}">your account</a>, and it removes your account, what you've saved, your group posts and your game scores straight away.</li>
+    <li>Questions, stories and group posts are kept while they're useful to the church, and removed on request.</li>
+  </ul>
+
+  <h2>Who else is involved</h2>
+  <p>We never sell your information or use it for advertising. A few services help run the app:</p>
+  <ul>
+    <li><b>Render</b> hosts the app and its database.</li>
+    <li><b>Our email provider</b> sends sign-in links and replies.</li>
+    <li><b>Google, Apple or Mozilla</b> deliver notifications to your phone, depending on your device. They see only the notification, not your account. In the iPhone and Android apps, notifications go through Google's <b>Firebase Cloud Messaging</b>, which passes them to Apple for iPhones. Firebase gives your phone a random token so a notification can find it; the token isn't linked to your name, and the app turns off Firebase's analytics.</li>
+    <li><b>Google's Gemini</b> answers questions you type into the study assistant. Only your question and the Bible passage are sent, never your name or account. The app's guide (the “Ask” button) answers most questions itself; if it can't tell what you mean, just your message is sent to Gemini to work out which page you need. Nothing you ask the guide is saved.</li>
+    <li><b>YouTube</b> plays the sermon videos and the courses under Watch, in its privacy-enhanced mode. Course pages load nothing from YouTube except small preview pictures until you press play; once you do, YouTube's own privacy policy applies. Your place in each course and your course notes stay on your phone, and in your account if you're signed in.</li>
+    <li><b>OpenBible.com</b> hosts the recordings for the audio Bible. When you listen to a chapter that isn't saved on your phone, your phone fetches it from them, so they see your internet address, as any website would. Nothing else about you is sent, and they place no tracking on the app. Chapters you save for offline play from your phone.</li>
+    <li><b>Stewardship</b> handles giving. Card details go to them, never to us.</li>
+  </ul>
+
+  <h2 id="delete-account">Deleting your account</h2>
+  <p>You can delete your account yourself, in the website or in the iPhone or Android app:</p>
+  <ol>
+    <li>Sign in and open <a href="{{ url_for('account') }}">your account</a> (More → Account).</li>
+    <li>Scroll to the bottom and choose <b>Delete my account</b>, then confirm.</li>
+  </ol>
+  <p>This removes your account, your saved verses, notes, plans and progress, your group posts and your game scores straight away. Prayer requests you shared without an account aren't linked to you; to have one removed, <a href="{{ url_for('contact_page') }}">contact us</a>{% if info.visit_contact_email %} or email <a href="mailto:{{ info.visit_contact_email }}">{{ info.visit_contact_email }}</a>{% endif %} and we'll delete it. Backups of the database are overwritten within 30 days.</p>
+
+  <h2>Keeping the community safe</h2>
+  <p>Group posts and prayer requests are written by people in the church. If something is unkind or inappropriate, use <b>Report</b> on it and a member of staff will look at it; reported prayer requests are taken off the wall until they do. You can also choose <b>Hide their posts</b> to stop seeing someone's group posts; you can undo that from your account.</p>
+
+  <h2>Children and young people</h2>
+  <p>You need to be 13 or older to create an account. Younger children are welcome to use the app without one, with a parent or carer. Groups for under-18s are run by leaders in line with the church's safeguarding policy{% if info.safeguarding_policy_url %} (<a href="{{ info.safeguarding_policy_url }}" target="_blank" rel="noopener" data-external>read it here</a>){% endif %}.</p>
+
+  <h2>Your rights</h2>
+  <p>You can ask to see what we hold about you, have it corrected, have it deleted, or download a copy. Most of this you can do yourself from <a href="{{ url_for('account') }}">your account</a>. For anything else, <a href="{{ url_for('contact_page') }}">contact us</a>. If you're unhappy with how we've handled your information, you can complain to the Information Commissioner's Office at <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener" data-external>ico.org.uk</a>.</p>
+
+  <h2>Cookies</h2>
+  <p>The app uses a few small files on your device to keep you signed in, remember your settings and your place in the Bible, and protect forms from misuse. There are no advertising or tracking cookies.</p>
+</main>
+<style>
+  .pv { max-width: 40rem; }
+  .pv-lead { font-size: var(--fs-md); line-height: 1.55; margin: .75rem 0 .25rem; }
+  .pv-meta { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 1rem; }
+  .pv h2 { font-family: var(--display); font-size: var(--fs-md); margin: 1.5rem 0 .5rem; }
+  .pv p, .pv li, .pv dd { font-size: var(--fs-base); line-height: 1.6; }
+  .pv ul { padding-left: 1.25rem; margin: 0; display: grid; gap: .375rem; }
+  .pv-list { margin: 0; }
+  .pv-list dt { font-weight: 700; margin-top: .875rem; }
+  .pv-list dd { margin: .25rem 0 0; }
+  .pv a { color: var(--accent); }
+  .pv { padding-bottom: 2rem; }
+</style>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_prayer_nav.html" import prayer_nav %}
+{% block title %}Prayer practices · Clearspring{% endblock %}
+{% block content %}
+<main class="bible pr">
+  <header class="bible-head">
+    <span style="width:2.4rem"></span>
+    <h1 class="bible-title">Ways to pray</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+  {{ prayer_nav('practices') }}
+  <p class="bible-lede">Old, simple ways Christians have prayed for centuries. Each one guides you step by step.</p>
+  <div class="pp-list">
+    {% for p in practices %}
+    <a class="pp-card" href="{{ url_for('practice_page', slug=p.slug) }}">
+      <span class="pp-emoji" aria-hidden="true">{{ p.emoji }}</span>
+      <span class="pp-body"><b>{{ p.title }}</b><span>{{ p.summary }}</span><small>{{ p.minutes }} minutes</small></span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    {% endfor %}
+  </div>
+  <h2 class="bible-h2">More ways to pray</h2>
+  <div class="pp-list">
+    <a class="pp-card" href="{{ url_for('prayer_night') }}"><span class="pp-emoji" aria-hidden="true">🌙</span><span class="pp-body"><b>Before sleep</b><span>A psalm, a look back over the day, and a blessing. Can be read aloud to you.</span><small>5 minutes</small></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('prayer_world') }}"><span class="pp-emoji" aria-hidden="true">🌍</span><span class="pp-body"><b>Pray for the world</b><span>One country a day, so you pray for the whole world each year</span><small>3 minutes</small></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('prayer_fasting') }}"><span class="pp-emoji" aria-hidden="true">🍞</span><span class="pp-body"><b>Fasting</b><span>What it is, how to do it safely, and a simple planner</span></span>{{ icon('chevron-right', 18) }}</a>
+    <a class="pp-card" href="{{ url_for('feelings_index') }}"><span class="pp-emoji" aria-hidden="true">💭</span><span class="pp-body"><b>How are you feeling?</b><span>Scripture and a prayer for where you are today</span></span>{{ icon('chevron-right', 18) }}</a>
+  </div>
+</main>
+{% endblock %}

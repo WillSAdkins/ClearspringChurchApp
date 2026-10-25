@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Member · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">Member account</p><h1 style="overflow-wrap:anywhere">{{ m['name'] or m['email'] }}</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin_members') }}" class="btn-ghost">← Members</a></div>
+  </div>
+  <section class="admin-panel">
+    <div class="notif-counts">
+      <div class="notif-count-row"><span>Name</span><strong>{{ m['name'] or 'Not given' }}</strong></div>
+      <div class="notif-count-row"><span>Email</span><strong style="overflow-wrap:anywhere">{{ m['email'] }}</strong></div>
+      <div class="notif-count-row"><span>Joined</span><strong>{{ m['created_at'][:10]|pretty_date }}</strong></div>
+      <div class="notif-count-row"><span>Last signed in</span><strong>{{ m['last_login'][:10]|pretty_date if m['last_login'] else '—' }}</strong></div>
+      <div class="notif-count-row"><span>Last used the app</span><strong>{{ last_active|pretty_date if last_active else '—' }}</strong></div>
+      <div class="notif-count-row"><span>Days they've used it</span><strong>{{ active_days }}</strong></div>
+      <div class="notif-count-row"><span>Signs in with</span><strong>{{ 'Password or email link' if m['has_password'] else 'Email link only' }}</strong></div>
+      <div class="notif-count-row"><span>Phones with notifications</span><strong>{{ phones }}</strong></div>
+    </div>
+  </section>
+  <section class="admin-panel" style="margin-top:1.5rem">
+    <h2 class="section-label">Groups</h2>
+    {% for gr in groups %}<p class="empty-sub">{{ gr['name'] }}{% if gr['role'] == 'leader' %} (leader){% endif %}</p>{% else %}<p class="empty-sub">Not in any groups.</p>{% endfor %}
+  </section>
+  <section class="admin-panel" style="margin-top:1.5rem">
+    <h2 class="section-label">Can’t sign in?</h2>
+    <p class="empty-sub" style="line-height:1.6;margin-bottom:.75rem">They can tap <strong>Forgotten your password?</strong> on the sign-in page. Or send them a reset link now: it goes only to {{ m['email'] }}, works once for 20 minutes, and lets them choose a new password. Staff can never see or set someone's password.</p>
+    <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" name="action" value="reset" class="btn-ghost" style="width:auto">Email them a password reset link</button></form>
+  </section>
+  <section class="admin-panel" style="margin-top:1.5rem">
+    <h2 class="section-label">Delete this account</h2>
+    <p class="empty-sub" style="line-height:1.6;margin-bottom:.75rem">Only when they've asked (people can also do it themselves in Account). This removes the account and everything in it: saved items, group posts, scores, streaks. It can't be undone. It's noted in the staff log, without their name or email.</p>
+    <form method="post" onsubmit="return confirm('Delete this account and everything in it? This cannot be undone.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="ce" class="data-label" style="display:block;font-weight:600;margin-bottom:.35rem">Type their email to confirm</label>
+      <input type="email" id="ce" name="confirm_email" required autocomplete="off" style="width:100%;max-width:26rem;margin-bottom:.6rem">
+      <label for="rs" style="display:block;font-weight:600;margin-bottom:.35rem">How they asked <small>(optional, e.g. “email to office, 3 Nov”)</small></label>
+      <input type="text" id="rs" name="reason" maxlength="200" style="width:100%;max-width:26rem;margin-bottom:.8rem">
+      <button type="submit" name="action" value="delete" class="btn-danger" style="width:auto">Delete account</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

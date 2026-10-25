@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}{{ s.title }} · {{ course.title }}{% endblock %}
+{% block content %}
+<main class="bible gw gw-read">
+  {{ head('Session ' ~ n ~ ' of ' ~ total, url_for('grow_course'), 'Back to ' ~ course.title) }}
+  <article class="gw-article" id="gwSession" data-slug="{{ s.slug }}">
+    <p class="gw-k">{{ course.title }}</p>
+    <h2 class="gw-h1">{{ s.title }}</h2>
+
+    <h3 class="gw-h3">Read</h3>
+    {{ scripture(texts[s.read]) }}
+
+    <h3 class="gw-h3">Think</h3>
+    {% for p in s.body %}<p class="gw-p">{{ p|scripture_links }}</p>{% endfor %}
+    {% if more %}<p class="gw-p"><a href="{{ more.href }}">Go deeper: {{ more.title }} →</a></p>{% endif %}
+
+    <h3 class="gw-h3">Talk it over</h3>
+    <ol class="gw-qs">
+      {% for q in s.questions %}
+      <li><label for="gq{{ loop.index0 }}">{{ q }}</label>
+        <textarea id="gq{{ loop.index0 }}" class="gw-answer" data-q="{{ loop.index0 }}" rows="2" placeholder="Your thoughts (only you can see these)"></textarea></li>
+      {% endfor %}
+    </ol>
+
+    <h3 class="gw-h3">Learn by heart</h3>
+    {{ scripture(texts[s.memory], 'gold', false) }}
+    {% if memory_href %}<a class="gw-chip" href="{{ memory_href }}">{{ icon('target', 16) }} Learn this verse</a>{% endif %}
+
+    <section class="gw-try">
+      <h3>This week</h3>
+      <p>{{ s.action }}</p>
+    </section>
+
+    <h3 class="gw-h3">Pray</h3>
+    <p class="ps-prayer">{{ s.prayer }}</p>
+
+    <button type="button" class="gw-done" data-section="course" data-slug="{{ s.slug }}" data-off-label="I’ve done this session" data-then="gwNext">I’ve done this session</button>
+  </article>
+
+  <nav class="gw-pager" id="gwNext">
+    {% if prev %}<a href="{{ url_for('grow_session', slug=prev.slug) }}" class="gw-pg">{{ icon('chevron-left', 16) }} {{ prev.title }}</a>{% else %}<span></span>{% endif %}
+    {% if next %}<a href="{{ url_for('grow_session', slug=next.slug) }}" class="gw-pg next">{{ next.title }} {{ icon('chevron-right', 16) }}</a>
+    {% else %}<a href="{{ url_for('grow_next_steps') }}" class="gw-pg next">Next steps at Clearspring {{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+</main>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+(function () {
+  var slug = document.getElementById("gwSession").dataset.slug, G = window.Grow;
+  function fill() {
+    var a = (G.load().course.answers || {})[slug] || {};
+    document.querySelectorAll(".gw-answer").forEach(function (t) { if (document.activeElement !== t) t.value = a[t.dataset.q] || ""; });
+  }
+  fill();
+  document.querySelectorAll(".gw-answer").forEach(function (t) {
+    t.addEventListener("input", function () {
+      G.update("course", function (c) { c.answers = c.answers || {}; c.answers[slug] = c.answers[slug] || {}; c.answers[slug][t.dataset.q] = t.value; });
+    });
+  });
+  G.sync().then(function (ch) { if (ch) fill(); });
+})();
+</script>
+{% endblock %}

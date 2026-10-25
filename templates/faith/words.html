@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Church words, explained · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Church words', url_for('faith_hub'), 'Back to Exploring faith') }}
+  <p class="bible-lede">Christians use some words that nobody else does. Here they are in plain English.</p>
+  <input type="search" class="ps-input fq-search" id="gwQ" placeholder="Look up a word" aria-label="Look up a word">
+  <nav class="gl-letters" aria-label="Jump to a letter">
+    {% for l in words|map(attribute='word')|map('first')|unique %}<a href="#l-{{ l|lower }}">{{ l }}</a>{% endfor %}
+  </nav>
+  <dl class="gl-list" id="glList">
+    {% set ns = namespace(last='') %}
+    {% for w in words %}
+    <div class="gl-item" id="{{ w.id }}" data-hay="{{ (w.word ~ ' ' ~ w.meaning)|lower }}">
+      {# A <dl> group may hold only <dt> and <dd>, so the letter anchor goes on the term. #}
+      <dt {% if w.word[0] != ns.last %}id="l-{{ w.word[0]|lower }}" class="gl-anchor-dt"{% set ns.last = w.word[0] %}{% endif %}>{{ w.word }}</dt>
+      <dd>{{ w.meaning }} <a class="gl-ref" href="{{ w.ref|ref_url }}">{{ w.ref.replace('-', '–') }}</a></dd>
+    </div>
+    {% endfor %}
+  </dl>
+  <p class="gw-empty" id="glNone" hidden>That word isn’t here yet. Try the <a href="{{ url_for('dictionary_index') }}">Bible dictionary</a>.</p>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+(function () {
+  var q = document.getElementById("gwQ"), rows = document.querySelectorAll(".gl-item");
+  q.addEventListener("input", function () {
+    var w = q.value.trim().toLowerCase(), n = 0;
+    rows.forEach(function (r) { var ok = !w || r.dataset.hay.indexOf(w) >= 0; r.hidden = !ok; if (ok) n++; });
+    document.getElementById("glNone").hidden = n > 0;
+  });
+})();
+</script>
+{% endblock %}

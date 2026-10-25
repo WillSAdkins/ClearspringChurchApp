@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Today’s prayer list · Clearspring{% endblock %}
+{% block content %}
+<main class="pd" id="pd">
+  <header class="pd-head">
+    <a href="{{ url_for('prayer_journal') }}" class="ps-x" aria-label="Back to My prayers">{{ icon('chevron-left', 22) }}</a>
+    <div class="pd-progress" aria-hidden="true"><i id="pdBar"></i></div>
+    <span class="pd-count" id="pdCount" aria-live="polite"></span>
+  </header>
+
+  <section class="pd-intro" id="pdIntro">
+    <p class="ps-k">Today’s prayer list</p>
+    <h1 class="ps-t" id="pdIntroT">Pray through your cards</h1>
+    {% if texts.open %}<blockquote class="ps-scripture"><p>{{ texts.open.text }}</p><a class="ps-ref" href="{{ texts.open.href }}">{{ texts.open.ref }}</a></blockquote>{% endif %}
+    <p class="ps-p" id="pdIntroP">One card at a time. Pray for each, then swipe or tap Amen to go on.</p>
+    <button type="button" class="ps-go" id="pdStart">Begin</button>
+    <a class="ps-alt" href="{{ url_for('prayer_journal') }}" id="pdEdit">Edit my list</a>
+  </section>
+
+  <section class="pd-stage" id="pdStage" hidden aria-live="polite">
+    <div class="pd-deck" id="pdDeck"></div>
+    <div class="pd-acts">
+      <button type="button" class="pd-back" id="pdBack" aria-label="Previous card">{{ icon('chevron-left', 22) }}</button>
+      <button type="button" class="pd-amen" id="pdAmen">Amen</button>
+      <button type="button" class="pd-skip" id="pdSkip">Skip</button>
+    </div>
+    <p class="pd-hint" id="pdHint">Swipe left for the next card</p>
+  </section>
+
+  <section class="pd-done" id="pdDone" hidden>
+    <p class="ps-k">Amen</p>
+    <h2 class="ps-t" id="pdDoneT">Thank you for praying</h2>
+    <p class="ps-p" id="pdDoneP"></p>
+    <div class="ps-done-links">
+      <a class="ps-go" href="{{ url_for('prayer_journal') }}">My prayers</a>
+      <a class="ps-alt" href="{{ url_for('prayer_session') }}">Take a few more minutes with God</a>
+    </div>
+  </section>
+</main>
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-cards.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-deck.js') }}"></script>
+{% endblock %}

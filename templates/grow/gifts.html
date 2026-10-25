@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}Discover your gifts · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('Your gifts', url_for('grow_hub'), 'Back to Grow') }}
+
+  <section id="gfIntro">
+    <p class="bible-lede">God gives every Christian gifts to build up the church and serve the world (1 Peter 4:10). This short questionnaire can help you notice how God has made you.</p>
+    <ul class="gw-list">
+      <li>{{ items|length }} statements, about five minutes.</li>
+      <li>Answer as you are, not as you’d like to be.</li>
+      <li>It’s a starting point, not a verdict. The best way to discover your gifts is to try serving and ask people who know you.</li>
+    </ul>
+    <button type="button" class="ps-go" id="gfStart">Start</button>
+  </section>
+
+  <section class="gf-quiz" id="gfQuiz" hidden>
+    <div class="gw-bar-row"><span class="gw-bar"><i id="gfBar"></i></span><span class="gw-path-p" id="gfCount"></span></div>
+    <p class="gf-q" id="gfQ" aria-live="polite"></p>
+    <div class="gf-scale" id="gfScale">
+      {% for label in scale %}<button type="button" data-v="{{ loop.index0 }}">{{ label }}</button>{% endfor %}
+    </div>
+    <button type="button" class="ps-link" id="gfBack">Back</button>
+  </section>
+
+  <section id="gfResults" hidden>
+    <p class="gw-k">Your strongest gifts</p>
+    <h2 class="gw-h1" id="gfTop"></h2>
+    <div class="gf-cards" id="gfCards"></div>
+    <h3 class="gw-h3">Also showing</h3>
+    <p class="gw-p" id="gfAlso"></p>
+    <section class="gw-try">
+      <h3>What next?</h3>
+      <ul>
+        <li>Ask two people who know you well whether they see these gifts in you.</li>
+        <li>Try serving somewhere that uses one of them. You’ll learn more in a month of serving than from any questionnaire.</li>
+        <li><a href="{{ url_for('grow_next_steps') }}#serve">Find a place to serve at Clearspring</a>.</li>
+      </ul>
+    </section>
+    <button type="button" class="ps-link" id="gfRetake">Take it again</button>
+  </section>
+</main>
+<script id="gfData" type="application/json">{{ {'gifts': gifts, 'items': items}|tojson }}</script>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+  var D = JSON.parse(document.getElementById("gfData").textContent), G = window.Grow;
+  var $ = function (id) { return document.getElementById(id); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  var answers = [], i = 0, byKey = {};
+  D.gifts.forEach(function (g) { byKey[g.key] = g; });
+
+  function ask() {
+    var it = D.items[i];
+    $("gfQ").textContent = it.text;
+    $("gfCount").textContent = (i + 1) + " of " + D.items.length;
+    $("gfBar").style.width = Math.round(100 * i / D.items.length) + "%";
+    $("gfBack").hidden = i === 0;
+    document.querySelectorAll("#gfScale button").forEach(function (b) { b.classList.toggle("on", answers[i] === +b.dataset.v); });
+  }
+  function results() {
+    var tot = {};
+    D.items.forEach(function (it, n) { tot[it.gift] = (tot[it.gift] || 0) + (answers[n] || 0); });
+    var ranked = Object.keys(tot).sort(function (a, b) { return tot[b] - tot[a]; });
+    G.update("gifts", function (g) { g.answers = answers.slice(); g.results = ranked.map(function (k) { return [k, tot[k]]; }); g.at = new Date().toISOString(); });
+    draw();
+  }
+  function draw() {
+    var r = G.load().gifts.results;
+    if (!r) return false;
+    $("gfIntro").hidden = true; $("gfQuiz").hidden = true; $("gfResults").hidden = false;
+    var top = r.slice(0, 3).map(function (x) { return byKey[x[0]]; }).filter(Boolean);
+    $("gfTop").textContent = top.map(function (g) { return g.name; }).join(", ");
+    var cards = $("gfCards"); cards.textContent = "";
+    top.forEach(function (g) {
+      var c = el("article", "gf-card");
+      c.appendChild(el("h3", null, g.name));
+      c.appendChild(el("p", null, g.about));
+      var u = el("p", "gf-use"); u.appendChild(el("b", null, "Where it could fit: ")); u.appendChild(document.createTextNode(g.use)); c.appendChild(u);
+      var refs = el("p", "gf-refs");
+      g.links.forEach(function (l, n) { var a = el("a", null, l.t); a.href = l.h; refs.appendChild(a); if (n < g.links.length - 1) refs.appendChild(document.createTextNode(" · ")); });
+      c.appendChild(refs);
+      cards.appendChild(c);
+    });
+    $("gfAlso").textContent = r.slice(3, 5).map(function (x) { return byKey[x[0]] && byKey[x[0]].name; }).filter(Boolean).join(" and ") + ".";
+    return true;
+  }
+  document.querySelectorAll("#gfScale button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      answers[i] = +b.dataset.v;
+      if (i < D.items.length - 1) { i++; ask(); } else { results(); window.scrollTo(0, 0); }
+    });
+  });
+  $("gfBack").addEventListener("click", function () { if (i > 0) { i--; ask(); } });
+  $("gfStart").addEventListener("click", function () { answers = []; i = 0; $("gfIntro").hidden = true; $("gfQuiz").hidden = false; ask(); });
+  $("gfRetake").addEventListener("click", function () { answers = []; i = 0; $("gfResults").hidden = true; $("gfQuiz").hidden = false; ask(); window.scrollTo(0, 0); });
+  draw();
+  G.sync().then(function (ch) { if (ch && $("gfQuiz").hidden) draw(); });
+})();
+</script>
+{% endblock %}

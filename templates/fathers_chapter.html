@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_w6.html" import head %}
+{% from "_fathers.html" import father %}
+{% block title %}The early church on {{ 'Psalm' if book.slug == 'psalms' else book.name }} {{ chapter }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible">
+  {{ head(('Psalm' if book.slug == 'psalms' else book.name) ~ ' ' ~ chapter, url_for('fathers_index'), 'Back to the early church') }}
+  <p class="bible-lede">{{ total }} comment{{ 's' if total != 1 }} from the early church. <a href="{{ url_for('bible_read_chapter', book_slug=book.slug, chapter=chapter) }}">Read {{ 'Psalm' if book.slug == 'psalms' else book.name }} {{ chapter }}</a></p>
+  {% for g in groups %}
+  <section class="ef-verse" id="v{{ g.v1 }}">
+    <h2 class="bible-h2"><a href="{{ url_for('verse_page', book_slug=book.slug, chapter=chapter, verse=g.v1) }}">Verse {{ g.v1 }}{% if g.v2 != g.v1 %}–{{ g.v2 }}{% endif %}</a></h2>
+    {% for f in g['items'] %}{{ father(f) }}{% endfor %}
+  </section>
+  {% endfor %}
+  <nav class="reader-paging" aria-label="Chapters">
+    {% if prev_ch %}<a class="page-btn" href="{{ url_for('fathers_chapter', book_slug=book.slug, chapter=prev_ch) }}">‹ Chapter {{ prev_ch }}</a>{% else %}<span></span>{% endif %}
+    {% if next_ch %}<a class="page-btn page-next" href="{{ url_for('fathers_chapter', book_slug=book.slug, chapter=next_ch) }}">Chapter {{ next_ch }} ›</a>{% endif %}
+  </nav>
+</main>
+{% endblock %}

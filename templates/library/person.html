@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, refs_by_book, source, chip_person, chip_place %}
+{% block title %}{{ p.name }} · People of the Bible{% endblock %}
+{% block content %}
+{% macro node(x, cls='') -%}
+<a class="ft-node {{ cls }}" href="{{ url_for('person_page', slug=x.slug) }}">{{ x.name }}</a>
+{%- endmacro %}
+{% set fam = p.family %}
+<main class="bible lib">
+  {{ head(p.name, url_for('people_index'), "People", "Person") }}
+  {% if p.title and p.title != p.name %}<p class="lib-sub-title">{{ p.title }}</p>{% endif %}
+
+  <dl class="lib-facts">
+    {% if p.meaning %}<div><dt>Name means</dt><dd>{{ p.meaning }}</dd></div>{% endif %}
+    {% if p.also %}<div><dt>Also called</dt><dd>{{ p.also }}</dd></div>{% endif %}
+    {% if p.birth or p.death %}<div><dt>Lived</dt><dd>{% if p.birth %}born c. {{ -p.birth if p.birth < 0 else p.birth }}{{ ' BC' if p.birth < 0 else '' }}{% endif %}{% if p.birth and p.death %}; {% endif %}{% if p.death %}died c. {{ -p.death if p.death < 0 else p.death }}{{ ' BC' if p.death < 0 else '' }}{% endif %}</dd></div>{% endif %}
+    {% if p.born_at %}<div><dt>Born</dt><dd>{% for x in p.born_at %}<a href="{{ url_for('place_page', slug=x.slug) }}">{{ x.name }}</a>{% endfor %}</dd></div>{% endif %}
+    {% if p.died_at %}<div><dt>Died</dt><dd>{% for x in p.died_at %}<a href="{{ url_for('place_page', slug=x.slug) }}">{{ x.name }}</a>{% endfor %}</dd></div>{% endif %}
+    {% if p.groups %}<div><dt>Belongs to</dt><dd>{{ p.groups|join(', ') }}</dd></div>{% endif %}
+    <div><dt>Mentioned</dt><dd>{{ p.verse_count }} verse{{ '' if p.verse_count == 1 else 's' }}{% if p.first %} · first in <a href="{{ p.first.href }}">{{ p.first.label }}</a>{% endif %}</dd></div>
+  </dl>
+
+  {% if profile %}
+  <a class="lib-card-link" href="{{ url_for('profile_page', slug=profile.slug) }}"><b>Profile: {{ profile.title }}</b><span>{{ profile.summary }}</span></a>
+  {% elif modern %}
+  <a class="lib-card-link" href="{{ url_for('dictionary_page', slug=modern.slug) }}"><b>{{ modern.title }} in the Bible dictionary</b><span>{{ modern.summary }}</span></a>
+  {% endif %}
+
+  {% if fam %}
+  <section class="lib-section">
+    <h2 class="bible-h2">Family</h2>
+    <div class="ft">
+      {% if p.grandparents %}<div class="ft-row ft-small"><span class="ft-label">Grandparents</span>{% for x in p.grandparents %}{{ node(x) }}{% endfor %}</div>{% endif %}
+      {% if fam.father or fam.mother %}<div class="ft-row"><span class="ft-label">Parents</span>{% for x in fam.father or [] %}{{ node(x) }}{% endfor %}{% for x in fam.mother or [] %}{{ node(x) }}{% endfor %}</div>{% endif %}
+      <div class="ft-row ft-me-row">
+        <span class="ft-me">{{ p.name }}</span>
+        {% if fam.partners %}<span class="ft-amp">married to</span>{% for x in fam.partners %}{{ node(x, 'ft-spouse') }}{% endfor %}{% endif %}
+      </div>
+      {% if fam.children %}<div class="ft-row"><span class="ft-label">Children</span>{% for x in fam.children %}{{ node(x) }}{% endfor %}</div>{% endif %}
+      {% set sibs = (fam.siblings or []) + (fam.halfSiblingsSameFather or []) + (fam.halfSiblingsSameMother or []) %}
+      {% if sibs %}<div class="ft-row ft-small ft-sibs"><span class="ft-label">Brothers &amp; sisters</span>{% for x in sibs %}{{ node(x) }}{% endfor %}</div>{% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if p.summary %}
+  <section class="lib-section">
+    <h2 class="bible-h2">About {{ p.name }}</h2>
+    <article class="lib-article lib-clamp" data-clamp>{{ p.summary|safe }}</article>
+    {{ source("From Easton’s Bible Dictionary (1897).") }}
+  </section>
+  {% endif %}
+
+  {% set map_places = (p.born_at + p.died_at)|selectattr('lat')|list %}
+  {% if events %}
+  <section class="lib-section">
+    <h2 class="bible-h2">On the timeline</h2>
+    <ol class="tl-mini">
+      {% for e in events %}<li><span class="tl-when">{{ e.when }}</span><a href="{{ e.href or '#' }}">{{ e.title }}</a>{% if e.ref %}<small>{{ e.ref }}</small>{% endif %}</li>{% endfor %}
+    </ol>
+    <a class="lib-more" href="{{ url_for('timeline_page') }}">The whole timeline →</a>
+  </section>
+  {% endif %}
+
+  {% if map_places %}
+  <section class="lib-section">
+    <h2 class="bible-h2">On the map</h2>
+    <div class="lib-map" id="personMap" data-markers='{{ map_places|map(attribute="slug")|list|tojson }}'></div>
+  </section>
+  {% endif %}
+
+  <section class="lib-section">
+    <h2 class="bible-h2">Every mention</h2>
+    {% if p.by_book|length > 12 %}<details class="lib-more-refs"><summary>Show all {{ p.verse_count }} verses</summary>{{ refs_by_book(p.by_book) }}</details>
+    {% else %}{{ refs_by_book(p.by_book) }}{% endif %}
+  </section>
+
+  {% if namesakes %}
+  <section class="lib-section">
+    <h2 class="bible-h2">Others called {{ p.name }}</h2>
+    <div class="lib-chips">{% for x in namesakes[:30] %}{{ chip_person(x) }}{% endfor %}</div>
+  </section>
+  {% endif %}
+
+  {{ source("People data: Theographic Bible Metadata (CC BY-SA 4.0). Dates are traditional estimates.") }}
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+document.querySelectorAll("[data-clamp]").forEach(function (b) {
+  if (b.scrollHeight <= b.clientHeight + 12) { b.classList.add("open"); return; }
+  var btn = document.createElement("button");
+  btn.type = "button"; btn.className = "vp-cm-more"; btn.textContent = "Read more";
+  btn.addEventListener("click", function () { var o = b.classList.toggle("open"); btn.textContent = o ? "Show less" : "Read more"; });
+  b.parentNode.insertBefore(btn, b.nextSibling);
+});
+</script>
+{% if map_places %}
+<script src="{{ url_for('static', filename='bible-map.js') }}"></script>
+<script>
+  BibleMap.mount(document.getElementById("personMap"), {
+    markers: {{ map_places|tojson }}.map(function (x) { return { lat: x.lat, lon: x.lon, label: x.name, href: "/bible/places/" + x.slug, main: true }; }),
+    fitMain: true
+  });
+</script>
+{% endif %}
+{% endblock %}

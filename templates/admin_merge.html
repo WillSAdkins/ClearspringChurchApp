@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Merge a backup · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">Staff area</p><h1>Merge a backup</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin_data') }}" class="btn-ghost">← Your data</a></div>
+  </div>
+  <p class="empty-sub" style="line-height:1.6;max-width:42rem;margin-bottom:1.25rem">
+    This is what merging <strong>{{ filename }}</strong> would add. Nothing that's here now will be changed or removed.
+    {% if rows %}Look through the examples: if something was edited after this backup was made, the old version can come back as an extra copy, which you can delete afterwards.{% endif %}
+  </p>
+  {% if rows %}
+  <div class="admin-table">
+    {% for r in rows %}
+    <div class="admin-row">
+      <div class="admin-row-date"><span class="mono">+{{ r.added }}</span></div>
+      <div class="admin-row-main">
+        <strong>{{ r.name }}</strong>
+        {% if r.examples %}<span class="admin-row-loc">{{ r.examples|join(' · ') }}{% if r.added > r.examples|length %} · …{% endif %}</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="admin-alert">Everything in this backup is already here. There's nothing to add.</div>
+  {% endif %}
+  <form method="post" action="{{ url_for('admin_merge_confirm') }}" style="margin-top:1.5rem;display:flex;gap:.75rem;flex-wrap:wrap">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if rows %}<button type="submit" name="action" value="merge" class="btn-primary" style="width:auto">Merge: add {{ rows|sum(attribute='added') }} item{{ 's' if rows|sum(attribute='added') != 1 }}</button>{% endif %}
+    <button type="submit" name="action" value="cancel" class="btn-ghost" style="width:auto">{{ 'Cancel' if rows else 'Done' }}</button>
+  </form>
+</main>
+{% endblock %}

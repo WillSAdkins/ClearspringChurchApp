@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}{{ s.title }} · First steps{% endblock %}
+{% block content %}
+<main class="bible gw gw-read">
+  {{ head('Step ' ~ n ~ ' of ' ~ total, url_for('grow_first_steps'), 'Back to First steps') }}
+  <article class="gw-article">
+    <p class="gw-k">First steps</p>
+    <h2 class="gw-h1">{{ s.emoji }} {{ s.title }}</h2>
+    {{ scripture(texts[s.verse], 'big') }}
+    {% for p in s.body %}<p class="gw-p">{{ p }}</p>{% endfor %}
+
+    <details class="gw-more">
+      <summary>Read {{ s.read.replace('-', '–') }}</summary>
+      {{ scripture(texts[s.read]) }}
+    </details>
+
+    {% if tries %}
+    <section class="gw-try">
+      <h3>Try this</h3>
+      <ul>
+        {% for t in tries %}<li>{% if t.href %}<a href="{{ t.href }}">{{ t.text }}</a>{% else %}{{ t.text }}{% endif %}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <button type="button" class="gw-done" data-section="steps" data-slug="{{ s.slug }}" data-then="gwNext">Mark as done</button>
+  </article>
+
+  <nav class="gw-pager" id="gwNext">
+    {% if prev %}<a href="{{ url_for('grow_step', slug=prev.slug) }}" class="gw-pg">{{ icon('chevron-left', 16) }} {{ prev.title }}</a>{% else %}<span></span>{% endif %}
+    {% if next %}<a href="{{ url_for('grow_step', slug=next.slug) }}" class="gw-pg next">{{ next.title }} {{ icon('chevron-right', 16) }}</a>
+    {% else %}<a href="{{ url_for('grow_course') }}" class="gw-pg next">Next: the Foundations course {{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+</main>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

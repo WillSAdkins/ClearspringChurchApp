@@ -1,0 +1,125 @@
+library.sqlite — sources and licences (built by tools/build_library.py)
+
+PUBLIC DOMAIN
+  Matthew Henry's Concise Commentary (1706)       CrossWire SWORD module MHCC (Ubuntu package sword-comm-mhcc)
+  C. H. Spurgeon, The Treasury of David (1869-85)  CrossWire SWORD module TDavid (sword-comm-tdavid)
+  Nave's Topical Bible (1896)                      CrossWire SWORD module Nave (sword-dict-naves)
+  Easton's Bible Dictionary (1897)                 text via Theographic (below)
+  Creeds, confessions, catechisms                  github.com/NonlinearFruit/Creeds.json — only texts marked
+                                                   "Public Domain"; the repo lists several copyrighted texts,
+                                                   none of which are included
+  Gospel harmony                                   derived from Berean Standard Bible headings (public domain)
+  Basemap (static/maps/basemap.svg)                Natural Earth, public domain
+
+CC BY 4.0
+  Hitchcock's Bible Names (public-domain text)     BibleData, Brady Stephenson, github.com/BradyStephenson/bible-data
+  Place coordinates                                OpenBible.info Bible Geocoding Data (via Theographic)
+
+CC BY-SA 4.0 — this database's tables derived from these are shared under CC BY-SA 4.0
+  people, places, events, chapter_people, chapter_places, dictionary
+                                                   Theographic Bible Metadata, Robert Rouse,
+                                                   github.com/robertrouse/theographic-bible-metadata
+  parallels                                        UBS Parallel Passage Database, (c) 2023 United Bible Societies,
+                                                   github.com/ubsicap/ubs-open-license
+  routes                                           UBS Project MARBLE Bible Routes, Dr Leen Ritmeyer,
+                                                   (c) United Bible Societies 2023
+
+Changes made: data reshaped into SQLite tables, references normalised and linked,
+route lines thinned, text converted from OSIS/Markdown to simple HTML.
+
+fathers.sqlite — built by tools/build_fathers.py
+PUBLIC DOMAIN
+  The early church on each verse                  HistoricalChristianFaith Commentaries-Database
+                                                   (github.com/HistoricalChristianFaith/Commentaries-Database),
+                                                   compilation dedicated to the public domain. Only entries from
+                                                   these public-domain 19th-century translations are included:
+                                                   Thomas Aquinas, Catena Aurea (tr. under J. H. Newman, 1841-45);
+                                                   John Chrysostom, Homilies, and Augustine, Expositions on the
+                                                   Psalms, Tractates on John, Homilies on 1 John, Sermon on the
+                                                   Mount, City of God (Nicene and Post-Nicene Fathers, 1886-89).
+                                                   Excerpts from modern, copyrighted translations in that database
+                                                   are deliberately left out.
+
+static/vendor/bible3d.min.js — 3D models and relief map
+MIT
+  three.js (c) 2010-2026 three.js authors          static/vendor/THREE_LICENSE.txt
+
+Word by word (grammar.sqlite, v32)
+----------------------------------
+Grammar codes and their expansions: STEPBible.org, Tyndale House, Cambridge
+  (TAGNT, TAHOT, TEGMC, TEHMC), CC BY 4.0. https://github.com/STEPBible/STEPBible-Data
+Sentence structure, participant references, Septuagint equivalents:
+  MACULA Greek (SBLGNT trees) and MACULA Hebrew (WLC trees), Biblica, Inc. / Clear Bible,
+  CC BY 4.0. https://github.com/Clear-Bible/macula-greek  https://github.com/Clear-Bible/macula-hebrew
+Meaning-group (semantic domain) labels: United Bible Societies MARBLE, Semantic Dictionary of
+  Biblical Greek, based on J. P. Louw and E. A. Nida, Greek-English Lexicon of the New Testament
+  Based on Semantic Domains (UBS, 1996); supplied in MACULA Greek and used with permission.
+Changes made for Clearspring: words aligned to the STEPBible word lists; grammar explanations
+  rewritten in plain English; clause layout derived from the syntax trees; Septuagint links
+  aggregated by Strong's number. Rebuild with tools/build_grammar.py.
+
+Study notes and dictionary (notes.sqlite, v33)
+----------------------------------------------
+Aquifer Open Study Notes, Book Intros, Themes and Profiles (c) 2026 Mission Mutual, adapted from
+  Tyndale Open Study Notes (c) 2023 Tyndale House Publishers. CC BY-SA 4.0.
+Aquifer Open Bible Dictionary (c) 2026 Mission Mutual, adapted from Tyndale Open Bible Dictionary
+  (c) 2023 Tyndale House Publishers. CC BY-SA 4.0.
+Biblica Study Notes, Book Intros and Bible Dictionary (key terms) (c) 2023 Biblica, Inc. CC BY-SA 4.0.
+All via https://github.com/BibleAquifer (English folders).
+Changes: HTML reduced to basic formatting; Bible references and cross-references converted to links
+  within the app; "see" entries converted to redirects. This adapted file is shared under CC BY-SA 4.0.
+  Rebuild with tools/build_notes.py.
+
+Young's Literal Translation (1898) and the Darby Bible (1890), v34
+------------------------------------------------------------------
+Public domain texts, from scrollmapper/bible_databases (MIT licence for the compilation).
+Rebuild with tools/build_csv_bible.py.
+
+commentaries/*.sqlite — built by tools/build_commentaries.py (v37)
+PUBLIC DOMAIN (each marked "Public Domain" in its CrossWire SWORD .conf file)
+  Matthew Henry, Commentary on the Whole Bible (1706-21)     module MHC
+  Jamieson, Fausset and Brown, Commentary (1871)            module JFB
+  Albert Barnes, Notes on the New Testament (1834-85)       module Barnes
+  Adam Clarke, Commentary (1810-26)                         module Clarke
+  John Calvin, Commentaries (tr. Calvin Translation Society) module CalvinCommentaries
+  John Wesley, Explanatory Notes (1754-65)                  module Wesley
+  Geneva Bible notes (1599)                                 module Geneva
+  B. W. Johnson, The People's New Testament (1891)          module PNT
+  C. I. Scofield, Reference Notes (1917 edition)            module Scofield
+FREE FOR NON-COMMERCIAL USE
+  A. T. Robertson, Word Pictures in the New Testament (1930-33)  module RWP
+  ("Copyrighted; Free non-commercial distribution")
+Modules obtained from github.com/lisasdungeon/the-gift ("Study Guides/Commentaries
+and Reference"), exported with mod2imp, and rebuilt as simple HTML.
+
+reference.sqlite — built by tools/build_reference.py (v37), public domain SWORD modules
+  International Standard Bible Encyclopedia (ed. James Orr, 1915)   module ISBE
+  Smith's Bible Dictionary (William Smith, 1863)                   module Smith
+  R. A. Torrey, The New Topical Text Book (1897)                   module Torrey
+  Easton's Bible Dictionary (M. G. Easton, 1897)                   module Easton (v43)
+  Nave's Topical Bible (Orville J. Nave, 1896)                     module Nave (v43)
+  C. H. Spurgeon, Morning and Evening (1865-68)                    module SME
+
+classics.sqlite — built by tools/build_classics.py (v37)
+  Standard Ebooks editions (CC0 public domain dedication), github.com/standardebooks:
+    Bunyan, The Pilgrim's Progress; Thomas a Kempis, The Imitation of Christ (tr. William
+    Benham); Augustine, The City of God (tr. Marcus Dods, George Wilson, J. J. Smith);
+    Chesterton, Orthodoxy and The Everlasting Man; Moody, The Way to God; MacDonald,
+    Unspoken Sermons; Gregory of Nyssa, On the Making of Man (tr. William Moore and
+    H. A. Wilson); Milton, Paradise Lost; Spurgeon, The Art of Illustration.
+    Added in v43: Boethius, The Consolation of Philosophy (tr. H. R. James); Dante, The
+    Divine Comedy (tr. Henry Wadsworth Longfellow); Donne, Poetry; Chesterton, Heretics and
+    The Man Who Was Thursday; Dostoevsky, The Brothers Karamazov (tr. Constance Garnett);
+    Lew Wallace, Ben-Hur; Sienkiewicz, Quo Vadis (tr. Jeremiah Curtin); MacDonald,
+    Phantastes, Lilith, At the Back of the North Wind and The Princess and the Goblin
+  Project Gutenberg texts via the GITenberg mirrors (public domain; Project Gutenberg's
+  name, header, footer and licence removed as its terms ask):
+    Brother Lawrence, The Practice of the Presence of God (Revell edition, c. 1895; #13871)
+    Julian of Norwich, Revelations of Divine Love (ed. Grace Warrack, 1901; #52958)
+    Charles M. Sheldon, In His Steps (1896; #4540)
+    Added in v43: Augustine, Confessions (tr. E. B. Pusey; #3296); Bunyan, Grace Abounding
+    (#654); Andrew Murray, Humility (#57121), Lord, Teach Us to Pray (#26709) and The
+    Master's Indwelling (#12854); E. M. Bounds, Power Through Prayer (#65115), Purpose in
+    Prayer (#66112) and The Essentials of Prayer (#73271); Jonathan Edwards, Selected
+    Sermons (#34632)
+  Every author and translator died before 1956: public domain in the UK and the US.

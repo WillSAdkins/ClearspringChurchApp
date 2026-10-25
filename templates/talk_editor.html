@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% block title %}Sermon notes · Clearspring{% endblock %}
+{% block content %}
+<main class="bible jx" data-kind="talk">
+
+  <header class="bible-head">
+    <a href="{{ url_for('my_study', f='talk') }}" class="bible-back" aria-label="Back to My study">{{ icon('chevron-left', 22) }}</a>
+    <h1 class="bible-title">Sermon notes</h1>
+    <span class="jx-status" id="jxStatus" aria-live="polite"></span>
+  </header>
+
+  <section class="jx-step jx-meta">
+    <input type="text" id="jxTitle" class="jx-input jx-title" placeholder="Title of the talk" maxlength="140" data-field="title" aria-label="Title">
+    <div class="jx-meta-row">
+      <label class="jx-mini"><span>Speaker</span><input type="text" class="jx-input" maxlength="80" data-field="speaker" placeholder="Who spoke"></label>
+      <label class="jx-mini"><span>Date</span><input type="date" class="jx-input" id="jxDate" data-field="date"></label>
+    </div>
+    <label class="jx-mini"><span>Passage</span><input type="text" class="jx-input" id="jxRef" maxlength="80" data-field="ref" placeholder="e.g. Luke 15:11-32" autocomplete="off"></label>
+    <p class="jx-links" id="jxRefLinks"></p>
+  </section>
+
+  <section class="jx-step">
+    <label for="jxNotes" class="jx-step-title jx-plain">Notes</label>
+    <textarea id="jxNotes" class="jx-area jx-big" rows="12" data-field="notes"
+      placeholder="Main points, quotes, questions… Type a reference like “Romans 5:8” and it becomes a link below."></textarea>
+    <div class="jx-mentioned" id="jxMentioned" hidden>
+      <p class="jx-mentioned-title">Passages mentioned</p>
+      <div class="jx-mentioned-list" id="jxMentionedList"></div>
+    </div>
+  </section>
+
+  <section class="jx-step">
+    <label for="jxKey" class="jx-step-title jx-plain">The one thing to remember</label>
+    <textarea id="jxKey" class="jx-area" rows="2" data-field="takeaway" placeholder="If you forget everything else…"></textarea>
+  </section>
+
+  <section class="jx-step">
+    <label for="jxDo" class="jx-step-title jx-plain">One thing to do this week</label>
+    <textarea id="jxDo" class="jx-area" rows="2" data-field="action" placeholder="A small, real next step"></textarea>
+  </section>
+
+  <section class="jx-step">
+    <p class="jx-step-title jx-plain">Tags</p>
+    <div id="jxTags"></div>
+  </section>
+
+  <div class="jx-foot">
+    <button type="button" class="jx-delete" id="jxDelete" hidden>{{ icon('trash', 18) }}<span>Delete</span></button>
+    <a class="jx-done" href="{{ url_for('my_study', f='talk') }}">Done</a>
+  </div>
+</main>
+<script src="{{ url_for('bible_refs_data') }}"></script>
+<script src="{{ url_for('static', filename='bible-refs.js') }}"></script>
+<script src="{{ url_for('static', filename='study-store.js') }}"></script>
+<script src="{{ url_for('static', filename='tag-field.js') }}"></script>
+<script src="{{ url_for('static', filename='journal-editor.js') }}"></script>
+{% endblock %}

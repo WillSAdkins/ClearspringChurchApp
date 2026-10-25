@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ title }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib lib-wide">
+  {% if cols %}
+  {{ head(title, url_for('compare_passages'), "Compare", "Side by side") }}
+  <form class="cmp-trans" method="get">
+    {% for c in cols %}<input type="hidden" name="r" value="{{ c.label }}">{% endfor %}<input type="hidden" name="t" value="{{ title }}">
+    <label>Translation <select name="translation" onchange="this.form.submit()">
+      {% for code, name in translations %}<option value="{{ code }}" {{ 'selected' if code == translation }}>{{ name }}</option>{% endfor %}
+    </select></label>
+    <noscript><button class="ps-link" type="submit">Change</button></noscript>
+  </form>
+  <div class="cmp cmp-{{ cols|length }}">
+    {% for c in cols %}
+    <section class="cmp-col">
+      <h2 class="cmp-ref"><a href="{{ url_for('bible_read_chapter', book_slug=c.ref.slug, chapter=c.ref.chapter) }}?translation={{ translation }}&v={{ c.ref.verse or 1 }}">{{ c.label }}</a></h2>
+      <p class="cmp-text">{% for v in c.verses %}<sup>{{ v.verse }}</sup>{{ v.text }} {% endfor %}</p>
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  {{ head("Compare passages", url_for('bible_tab', tab='study'), "Study", "Side by side") }}
+  <p class="bible-lede">Put up to four passages next to each other: the same story in different Gospels, a law given twice, a psalm that also appears in Samuel. Seeing them together shows what each writer chose to stress.</p>
+  {% if bad %}<p class="cmp-bad" role="alert">Couldn’t find: {{ bad|join(', ') }}. Try a form like “Luke 15:11-32”.</p>{% endif %}
+  <form class="cmp-form" method="get">
+    {% for i in range(4) %}
+    <label class="cmp-field"><span>Passage {{ i + 1 }}{% if i > 1 %} (optional){% endif %}</span>
+      <input name="r" autocomplete="off" placeholder="{{ ['e.g. Matthew 6:9-13', 'e.g. Luke 11:2-4', 'e.g. Mark 1:1-8', 'e.g. John 1:19-28'][i] }}" {{ 'required' if i == 0 }} maxlength="80"></label>
+    {% endfor %}
+    <label class="cmp-field"><span>Translation</span><select name="translation">
+      {% for code, name in translations %}<option value="{{ code }}" {{ 'selected' if code == translation }}>{{ name }}</option>{% endfor %}
+    </select></label>
+    <button class="ps-go" type="submit">Compare</button>
+  </form>
+  <h2 class="bible-h2 lib-sub">Told more than once</h2>
+  <div class="cmp-examples">
+    {% for name, rs in examples %}
+    <a class="cmp-ex" href="{{ url_for('compare_passages', r=rs, t=name) }}"><b>{{ name }}</b><span>{{ rs|join(' · ') }}</span></a>
+    {% endfor %}
+  </div>
+  <p class="lib-source">For the four Gospels in order, see <a href="{{ url_for('harmony_page') }}">the Gospel harmony</a>.</p>
+  {% endif %}
+</main>
+{% endblock %}

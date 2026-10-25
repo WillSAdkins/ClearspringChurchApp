@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_prayer_nav.html" import prayer_nav %}
+{% block title %}My prayer list · Clearspring{% endblock %}
+{% block content %}
+<main class="bible pr pl">
+  <header class="bible-head">
+    <span style="width:2.4rem"></span>
+    <h1 class="bible-title">My prayers</h1>
+    <span style="width:2.4rem"></span>
+  </header>
+  {{ prayer_nav('mine') }}
+
+  <a class="pl-today" id="plToday" href="{{ url_for('prayer_deck') }}">
+    <span class="pl-today-k">Today’s prayer list</span>
+    <span class="pl-today-t" id="plTodayCount">Your cards for today</span>
+    <span class="pl-today-names" id="plTodayNames" aria-hidden="true"></span>
+    <span class="pl-today-go">Start praying {{ icon('chevron-right', 18) }}</span>
+  </a>
+
+  <nav class="pr-filter pl-tabs" role="tablist" aria-label="My prayers">
+    <button type="button" role="tab" data-tab="list" class="on" aria-selected="true" aria-controls="plList">My list</button>
+    <button type="button" role="tab" data-tab="answered" aria-selected="false" aria-controls="plAnswered">Answered</button>
+    <button type="button" role="tab" data-tab="thanks" aria-selected="false" aria-controls="plThanks">Thank-yous</button>
+  </nav>
+
+  <!-- My list: categories of cards -->
+  <section id="plList" role="tabpanel" aria-label="My list">
+    <div class="pl-bar">
+      <button type="button" class="pf-submit pl-add" id="plAdd">{{ icon('plus', 18) }} Add someone or something</button>
+      <button type="button" class="pl-manage" id="plManage">Categories</button>
+    </div>
+    <div id="plCats"></div>
+    <p class="pl-how">Each day you’ll get a few cards from every category, starting with the ones you’ve gone longest without praying for, so even a long list comes round regularly. To pray for someone more often, pin their card to every day, certain days, or a date each month.</p>
+  </section>
+
+  <!-- Answered -->
+  <section id="plAnswered" role="tabpanel" aria-label="Answered" hidden>
+    <div id="plAnsweredList" class="pl-answered"></div>
+    <div id="plAnsweredEmpty" class="saved-empty" hidden>
+      <span class="saved-empty-icon">{{ icon('hands', 26) }}</span>
+      <p class="saved-empty-title">No answered prayers yet</p>
+      <p class="saved-empty-sub">When God answers a prayer, open the card and mark it answered. It’s good to look back on.</p>
+    </div>
+  </section>
+
+  <!-- Thank-yous -->
+  <section id="plThanks" role="tabpanel" aria-label="Thank-yous" hidden>
+    <form class="ps-thanks pl-thanks-add" id="plThanksForm">
+      <input type="text" id="plThanksText" maxlength="300" placeholder="I’m thankful for…" aria-label="Something you’re thankful for">
+      <button type="submit">Add</button>
+    </form>
+    <ul id="plThanksList" class="pl-thanks"></ul>
+  </section>
+
+  <p class="journal-privacy">{{ icon('bookmark', 16) }}<span>Only you can see your list. It’s kept on this device{% if member %}, and in your own account so it follows you{% endif %}, and never shared with the church.</span></p>
+</main>
+
+<!-- Add or edit a card -->
+<dialog class="pl-sheet" id="plCard" aria-labelledby="plCardTitle">
+  <form method="dialog" class="pl-sheet-in" id="plCardForm">
+    <div class="pl-sheet-head">
+      <h2 id="plCardTitle">Add to your list</h2>
+      <button type="button" class="pl-x" data-close aria-label="Close">&times;</button>
+    </div>
+    <label class="pl-field"><span>Who or what?</span>
+      <input type="text" id="plName" maxlength="80" placeholder="e.g. Mum, The Patels, Our street">
+    </label>
+    <div class="pl-field"><span id="plCatLabel">Category</span>
+      <div class="pr-cats" id="plCatPick" role="radiogroup" aria-labelledby="plCatLabel"></div>
+    </div>
+    <div class="pl-field"><span>Prayer points</span>
+      <ul class="pl-notes" id="plNotes"></ul>
+      <div class="pl-note-add">
+        <input type="text" id="plNote" maxlength="500" placeholder="Add something to pray for…" aria-label="Add a prayer point">
+        <button type="button" id="plNoteAdd">Add</button>
+      </div>
+    </div>
+    <div class="pl-field"><span id="plWhenLabel">How often</span>
+      <div class="pl-when" role="radiogroup" aria-labelledby="plWhenLabel">
+        <label><input type="radio" name="plWhen" value="rotate" checked><span>In turn</span></label>
+        <label><input type="radio" name="plWhen" value="daily"><span>Every day</span></label>
+        <label><input type="radio" name="plWhen" value="days"><span>Certain days</span></label>
+        <label><input type="radio" name="plWhen" value="month"><span>Monthly</span></label>
+      </div>
+      <div class="pr-days" id="plDays" role="group" aria-label="Days" hidden>
+        {% for n, d, full in [(1,'M','Monday'),(2,'T','Tuesday'),(3,'W','Wednesday'),(4,'T','Thursday'),(5,'F','Friday'),(6,'S','Saturday'),(0,'S','Sunday')] %}<button type="button" class="pr-day" data-d="{{ n }}" aria-pressed="false" aria-label="{{ full }}">{{ d }}</button>{% endfor %}
+      </div>
+      <label class="pl-month" id="plMonth" hidden>On the
+        <select id="plDate" aria-label="Day of the month">{% for n in range(1, 32) %}<option value="{{ n }}">{{ n }}</option>{% endfor %}</select>
+        of each month</label>
+      <p class="pl-when-hint" id="plWhenHint">Comes round in turn with the others in its category.</p>
+    </div>
+    <p class="pl-stat" id="plStat"></p>
+    <p class="pl-err" id="plErr" role="alert" hidden>Give the card a name first.</p>
+    <div class="pl-sheet-foot">
+      <button type="button" class="pl-del" id="plDelete" hidden>Remove from my list</button>
+      <button type="submit" class="pf-submit" id="plSave" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Categories and church feeds -->
+<dialog class="pl-sheet" id="plCatsSheet" aria-labelledby="plCatsTitle">
+  <form method="dialog" class="pl-sheet-in">
+    <div class="pl-sheet-head">
+      <h2 id="plCatsTitle">Categories</h2>
+      <button type="button" class="pl-x" data-close aria-label="Close">&times;</button>
+    </div>
+    <p class="pl-sheet-sub">Choose how many cards you get from each category a day.</p>
+    <ul class="pl-catedit" id="plCatEdit"></ul>
+    <div class="pl-note-add">
+      <input type="text" id="plNewCat" maxlength="40" placeholder="New category, e.g. Small group" aria-label="New category name">
+      <button type="button" id="plNewCatAdd">Add</button>
+    </div>
+    <h3 class="pl-feeds-h">From the church</h3>
+    <ul class="pl-catedit" id="plFeedEdit"></ul>
+    <div class="pl-sheet-foot"><button type="submit" class="pf-submit">Done</button></div>
+  </form>
+</dialog>
+
+<script src="{{ url_for('static', filename='prayers.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-cards.js') }}"></script>
+<script src="{{ url_for('static', filename='prayer-list.js') }}"></script>
+{% endblock %}

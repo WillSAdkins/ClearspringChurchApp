@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head %}
+{% block title %}First steps · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw">
+  {{ head('First steps', url_for('grow_hub'), 'Back to Grow') }}
+  <p class="bible-lede">New to following Jesus? Welcome! These short steps cover the things that matter most in your first weeks. Take one a day, or go at your own pace.</p>
+  <div class="gw-bar-row"><span class="gw-bar"><i></i></span><span class="gw-path-p" data-progress="steps:{{ steps|map(attribute='slug')|join(',') }}" data-empty="Not started yet"></span></div>
+  <ol class="gw-steps">
+    {% for s in steps %}
+    <li><a class="gw-step" href="{{ url_for('grow_step', slug=s.slug) }}" data-tick="steps:{{ s.slug }}">
+      <span class="gw-step-n" aria-hidden="true"><b>{{ loop.index }}</b>{{ icon('check', 16) }}</span>
+      <span class="gw-step-b"><b>{{ s.emoji }} {{ s.title }}</b><small>{{ s.verse.replace('-', '–') }}</small></span>
+      {{ icon('chevron-right', 18) }}
+    </a></li>
+    {% endfor %}
+  </ol>
+  <p class="gw-note">Want to talk to someone? <a href="{{ url_for('ask_question') }}">Get in touch</a>. We’d love to hear your story.</p>
+</main>
+<script src="{{ url_for('static', filename='grow.js') }}"></script>
+{% endblock %}

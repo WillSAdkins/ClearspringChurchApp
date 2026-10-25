@@ -1,0 +1,40 @@
+{
+  "name": "clearspring-native",
+  "version": "1.0.0",
+  "description": "Native iOS/Android shell for the Clearspring church app",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "sync": "npx cap sync",
+    "open:ios": "npx cap open ios",
+    "open:android": "npx cap open android",
+    "add:ios": "npx cap add ios",
+    "add:android": "npx cap add android",
+    "icons": "npx @capacitor/assets generate --ios --android --assetPath resources --iconBackgroundColor \"#000000\" --iconBackgroundColorDark \"#000000\" --splashBackgroundColor \"#F5F8F7\" --splashBackgroundColorDark \"#061719\"",
+    "doctor": "npx cap doctor",
+    "prepare:ios": "node prepare-ios.js",
+    "prepare:android": "node prepare-android.js"
+  },
+  "dependencies": {
+    "@capacitor-firebase/messaging": "^8.5.2",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/app-launcher": "^8.0.1",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
+    "firebase": "^12.19.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.3",
+    "plist": "^3.1.1",
+    "xcode": "^3.0.1"
+  }
+}

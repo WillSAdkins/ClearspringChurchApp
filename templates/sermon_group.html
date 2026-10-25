@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% block title %}Group guide: {{ s['title'] }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw gw-read">
+  {{ head('Group guide', url_for('sermon_detail', sermon_id=s['id']) if s['published'] else url_for('sunday_page'), 'Back') }}
+  <p class="gw-k">For small groups · {{ s['preached_on']|pretty_date }}</p>
+  <h2 class="gw-h1">{{ s['title'] }}</h2>
+  {% if s['speaker'] %}<p class="sn-by">{{ s['speaker'] }}</p>{% endif %}
+  {% if s['summary'] %}<p class="gw-p">{{ s['summary'] }}</p>{% endif %}
+
+  <h3 class="gw-h3">Open in prayer</h3>
+  <p class="gw-p">Ask God to speak through his word as you read and talk together.</p>
+
+  {% if passage %}
+  <h3 class="gw-h3">Read {{ passage.label }}</h3>
+  <p class="gw-note">Read it aloud, perhaps twice, with different people reading.</p>
+  {{ scripture(text) }}
+  {% endif %}
+
+  <h3 class="gw-h3">Talk</h3>
+  {% if not written %}<p class="gw-note">Simple questions that work with any passage.</p>{% endif %}
+  <ol class="gw-qs plain">
+    {% for q in questions %}<li>{{ q|scripture_links }}</li>{% endfor %}
+  </ol>
+
+  <h3 class="gw-h3">Pray</h3>
+  <p class="gw-p">Pray for each other about what you’ve each said you’ll do this week. Then pray for one person each of you knows who doesn’t yet know Jesus.</p>
+
+  <div class="sn-acts">
+    <button type="button" class="gw-btn" id="sgShare">{{ icon('message', 16) }} Send to my group</button>
+    <button type="button" class="gw-btn" onclick="window.print()">Print</button>
+  </div>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script>
+document.getElementById("sgShare").addEventListener("click", function () {
+  var d = { title: document.title, text: "Questions for our group this week:", url: location.href }, b = this;
+  if (navigator.share) navigator.share(d).catch(function () {});
+  else if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function () { b.textContent = "Link copied"; });
+});
+</script>
+{% endblock %}

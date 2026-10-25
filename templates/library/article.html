@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head, chip_person, chip_place %}
+{% from "library/_ui.html" import ref_also with context %}
+{% block title %}{{ a.title }} · {{ info.title }}{% endblock %}
+{% block content %}
+{% set index_url = url_for('dictionary_index', l=a.title[:1]|lower) if kind == 'dictionary' else url_for(kind ~ 's_index') %}
+<main class="bible lib">
+  {{ head(a.title, index_url, info.title, info.title if kind != 'dictionary' else 'Bible dictionary') }}
+
+  {% if person or place or profile %}
+  <div class="lib-chips lib-related">
+    {% if person %}{{ chip_person(person) }}{% endif %}
+    {% if place %}{{ chip_place(place) }}{% endif %}
+    {% if profile %}<a class="lib-chip" href="{{ url_for('profile_page', slug=profile.slug) }}"><b>Profile: {{ profile.title }}</b><small>Their life and what we learn</small></a>{% endif %}
+  </div>
+  {% endif %}
+
+  <article class="lib-article">{{ a.html }}</article>
+
+  {% if a.same_title %}
+  <p class="lib-note">Another article on this:
+    {% for x in a.same_title %}<a href="{{ url_for(kind ~ '_page', slug=x.slug) }}">{{ x.title }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+  {% endif %}
+
+  {% if refs and kind != 'dictionary' %}
+  <section class="vp-section">
+    <h2 class="bible-h2">Key passages</h2>
+    <div class="lib-chips">{% for r in refs %}<a class="lib-chip" href="{{ r.href }}">{{ r.label }}</a>{% endfor %}</div>
+    {% if more_refs %}<p class="lib-note">…and {{ more_refs }} more.</p>{% endif %}
+  </section>
+  {% endif %}
+
+  {% if kind in ('dictionary', 'theme', 'profile') %}{{ ref_also(a.slug) }}{% endif %}
+  {% if easton %}
+  <a class="lib-card-link" href="{{ url_for('dictionary_page', slug=a.slug, v='easton') }}"><b>Easton’s Bible Dictionary (1897)</b><span>The older entry for “{{ easton.term }}”, from the classic dictionary</span></a>
+  {% endif %}
+  {% if person %}
+  <a class="lib-card-link" href="{{ url_for('person_page', slug=person.slug) }}"><b>{{ person.name }}: family, places and timeline</b><span>Every verse that mentions {{ person.name }}, with family links</span></a>
+  {% endif %}
+
+  <p class="lib-source">{{ source.credit }} <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+{% endblock %}

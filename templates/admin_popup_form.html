@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}{{ 'Edit pop-up' if p.id else 'New pop-up' }} · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div><p class="eyebrow">Staff area</p><h1>{{ 'Edit pop-up' if p.id else 'New pop-up' }}</h1></div>
+    <div class="admin-actions"><a href="{{ url_for('admin_popups') }}" class="btn-ghost">← Pop-ups</a></div>
+  </div>
+  <form method="post" enctype="multipart/form-data" class="event-form" id="puForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if p.kind == 'sponsor' or popup_settings().sponsors_on %}
+    <div class="form-row">
+      <div><label for="kind">Kind</label><select id="kind" name="kind">{% for k, label in kinds.items() %}<option value="{{ k }}" {{ 'selected' if p.kind == k }}>{{ label }}</option>{% endfor %}</select></div>
+      <div><label for="sponsor_name">Sponsor’s name <small>(for sponsor pop-ups)</small></label><input type="text" id="sponsor_name" name="sponsor_name" maxlength="80" value="{{ p.sponsor_name or '' }}" placeholder="Leckhampton Bakery"></div>
+    </div>
+    {% else %}<input type="hidden" name="kind" value="church">{% endif %}
+    <label for="title">Title</label>
+    <input type="text" id="title" name="title" maxlength="80" required value="{{ p.title }}" placeholder="Christmas at Clearspring">
+    <label for="body">Message <small>(optional, up to 400 characters)</small></label>
+    <textarea id="body" name="body" rows="3" maxlength="400" placeholder="Carols by candlelight, Sunday 20 December at 6pm. Bring a friend!">{{ p.body or '' }}</textarea>
+    <div class="form-row">
+      <div><label for="button_text">Button words</label><input type="text" id="button_text" name="button_text" maxlength="30" value="{{ p.button_text or '' }}" placeholder="Find out more"></div>
+      <div><label for="button_url">Button goes to</label><input type="text" id="button_url" name="button_url" maxlength="300" value="{{ p.button_url or '' }}" placeholder="/community/calendar"></div>
+    </div>
+    <p class="field-hint">A page in the app, like <code>/community/calendar</code> or <code>/giving</code>, or a full https:// web address.</p>
+    <div class="form-row">
+      <div><label for="starts">First day</label><input type="date" id="starts" name="starts" required value="{{ p.starts }}"></div>
+      <div><label for="ends">Last day</label><input type="date" id="ends" name="ends" required value="{{ p.ends }}"></div>
+    </div>
+    <div class="form-row">
+      <div><label for="pages">Show on</label><select id="pages" name="pages">{% for k, (label, _) in pages.items() %}<option value="{{ k }}" {{ 'selected' if p.pages == k }}>{{ label }}</option>{% endfor %}</select></div>
+      <div><label for="audience">Who sees it</label><select id="audience" name="audience">{% for k, label in audiences.items() %}<option value="{{ k }}" {{ 'selected' if p.audience == k }}>{{ label }}</option>{% endfor %}</select></div>
+    </div>
+    <label for="image">Picture <small>(optional; landscape works best)</small></label>
+    <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
+    {% if p.image_at %}<label class="admin-check"><input type="checkbox" name="remove_image" value="1"><span>Remove the current picture</span></label>{% endif %}
+    <label class="admin-check"><input type="checkbox" name="active" value="1" {{ 'checked' if p.active }}><span>Switched on</span></label>
+    <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto">Save</button></div>
+  </form>
+  {% if p.id %}
+  <form method="post" onsubmit="return confirm('Delete this pop-up?');" style="margin-top:1.5rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete">
+    <button type="submit" class="btn-danger small">Delete pop-up</button>
+  </form>
+  {% endif %}
+</main>
+<script>
+(function () {
+  // Shrink a large photo on this device before it uploads.
+  var form = document.getElementById("puForm"), input = document.getElementById("image");
+  form.addEventListener("submit", function (e) {
+    var f = input.files && input.files[0]; if (!f || f.size < 600000) return;
+    e.preventDefault();
+    var img = new Image(), url = URL.createObjectURL(f);
+    img.onload = function () {
+      var s = Math.min(1, 1400 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(function (b) {
+        var fd = new FormData(form); fd.set("image", b, "picture.jpg");
+        fetch(location.pathname, { method: "POST", body: fd }).then(function (r) { location.href = r.url; });
+      }, "image/jpeg", 0.85);
+    };
+    img.onerror = function () { form.submit(); };
+    img.src = url;
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "icons.html" import icon %}
+{% block title %}Page not found · Clearspring{% endblock %}
+{% block content %}
+<main class="err">
+  <p class="err-code" aria-hidden="true">404</p>
+  <h1 class="err-title">We couldn’t find that page</h1>
+  <p class="err-lede">It may have moved, or the link may have a typo. “Seek, and you will find”, but perhaps somewhere else:</p>
+  <nav class="err-links">
+    <a href="{{ url_for('index') }}">{{ icon('home', 18) }} Home</a>
+    <a href="{{ url_for('bible_hub') }}">{{ icon('book', 18) }} Bible</a>
+    <a href="{{ url_for('bible_search') }}">{{ icon('search', 18) }} Search the Bible</a>
+    <a href="{{ url_for('games_hub') }}">{{ icon('target', 18) }} Kids Games</a>
+  </nav>
+</main>
+{% endblock %}

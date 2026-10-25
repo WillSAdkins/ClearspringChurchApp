@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}Listen to the Bible · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lis" id="lis" data-start="{{ (start.slug ~ '/' ~ start.chapter) if start else '' }}">
+  {{ head("Listen", url_for('bible_hub'), "Bible", "Audio Bible") }}
+
+  <section class="lis-now" aria-label="Now playing">
+    <p class="lis-k" id="lisK">The Bible, read aloud</p>
+    <h2 class="lis-title" id="lisTitle">Choose a chapter</h2>
+    <p class="lis-sub" id="lisSub">Berean Standard Bible</p>
+    <div class="lis-prog">
+      <input type="range" id="lisSeek" min="0" max="1000" value="0" step="1" aria-label="Position in the chapter" disabled>
+      <div class="lis-times"><span id="lisCur">0:00</span><span id="lisDur">0:00</span></div>
+    </div>
+    <div class="lis-ctl">
+      <button type="button" class="lis-b" id="lisPrev" aria-label="Previous chapter"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button type="button" class="lis-b" id="lisBack" aria-label="Back 15 seconds"><span>−15</span></button>
+      <button type="button" class="lis-play" id="lisPlay" aria-label="Play" disabled>
+        <svg class="i-play" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+        <svg class="i-pause" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" hidden><path fill="currentColor" d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <button type="button" class="lis-b" id="lisFwd" aria-label="Forward 30 seconds"><span>+30</span></button>
+      <button type="button" class="lis-b" id="lisNext" aria-label="Next chapter"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+    </div>
+    <div class="lis-opts">
+      <button type="button" class="ab-chip" id="lisSpeed" aria-label="Playback speed">1×</button>
+      <button type="button" class="ab-chip" id="lisSleep" aria-pressed="false" aria-label="Sleep timer">Sleep</button>
+      <button type="button" class="ab-chip" id="lisAuto" aria-pressed="true">Carry on</button>
+      <label class="lis-reader"><span class="sr-only">Narrator</span>
+        <select id="lisReader">{% for k, r in readers.items() %}<option value="{{ k }}" {{ 'selected' if k == default_reader }}>{{ r[0] }}</option>{% endfor %}</select>
+      </label>
+    </div>
+    <p class="lis-msg" id="lisMsg" role="status"></p>
+    <a class="lis-read" id="lisRead" href="#" hidden>Read along in the Bible →</a>
+  </section>
+
+  <p class="lis-tip">Keeps playing with your phone locked, chapter after chapter. Use the lock screen or your headphones to pause or skip.</p>
+
+  <section class="lis-pick" aria-label="Choose a book and chapter">
+    <div class="lis-tabs" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-t="ot" class="on">Old Testament</button>
+      <button type="button" role="tab" aria-selected="false" data-t="nt">New Testament</button>
+    </div>
+    <div class="lis-books" id="lisBooks-ot">{% for b in ot %}<button type="button" data-book="{{ b.slug }}">{{ b.name }}</button>{% endfor %}</div>
+    <div class="lis-books" id="lisBooks-nt" hidden>{% for b in nt %}<button type="button" data-book="{{ b.slug }}">{{ b.name }}</button>{% endfor %}</div>
+    <div class="lis-chaps" id="lisChaps" hidden>
+      <div class="lis-chaps-head"><b id="lisChapsTitle"></b><button type="button" class="ps-link" id="lisChapsClose">All books</button></div>
+      <div class="lis-chaps-grid" id="lisChapsGrid"></div>
+      <div class="lis-save">
+        <button type="button" class="ps-link" id="lisSaveBook">Save this book’s audio for offline</button>
+        <p class="lis-save-msg" id="lisSaveMsg" role="status"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lis-saved" id="lisSaved" hidden>
+    <h2 class="bible-h2 lib-sub">Saved on this phone</h2>
+    <ul id="lisSavedList"></ul>
+    <p class="lis-space" id="lisSpace"></p>
+  </section>
+
+  <p class="lib-source">{{ credit }} Played from OpenBible.com, or from this phone once saved. <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+<script>
+  window.CS_AUDIO_BOOKS = {{ books|tojson }};
+  window.CS_AUDIO_READERS = {{ readers_js|tojson }};
+  window.CS_AUDIO_DEFAULT_READER = {{ default_reader|tojson }};
+</script>
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script src="{{ url_for('static', filename='audio-bible.js') }}"></script>
+<script src="{{ url_for('static', filename='listen.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "_w6.html" import head, scripture %}
+{% from "groups/_post.html" import post_card with context %}
+{% block title %}{{ grp['name'] }} · Clearspring{% endblock %}
+{% block content %}
+<main class="bible gw gr" id="gr" data-gid="{{ grp['id'] }}">
+  {{ head(grp['name'], url_for('groups_index'), 'Back to Groups') }}
+  <p class="gr-sub">{{ emoji }} {{ kind_name }} · {{ people|length }} {{ 'person' if people|length == 1 else 'people' }}</p>
+
+  <nav class="pr-nav gr-tabs" aria-label="Group">
+    {% for k, label in [('talk', 'Talk'), ('pray', 'Pray'), ('read', 'Read'), ('learn', 'Learn'), ('people', 'People')] %}
+    <a href="{{ url_for('group_page', gid=grp['id'], tab=k) }}" class="{{ 'on' if tab == k }}"{% if tab == k %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if request.args.get('joined') %}<div class="gw-thanks" role="status"><b>Welcome to {{ grp['name'] }}!</b><span>Say hello, or see what the group is reading.</span></div>{% endif %}
+
+  {# ------------------------------------------------ TALK #}
+  {% if tab == 'talk' %}
+  <section class="gr-compose">
+    <div class="gr-compose-tabs" role="tablist">
+      <button type="button" class="on" data-pane="cPost" role="tab" aria-selected="true">Post</button>
+      <button type="button" data-pane="cCheck" role="tab" aria-selected="false">Check in</button>
+      <button type="button" data-pane="cVerse" role="tab" aria-selected="false">Share a verse</button>
+    </div>
+    <form method="post" action="{{ url_for('group_post', gid=grp['id']) }}" class="gr-pane" id="cPost">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="post">
+      <textarea name="body" rows="3" maxlength="4000" placeholder="Say something to the group…" required aria-label="Message"></textarea>
+      <button type="submit" class="pr-add-btn">Post</button>
+    </form>
+    <form method="post" action="{{ url_for('group_post', gid=grp['id']) }}" class="gr-pane" id="cCheck" hidden>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="checkin">
+      {% for key, q in checkin_qs %}<label>{{ q }}<textarea name="q_{{ key }}" rows="2" maxlength="1500"></textarea></label>{% endfor %}
+      <button type="submit" class="pr-add-btn">Check in</button>
+    </form>
+    <form method="post" action="{{ url_for('group_post', gid=grp['id']) }}" class="gr-pane" id="cVerse" hidden>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="verse">
+      <input type="text" name="ref" maxlength="40" placeholder="e.g. Psalm 46:10" required aria-label="Bible reference">
+      <textarea name="body" rows="2" maxlength="2000" placeholder="Why it matters to you (optional)" aria-label="Your note"></textarea>
+      <button type="submit" class="pr-add-btn">Share</button>
+    </form>
+  </section>
+  <div class="gr-feed">
+    {% for p in posts %}{{ post_card(p, 'talk') }}{% else %}
+    <div class="gw-empty"><p><b>Nothing here yet</b></p><p>Start the conversation: say hello, share a verse, or check in.</p></div>
+    {% endfor %}
+  </div>
+
+  {# ------------------------------------------------ PRAY #}
+  {% elif tab == 'pray' %}
+  <form method="post" action="{{ url_for('group_post', gid=grp['id']) }}" class="gr-compose gr-pane">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="prayer">
+    <label for="gpPray" class="bible-h2" style="margin:0">Ask the group to pray</label>
+    <textarea id="gpPray" name="body" rows="3" maxlength="4000" placeholder="What would you like prayer for?" required></textarea>
+    <button type="submit" class="pr-add-btn">Ask for prayer</button>
+    <p class="gw-note">Only people in this group will see it.</p>
+  </form>
+  <div class="gr-feed">
+    {% for p in praying %}{{ post_card(p, 'pray') }}{% else %}
+    <div class="gw-empty"><p><b>No prayer requests yet</b></p><p>Share what’s on your heart, and pray for each other.</p></div>
+    {% endfor %}
+  </div>
+  {% if answered %}
+  <h2 class="bible-h2">Answered prayer</h2>
+  <div class="gr-feed">{% for p in answered %}{{ post_card(p, 'pray') }}{% endfor %}</div>
+  {% endif %}
+
+  {# ------------------------------------------------ READ #}
+  {% elif tab == 'read' %}
+  {% if plan %}
+  <section class="gr-plan" id="grPlan" data-slug="{{ plan.slug }}" data-start="{{ plan.start }}">
+    <p class="gw-k">Reading together</p>
+    <h2 class="gw-h1">{{ plan.emoji }} {{ plan.title }}</h2>
+    <p class="gr-plan-meta">{{ plan.total }} days · started {{ plan.start|pretty_date }}</p>
+    {% if plan.today %}
+    <a class="gr-today" href="{{ plan.today_href }}">
+      <span class="gr-today-k">Today · Day {{ plan.today }}</span>
+      <span class="gr-today-t">{{ plan.today_label }}</span>
+      <span class="gr-today-cta">Read now →</span>
+    </a>
+    {% elif plan.finished %}<p class="gw-p">The plan has finished. Well done, everyone!</p>
+    {% else %}<p class="gw-p">It starts {{ plan.start|pretty_date }}.</p>{% endif %}
+    <div class="gr-join" id="grJoin" hidden>
+      <p>Join in to follow the plan on the same days as everyone else. Your progress will show here.</p>
+      <button type="button" class="ps-go" id="grJoinBtn">Join the plan</button>
+    </div>
+  </section>
+
+  {% if plan.people %}
+  <h2 class="bible-h2">How everyone’s getting on</h2>
+  <ul class="gr-progress">
+    {% for r in plan.people %}
+    <li class="{{ 'me' if r.me }}">
+      <span class="gr-pname">{{ r.name }}{% if r.me %} (you){% endif %}</span>
+      {% if r.hidden %}<span class="gr-pstat">keeps progress private</span>
+      {% elif not r.joined %}<span class="gr-pstat">not following yet</span>
+      {% else %}
+      <span class="gr-pbar"><i style="width:{{ [r.pct, 2]|max }}%"></i></span>
+      <span class="gr-pstat">{{ r.done }}/{{ plan.total }} · {{ r.status }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="gw-note">Progress comes from each person’s own app when they’re signed in, so it can take a moment to catch up.</p>
+  {% endif %}
+
+  {% if plan.today %}
+  <h2 class="bible-h2">Talk about Day {{ plan.today }}</h2>
+  <form method="post" action="{{ url_for('group_post', gid=grp['id']) }}" class="gr-compose gr-pane">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="post">
+    <input type="hidden" name="plan_day" value="{{ plan.today }}"><input type="hidden" name="tab" value="read">
+    <textarea name="body" rows="2" maxlength="4000" placeholder="What stood out to you in today’s reading?" required aria-label="Your thoughts on today’s reading"></textarea>
+    <button type="submit" class="pr-add-btn">Post</button>
+  </form>
+  <div class="gr-feed">{% for p in day_posts %}{{ post_card(p, 'read') }}{% endfor %}</div>
+  {% endif %}
+
+  {% if is_leader %}
+  <details class="gw-more gr-lead"><summary>Change or stop the plan</summary>
+    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="plan">
+      <button type="submit" name="clear" value="1" class="gw-btn" onclick="return confirm('Stop reading this plan as a group?');">Stop the group plan</button>
+    </form>
+  </details>
+  {% endif %}
+
+  {% else %}
+  <div class="gw-empty"><p><b>No plan yet</b></p><p>{% if is_leader %}Choose a plan for the group to read together.{% else %}A group leader can choose a plan to read together.{% endif %}</p></div>
+  {% endif %}
+
+  {% if is_leader and (not plan) %}
+  <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form gr-box">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="plan">
+    <label>Plan<select name="slug" required>
+      {% for p in plans %}<option value="{{ p.slug }}">{{ p.emoji }} {{ p.title }} ({{ p.length }} days)</option>{% endfor %}
+    </select></label>
+    <label>Start on<input type="date" name="start" value="{{ today_iso or '' }}" required></label>
+    <button type="submit" class="ps-go">Read this together</button>
+  </form>
+  {% endif %}
+
+  {# ------------------------------------------------ LEARN #}
+  {% elif tab == 'learn' %}
+  {% if grp['verse_key'] %}
+  <section class="gr-verse">
+    <p class="gw-k">Learning together</p>
+    {{ scripture(verse, 'big gold', false) }}
+    {% if grp['verse_note'] %}<p class="gw-p">{{ grp['verse_note'] }}</p>{% endif %}
+    <a class="ps-go" href="{{ verse_learn_href }}">Practise it</a>
+  </section>
+  <h2 class="bible-h2">Who’s learning it</h2>
+  <ul class="gr-learners">
+    {% for r in learners %}
+    <li><span>{{ r.name }}{% if r.me %} (you){% endif %}</span>
+      <span class="gr-lstat s-{{ r.status }}">{{ {'known': 'Knows it ✓', 'learning': 'Learning', 'added': 'Added', 'not-started': 'Not started'}[r.status] }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="gw-empty"><p><b>No verse yet</b></p><p>{% if is_leader %}Choose a verse for the group to learn by heart together.{% else %}A group leader can choose a verse to learn together.{% endif %}</p></div>
+  {% endif %}
+  {% if is_leader %}
+  <details class="gw-more gr-lead" {{ 'open' if not grp['verse_key'] }}><summary>{{ 'Choose a different verse' if grp['verse_key'] else 'Choose a verse' }}</summary>
+    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="verse">
+      <label>Verse<input type="text" name="ref" maxlength="40" required placeholder="e.g. Joshua 1:9"></label>
+      <label>A note (optional)<input type="text" name="note" maxlength="280" placeholder="Why this one?"></label>
+      <button type="submit" class="ps-go">Learn this together</button>
+      {% if grp['verse_key'] %}<button type="submit" name="clear" value="1" class="gw-btn">Clear the verse</button>{% endif %}
+    </form>
+  </details>
+  {% endif %}
+
+  {# ------------------------------------------------ PEOPLE #}
+  {% elif tab == 'people' %}
+  <section class="gr-inviteb">
+    <h2 class="bible-h2">Invite people</h2>
+    <p class="gw-p">Send this link to people you’d like in the group. Anyone with it can join, so share it only with them.</p>
+    <div class="gr-code"><span>Code</span><b>{{ grp['invite_code'] }}</b></div>
+    <div class="gr-acts">
+      <button type="button" class="gw-btn" id="grShare" data-url="{{ invite_url }}" data-name="{{ grp['name'] }}">{{ icon('message', 16) }} Send the invite</button>
+      <button type="button" class="gw-btn" id="grCopy" data-url="{{ invite_url }}">Copy link</button>
+    </div>
+  </section>
+
+  <h2 class="bible-h2">Members</h2>
+  <ul class="gr-members">
+    {% for p in people %}
+    <li>
+      <span class="gp-avatar" aria-hidden="true">{{ (p.name or 'A')[:1]|upper }}</span>
+      <span class="gr-mname"><b>{{ p.name or 'A member' }}{% if p.member_id == me['id'] %} (you){% endif %}</b>{% if p.role == 'leader' %}<small>Leader</small>{% endif %}</span>
+      {% if is_leader and p.member_id != me['id'] %}
+      <details class="gp-menu"><summary aria-label="Options for {{ p.name or 'this member' }}">⋯</summary><div class="gp-menu-list">
+        {% if p.role != 'leader' %}<form method="post" action="{{ url_for('group_member_action', gid=grp['id'], mid=p.member_id, action='leader') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Make a leader</button></form>
+        {% else %}<form method="post" action="{{ url_for('group_member_action', gid=grp['id'], mid=p.member_id, action='member') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Stop being a leader</button></form>{% endif %}
+        <form method="post" action="{{ url_for('group_member_action', gid=grp['id'], mid=p.member_id, action='remove') }}" onsubmit="return confirm('Remove {{ p.name or 'this member' }} from the group?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Remove from group</button></form>
+      </div></details>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  <section class="gr-box">
+    <h2 class="bible-h2">Your settings</h2>
+    <form method="post" action="{{ url_for('group_member_action', gid=grp['id'], mid=me['id'], action='sharing') }}" class="gr-toggle">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <span><b>Share my progress</b><small>Others see how you’re getting on with the group’s plan and verse.</small></span>
+      <button type="submit" class="gr-switch{{ ' on' if mem['share_progress'] }}" aria-pressed="{{ 'true' if mem['share_progress'] else 'false' }}" aria-label="Share my progress"><i></i></button>
+    </form>
+    <p class="gw-note"><a href="{{ url_for('notification_settings') }}">Notifications</a>: turn on “Your groups” to hear about new posts and prayer requests.</p>
+  </section>
+
+  {% if is_leader %}
+  <details class="gw-more gr-lead"><summary>Group details</summary>
+    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="details">
+      <label>Name<input type="text" name="name" maxlength="80" value="{{ grp['name'] }}" required></label>
+      <label>Kind<select name="kind">{% for k, n, e in kinds %}<option value="{{ k }}" {{ 'selected' if grp['kind'] == k }}>{{ e }} {{ n }}</option>{% endfor %}</select></label>
+      <label>About<textarea name="about" rows="2" maxlength="400">{{ grp['about'] or '' }}</textarea></label>
+      <button type="submit" class="ps-go">Save</button>
+    </form>
+    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form" onsubmit="return confirm('Make a new invite link? The old one will stop working.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="invite">
+      <button type="submit" class="gw-btn">Make a new invite link</button>
+    </form>
+    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form" onsubmit="return confirm('Close this group for everyone? Members will no longer be able to see it.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="delete">
+      <button type="submit" class="gw-btn gr-danger">Close the group</button>
+    </form>
+  </details>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('group_leave', gid=grp['id']) }}" onsubmit="return confirm('Leave {{ grp['name'] }}?');" class="gr-leave">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="ps-link">Leave this group</button>
+  </form>
+  {% endif %}
+</main>
+<script src="{{ url_for('static', filename='plans.js') }}"></script>
+<script src="{{ url_for('static', filename='groups.js') }}"></script>
+{% endblock %}

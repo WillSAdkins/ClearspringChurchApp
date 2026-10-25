@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% set show_back = false %}{# this page draws its own back link #}
+{% block title %}Your data · Clearspring admin<style>
+  .data-label { display: block; font-weight: 600; margin-bottom: .35rem; }
+  .data-choice { display: grid; gap: 1rem; }
+  @media (min-width: 40rem) { .data-choice { grid-template-columns: 1fr 1fr; } }
+  .data-choice .empty-sub { margin-top: .5rem; line-height: 1.55; }
+</style>
+{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area</p>
+      <h1>Your data</h1>
+    </div>
+    <div class="admin-actions">
+      <a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a>
+    </div>
+  </div>
+
+  <section class="admin-panel">
+    <h2 class="section-label">Where it's stored</h2>
+    <p class="empty-sub" style="line-height:1.6; margin-bottom:.75rem;">
+      Everything you enter is kept in a single file, stored <strong>outside</strong>
+      the app folder. That means you can replace the app with a newer version
+      without losing anything.
+    </p>
+    <p class="data-path">{{ db_path }}</p>
+    <p class="empty-sub" style="margin-top:.5rem;">{{ db_size_kb }} KB</p>
+    {% if disk_free_mb is not none %}
+    <p class="empty-sub" style="margin-top:.375rem;">
+      Disk: {{ disk_free_mb }} MB free of {{ disk_total_mb }} MB
+      {%- if disk_used_pct is not none %} ({{ disk_used_pct }}% used){% endif %}
+    </p>
+    {% if disk_used_pct is not none and disk_used_pct >= 85 %}
+    <p style="margin-top:.5rem;padding:.5rem .75rem;border-radius:0.5rem;
+              background:#fdf0e6;color:#7a3f10;font-size:0.85rem;">
+      <strong>Disk is nearly full.</strong> If it runs out, saving will start
+      failing and the database can be damaged. Download a backup now, then
+      increase the disk size in your Render dashboard.
+    </p>
+    {% endif %}
+    {% endif %}
+  </section>
+
+  <section class="admin-panel" style="margin-top:1.5rem;">
+    <h2 class="section-label">What's in it</h2>
+    <div class="notif-counts">
+      {% for label, n in counts.items() %}
+        <div class="notif-count-row"><span>{{ label }}</span><strong>{{ n }}</strong></div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="admin-panel" style="margin-top:1.5rem;">
+    <h2 class="section-label">Back up</h2>
+    <p class="empty-sub" style="line-height:1.6; margin-bottom:1rem;">
+      Download a complete copy. Worth doing before any big change, and worth
+      keeping one somewhere other than this computer.
+    </p>
+    <a href="{{ url_for('admin_backup') }}" class="btn-primary" style="width:auto; display:inline-block;">
+      Download backup
+    </a>
+  </section>
+
+  <section class="admin-panel" style="margin-top:1.5rem;">
+    <h2 class="section-label">Bring back data from a backup</h2>
+    <p class="empty-sub" style="line-height:1.6; margin-bottom:1rem;">
+      Choose a backup file, then how to use it. Either way, a copy of what's here now is kept on the server first (see “Safety copies” below), so you can always go back.
+    </p>
+    <form method="post" enctype="multipart/form-data" id="restoreForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="backupFile" class="data-label">Backup file</label>
+      <input type="file" id="backupFile" name="backup" accept=".db" required style="width:100%; margin-bottom:1rem;">
+      <div class="data-choice">
+        <div>
+          <button type="submit" formaction="{{ url_for('admin_merge') }}" class="btn-primary" style="width:auto;">Merge into current data</button>
+          <p class="empty-sub">Keeps everything here now and adds anything in the backup that's missing. You'll see what would be added before anything changes. Use this to recover from a crash, one old copy at a time.</p>
+        </div>
+        <div>
+          <button type="submit" formaction="{{ url_for('admin_restore') }}" class="btn-danger" style="width:auto;"
+                  onclick="return confirm('Replace ALL current data with this backup? Anything added since it was made will be gone (a safety copy is kept).');">Replace everything</button>
+          <p class="empty-sub">Makes the app exactly as it was when the backup was made.</p>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="admin-panel" style="margin-top:1.5rem;">
+    <h2 class="section-label">Safety copies</h2>
+    <p class="empty-sub" style="line-height:1.6; margin-bottom:.75rem;">
+      Made automatically just before every restore or merge, and kept on the server (the newest five of each). Download one to keep, or go back to it.
+    </p>
+    {% if not copies %}<p class="empty-sub">None yet.</p>{% endif %}
+    <div class="admin-table">
+      {% for c in copies %}
+      <div class="admin-row">
+        <div class="admin-row-main">
+          <strong>Before {{ {'restore': 'a restore', 'merge': 'a merge', 'undo': 'going back'}[c.kind] }}</strong>
+          <span class="admin-row-loc">{{ c.when.strftime('%-d %b %Y, %H:%M') }} · {{ c.size_kb }} KB</span>
+        </div>
+        <div class="admin-row-actions">
+          <a href="{{ url_for('admin_saved_copy', name=c.name) }}" class="btn-ghost small">Download</a>
+          <form method="post" action="{{ url_for('admin_saved_copy', name=c.name) }}"
+                onsubmit="return confirm('Go back to this copy? What is here now will be kept as another safety copy.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" name="action" value="restore" class="btn-ghost small">Go back to this</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+<style>
+  .data-label { display: block; font-weight: 600; margin-bottom: .35rem; }
+  .data-choice { display: grid; gap: 1rem; }
+  @media (min-width: 40rem) { .data-choice { grid-template-columns: 1fr 1fr; } }
+  .data-choice .empty-sub { margin-top: .5rem; line-height: 1.55; }
+</style>
+{% endblock %}

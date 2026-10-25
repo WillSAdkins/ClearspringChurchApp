@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% set show_back = false %}{# this page draws its own back link #}
+{% block title %}Admin · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area{% if staff_name() %} · {{ staff_name() }}{% endif %}</p>
+      <h1>The board</h1>
+    </div>
+    <div class="admin-actions">
+      {% if can_open('admin_status') %}<a href="{{ url_for('admin_status') }}" class="btn-ghost">Status</a>{% endif %}
+      {% if can_open('admin_email') %}<a href="{{ url_for('admin_email') }}" class="btn-ghost">Email</a>{% endif %}
+      {% if can_open('admin_home') %}<a href="{{ url_for('admin_home') }}" class="btn-ghost">Home</a>{% endif %}
+      {% if can_open('admin_visit') %}<a href="{{ url_for('admin_visit') }}" class="btn-ghost">Visit</a>{% endif %}
+      {% if can_open('admin_popups') %}<a href="{{ url_for('admin_popups') }}" class="btn-ghost">Pop-ups</a>{% endif %}
+      {% if can_open('admin_college') %}<a href="{{ url_for('admin_college') }}" class="btn-ghost">Bible College</a>{% endif %}
+      {% if can_open('admin_pictures') %}<a href="{{ url_for('admin_pictures') }}" class="btn-ghost">Pictures</a>{% endif %}
+      {% if can_open('admin_data') %}<a href="{{ url_for('admin_data') }}" class="btn-ghost">Data</a>{% endif %}
+      {% if can_open('admin_notifications') %}<a href="{{ url_for('admin_notifications') }}" class="btn-ghost">Notify</a>{% endif %}
+      {% if can_open('admin_members') %}<a href="{{ url_for('admin_members') }}" class="btn-ghost">Members</a>{% endif %}
+      {% if can_open('admin_resources') %}<a href="{{ url_for('admin_resources') }}" class="btn-ghost">Resources</a>{% endif %}
+      {% if can_open('admin_ministries') %}<a href="{{ url_for('admin_ministries') }}" class="btn-ghost">Ministries</a>{% endif %}
+      {% if can_open('admin_store') %}<a href="{{ url_for('admin_store') }}" class="btn-ghost">Store</a>{% endif %}
+      {% if can_open('admin_giving') %}<a href="{{ url_for('admin_giving') }}" class="btn-ghost">Giving</a>{% endif %}
+      {% if can_open('admin_sermons') %}<a href="{{ url_for('admin_sermons') }}" class="btn-ghost">Sermons</a>{% endif %}
+      {% if can_open('admin_watch_library') %}<a href="{{ url_for('admin_watch_library') }}" class="btn-ghost">Watch library</a>{% endif %}
+      {% if can_open('admin_polls') %}<a href="{{ url_for('admin_polls') }}" class="btn-ghost">Polls</a>{% endif %}
+      {% if can_open('admin_prayers') %}<a href="{{ url_for('admin_prayers') }}" class="btn-ghost">Prayer{% if held_count %} ({{ held_count }}){% endif %}</a>{% endif %}
+      {% if can_open('admin_questions') %}<a href="{{ url_for('admin_questions') }}" class="btn-ghost">Questions{% if pending_count %} ({{ pending_count }}){% endif %}</a>{% endif %}
+      {% if can_open('admin_devotionals') %}<a href="{{ url_for('admin_devotionals') }}" class="btn-ghost">Devotionals</a>{% endif %}
+      {% if can_open('admin_church_plan') %}<a href="{{ url_for('admin_church_plan') }}" class="btn-ghost">Reading plan</a>{% endif %}
+      {% if can_open('admin_stories') %}<a href="{{ url_for('admin_stories') }}" class="btn-ghost">Stories{% if story_count %} ({{ story_count }}){% endif %}</a>{% endif %}
+      {% if can_open('admin_next_steps') %}<a href="{{ url_for('admin_next_steps') }}" class="btn-ghost">Next steps</a>{% endif %}
+      {% if can_open('admin_groups') %}<a href="{{ url_for('admin_groups') }}" class="btn-ghost">Groups{% if report_count %} ({{ report_count }}){% endif %}</a>{% endif %}
+      {% if can_open('new_event') %}<a href="{{ url_for('new_event') }}" class="btn-primary">+ Add event</a>{% endif %}
+      {% if is_owner() %}<a href="{{ url_for('admin_staff') }}" class="btn-ghost">Staff</a>{% else %}<a href="{{ url_for('admin_my_account') }}" class="btn-ghost">My account</a>{% endif %}
+      <a href="{{ url_for('logout') }}" class="btn-ghost">Sign out</a>
+    </div>
+  </div>
+
+  {% set missing = data_missing() %}
+  {% if missing and is_owner() %}
+  <div class="admin-alert" style="margin:0 0 1.25rem">
+    <strong>Some Bible features are switched off because their data files are missing on the server:</strong>
+    {{ missing|map(attribute='feature')|join('; ') }}.
+    Upload {{ missing|map(attribute='zip')|unique|join(' and ') }} again. <a href="{{ url_for('admin_status') }}#bible-data">See details</a>
+  </div>
+  {% endif %}
+  <div class="admin-table">
+    {% if not events %}
+      <p class="empty-sub">No events yet. Add the first one.</p>
+    {% endif %}
+    {% for e in events %}
+      <div class="admin-row">
+        <div class="admin-row-date">
+          <span class="mono">{{ e['event_date'] }}</span>
+          <span class="mono">{{ e['event_time'] }}</span>
+        </div>
+        <div class="admin-row-main">
+          <span class="card-tag">{{ e['category'] }}</span>
+          <strong>{{ e['title'] }}</strong>
+          {% if e['location'] %}<span class="admin-row-loc">{{ e['location'] }}</span>{% endif %}
+        </div>
+        {% if can_open('edit_event') %}
+        <div class="admin-row-actions">
+          <a href="{{ url_for('edit_event', event_id=e['id']) }}" class="btn-ghost small">Edit</a>
+          <form method="post" action="{{ url_for('delete_event', event_id=e['id']) }}"
+                onsubmit="return confirm('Remove this event?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-danger small">Delete</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <a class="back-link" href="{{ url_for('index') }}">← View public page</a>
+</main>
+{% endblock %}
