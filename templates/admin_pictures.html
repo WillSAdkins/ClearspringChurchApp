@@ -7,18 +7,18 @@
     <div><p class="eyebrow">Staff area</p><h1>Page pictures</h1></div>
     <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Board</a></div>
   </div>
-  <p class="pc-lead">Each main page has an illustrated banner that moves as people scroll. Upload a photo of the church for any page and it's used instead, with the same movement. Wide, landscape photos work best; they're resized on your device before uploading. Only use photos you have permission to use, and ask before showing children's faces.</p>
+  <p class="pc-lead">Each main page has an illustrated banner that moves as people scroll. Upload a photo of the church for any page and it's used instead, with the same movement. The home screen's tiles and cards take a photo each too (square-ish photos suit the tiles); until then they show an icon. Wide, landscape photos work best; they're resized on your device before uploading. Only use photos you have permission to use, and ask before showing children's faces.</p>
 
   <div class="pc-grid">
     {% for p in pages %}
     <section class="pc-card" id="p-{{ p.key }}">
       <div class="pc-preview">
-        {% if p.photo %}<img src="{{ p.photo }}" alt="">{% elif p.scene %}<div class="pc-scene">{{ p.scene }}</div>{% else %}<img src="{{ url_for('static', filename='hero-worship.jpg') }}" alt="">{% endif %}
+        {% if p.photo %}<img src="{{ p.photo }}" alt="">{% elif p.scene %}<div class="pc-scene">{{ p.scene }}</div>{% elif p.key == 'home' %}<img src="{{ url_for('static', filename='hero-worship.jpg') }}" alt="">{% else %}<div class="pc-none">No photo yet: the tile shows an icon</div>{% endif %}
         {% if p.line %}<span class="pc-line">{{ p.line }}</span>{% endif %}
       </div>
       <div class="pc-body">
         <b>{{ p.title }}</b>
-        <small>{{ 'Your photo' if p.photo else ('The original worship photo' if p.key == 'home' else 'Illustration') }}</small>
+        <small>{{ 'Your photo' if p.photo else ('The original worship photo' if p.key == 'home' else ('Icon' if p.key.startswith(('tile-', 'card-')) else 'Illustration')) }}</small>
         <form method="post" enctype="multipart/form-data" class="pc-upload" data-key="{{ p.key }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="key" value="{{ p.key }}">
@@ -45,6 +45,7 @@
   .pc-preview { position: relative; height: 8.5rem; overflow: hidden; background: var(--surface-2); }
   .pc-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .pc-scene { position: absolute; inset: 0; }
+  .pc-none { position: absolute; inset: 0; display: grid; place-items: center; padding: 1rem; text-align: center; font-size: var(--fs-sm); color: var(--muted); background: var(--tone); }
   .pc-scene .sc-layer { position: absolute; inset: 0; width: 100%; height: 100%; }
   .pc-line { position: absolute; left: .75rem; right: .75rem; bottom: .5rem; color: #fff; font: 600 var(--fs-sm) var(--display); text-shadow: 0 1px 8px rgba(0,0,0,.5); }
   .pc-body { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .75rem; }

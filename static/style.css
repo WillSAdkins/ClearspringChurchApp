@@ -15,30 +15,30 @@
 @font-face { font-family: "Instrument Serif"; src: url("fonts/instrument-serif-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 
 :root {
-  --bg: #F2F2F2;          /* the 60%: light grey page (dark mode: #5A5A5A) */
+  --bg: #F2F3F5;          /* the 60%: light page (dark mode: deep black #0F0F0F) */
   --surface: #FFFFFF;
-  --surface-2: #E9E9E9;
-  --ink: #1E1E1E;
-  --muted: #4F4F4F;
-  --line: #D4D4D4;
+  --surface-2: #E9EBEE;
+  --ink: #16181B;
+  --muted: #4F5359;
+  --line: #D9DCE1;
   --white: #FFFFFF;
-  --accent: #005A9E;      /* the 10%: blue for links and text, 4.9:1 on --tone */
-  --accent-soft: #2F8FD8;
+  --accent: #0A63C9;      /* the 10%: blue for links and text (dark mode: #4A9EFF) */
+  --accent-soft: #1685FF;
   --on-accent: #FFFFFF;
-  --accent-fill: #006EC2; /* buttons and selected things: blue, white text 5.2:1 */
+  --accent-fill: #0B6FE0; /* buttons: blue #0B6FE0, white text 4.8:1 */
   --on-accent-fill: #FFFFFF;
-  --spring: #0191A1;      /* second blue: dots, bars, progress */
-  --wash: rgba(0,110,194,0.12);
-  --tone: #D6D6D6;        /* the 30%: grey feature cards (dark mode: #AFAFAF) */
-  --tone-line: #C4C4C4;
-  --glass: rgba(255,255,255,0.85);
-  --quest-deep: #2B2B2B;
-  --quest-mid: #3D5A73;
-  --quest-ember: #4FB3FF;
+  --spring: #1685FF;      /* electric blue #1685FF: bars, dots, active tab */
+  --wash: rgba(22,133,255,0.12);
+  --tone: #E4E6EA;        /* the 30%: cards (dark mode: charcoal #242629) */
+  --tone-line: #D2D5DA;
+  --glass: rgba(255,255,255,0.88);
+  --quest-deep: #0F0F0F;
+  --quest-mid: #1B2A3D;
+  --quest-ember: #4A9EFF;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
   --shadow-md: 0 8px 24px -16px rgba(0,0,0,0.28);
   --shadow-lg: 0 18px 40px -20px rgba(0,0,0,0.38);
-  --invert-bg: #5A5A5A;
+  --invert-bg: #242629;
   --invert-ink: #FFFFFF;
   --invert-muted: rgba(255,255,255,0.75);
   --danger: #B42318;
@@ -68,84 +68,84 @@
   --body: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --label: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --on-tone: #1E1E1E;
-  --tone-muted: #4F4F4F;
-  --tone-accent: #005A9E;
-  --on-spring: #0B1F22;
-  --art-filter: hue-rotate(32deg) saturate(.55);
+  --on-tone: #16181B;
+  --tone-muted: #4F5359;
+  --tone-accent: #0A63C9;
+  --on-spring: #0F0F0F;
+  --art-filter: hue-rotate(37deg) saturate(.7);
 }
 
 [data-theme="dark"] {
-  --bg: #5A5A5A;          /* night water */
-  --surface: #616161;
-  --surface-2: #535353;
+  --bg: #0F0F0F;          /* night water */
+  --surface: #242629;
+  --surface-2: #2E3034;
   --ink: #FFFFFF;
-  --muted: #EFEFEF;
-  --line: #6E6E6E;
-  --white: #616161;
-  --accent: #C4E4FF;
-  --accent-soft: #9FD3FF;
-  --on-accent: #1B1B1B;
-  --accent-fill: #006EC2;
+  --muted: #B8BCC2;
+  --line: #2E3135;
+  --white: #242629;
+  --accent: #4A9EFF;
+  --accent-soft: #7DB9FF;
+  --on-accent: #0F0F0F;
+  --accent-fill: #0B6FE0;
   --on-accent-fill: #FFFFFF;
-  --spring: #0191A1;
-  --wash: rgba(0,110,194,0.22);
-  --tone: #AFAFAF;
-  --tone-line: #9E9E9E;
-  --glass: rgba(78,78,78,0.92);
-  --quest-deep: #2B2B2B;
-  --quest-mid: #3D5A73;
-  --quest-ember: #4FB3FF;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.25);
-  --shadow-md: 0 10px 26px -16px rgba(0,0,0,0.5);
-  --shadow-lg: 0 18px 40px -18px rgba(0,0,0,0.6);
-  --invert-bg: #3A3A3A;
+  --spring: #1685FF;
+  --wash: rgba(22,133,255,0.16);
+  --tone: #242629;
+  --tone-line: #34373B;
+  --glass: rgba(15,15,15,0.92);
+  --quest-deep: #0A0A0A;
+  --quest-mid: #1B2A3D;
+  --quest-ember: #4A9EFF;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-md: 0 10px 26px -16px rgba(0,0,0,0.8);
+  --shadow-lg: 0 18px 40px -18px rgba(0,0,0,0.9);
+  --invert-bg: #2E3034;
   --invert-ink: #FFFFFF;
   --invert-muted: rgba(255,255,255,0.75);
-  --danger: #FFDAD6;
-  --success: #C6F6CC;
-  --on-tone: #1B1B1B;
-  --tone-muted: #383838;
-  --tone-accent: #003F73;
-  --on-spring: #0B1F22;
-  --art-filter: hue-rotate(32deg) saturate(.55) brightness(.9);
+  --danger: #FF9C9C;
+  --success: #7EE2A0;
+  --on-tone: #FFFFFF;
+  --tone-muted: #B8BCC2;
+  --tone-accent: #4A9EFF;
+  --on-spring: #0F0F0F;
+  --art-filter: hue-rotate(37deg) saturate(.7) brightness(.85);
 }
 
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] {
-    --bg: #5A5A5A;          /* night water */
-    --surface: #616161;
-    --surface-2: #535353;
+    --bg: #0F0F0F;          /* night water */
+    --surface: #242629;
+    --surface-2: #2E3034;
     --ink: #FFFFFF;
-    --muted: #EFEFEF;
-    --line: #6E6E6E;
-    --white: #616161;
-    --accent: #C4E4FF;
-    --accent-soft: #9FD3FF;
-    --on-accent: #1B1B1B;
-    --accent-fill: #006EC2;
+    --muted: #B8BCC2;
+    --line: #2E3135;
+    --white: #242629;
+    --accent: #4A9EFF;
+    --accent-soft: #7DB9FF;
+    --on-accent: #0F0F0F;
+    --accent-fill: #0B6FE0;
     --on-accent-fill: #FFFFFF;
-    --spring: #0191A1;
-    --wash: rgba(0,110,194,0.22);
-    --glass: rgba(78,78,78,0.92);
-    --quest-deep: #2B2B2B;
-    --quest-mid: #3D5A73;
-    --quest-ember: #4FB3FF;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.25);
-    --shadow-md: 0 10px 26px -16px rgba(0,0,0,0.5);
-    --shadow-lg: 0 18px 40px -18px rgba(0,0,0,0.6);
-    --invert-bg: #3A3A3A;
+    --spring: #1685FF;
+    --wash: rgba(22,133,255,0.16);
+    --glass: rgba(15,15,15,0.92);
+    --quest-deep: #0A0A0A;
+    --quest-mid: #1B2A3D;
+    --quest-ember: #4A9EFF;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+    --shadow-md: 0 10px 26px -16px rgba(0,0,0,0.8);
+    --shadow-lg: 0 18px 40px -18px rgba(0,0,0,0.9);
+    --invert-bg: #2E3034;
     --invert-ink: #FFFFFF;
     --invert-muted: rgba(255,255,255,0.75);
-    --danger: #FFDAD6;
-    --success: #C6F6CC;
-    --tone: #AFAFAF;
-    --tone-line: #9E9E9E;
-    --on-tone: #1B1B1B;
-    --tone-muted: #383838;
-    --tone-accent: #003F73;
-    --on-spring: #0B1F22;
-    --art-filter: hue-rotate(32deg) saturate(.55) brightness(.9);
+    --danger: #FF9C9C;
+    --success: #7EE2A0;
+    --tone: #242629;
+    --tone-line: #34373B;
+    --on-tone: #FFFFFF;
+    --tone-muted: #B8BCC2;
+    --tone-accent: #4A9EFF;
+    --on-spring: #0F0F0F;
+    --art-filter: hue-rotate(37deg) saturate(.7) brightness(.85);
 }
 }
 
@@ -3697,12 +3697,12 @@ mark.hl {
   border: 1px solid var(--line);
 }
 .theme-swatch span { flex: 1; }
-.theme-swatch.light span:first-child { background: #F2F2F2; }
-.theme-swatch.light span:last-child  { background: #006EC2; }
-.theme-swatch.dark  span:first-child { background: #5A5A5A; }
-.theme-swatch.dark  span:last-child  { background: #AFAFAF; }
-.theme-swatch.auto  span:first-child { background: #F2F2F2; }
-.theme-swatch.auto  span:last-child  { background: #5A5A5A; }
+.theme-swatch.light span:first-child { background: #F2F3F5; }
+.theme-swatch.light span:last-child  { background: #1685FF; }
+.theme-swatch.dark  span:first-child { background: #0F0F0F; }
+.theme-swatch.dark  span:last-child  { background: #242629; }
+.theme-swatch.auto  span:first-child { background: #F2F3F5; }
+.theme-swatch.auto  span:last-child  { background: #0F0F0F; }
 
 /* Text size picker */
 .set-row { display: flex; padding: 0 0 .75rem; }
@@ -6024,8 +6024,8 @@ a.il-word:active, a.il-word:hover { border-color: var(--accent); background: var
 @font-face { font-family: "OpenDyslexic"; src: url("fonts/opendyslexic.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "OpenDyslexic"; src: url("fonts/opendyslexic-bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
 :root { --wj: #B42318; }
-[data-theme="dark"] { --wj: #FFD6D6; }
-@media (prefers-color-scheme: dark) { [data-theme="auto"] { --wj: #FFD6D6; } }
+[data-theme="dark"] { --wj: #FF9C9C; }
+@media (prefers-color-scheme: dark) { [data-theme="auto"] { --wj: #FF9C9C; } }
 
 /* Font, spacing, layout */
 .scripture[data-font="sans"] { font-family: var(--body); }
@@ -8716,7 +8716,7 @@ html[data-native] body { overscroll-behavior-y: none; }
    with an accent kicker or button, so the real buttons stand out.
    Pictures (hero photos and illustrations) are content, not UI.
    ============================================================ */
-.devo-feature, .sn-card, .gw-path:not(.alt), .pl-today, .mz-promo, .hs-main, .b3h-wide, .col-custom {
+.devo-feature, .sn-card, .gw-path:not(.alt), .pl-today, .mz-promo, .b3h-wide, .col-custom {
   background: var(--tone); color: var(--on-tone, var(--ink)); border-color: var(--tone-line);
   --ink: var(--on-tone); --muted: var(--tone-muted); --accent: var(--tone-accent);
 }
@@ -8775,3 +8775,48 @@ html[data-native] body { overscroll-behavior-y: none; }
 
 /* The verse sheet sits on --invert-bg: its reference uses the inverted ink. */
 .vsheet-ref { color: var(--invert-muted); }
+
+
+/* ============================================================
+   Home screen, Fin's design (v48): photo tiles and cards.
+   Each tile and card takes a photo from Admin → Pictures; without
+   one it shows its icon on the charcoal card colour.
+   ============================================================ */
+.sw-hero-actions .sw-cta { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; }
+.sw-hero-actions .sw-cta .icn { flex: none; }
+
+.continue-card.hc-pic-card { padding: 0; gap: 0; overflow: hidden; align-items: stretch; background: var(--tone); border-color: var(--tone-line); color: var(--on-tone); }
+.continue-card.hc-pic-card::before { display: none; }
+.hc-pic { flex: 0 0 34%; position: relative; min-height: 6.5rem; display: grid; place-items: center; background: var(--wash); color: var(--tone-accent); }
+.hc-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hc-pic-card .continue-body { padding: .9rem 0 .9rem 1rem; justify-content: center; }
+.hc-pic-card .continue-ref { font-family: var(--display); font-size: var(--fs-lg); color: var(--on-tone); }
+.hc-pic-card .continue-label, .hc-pic-card .continue-note { color: var(--tone-muted); }
+.hc-pic-card > .icn { align-self: center; margin: 0 .9rem 0 .5rem; color: var(--on-tone); }
+
+.hs { gap: .6rem; }
+.hs-tile { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 0;
+  min-height: 9.25rem; padding: .7rem .7rem .75rem; background: var(--tone); border: 1px solid var(--tone-line); color: var(--on-tone); }
+.hs-tile .hs-icon { position: absolute; top: .7rem; left: .7rem; margin: 0; background: var(--wash); color: var(--tone-accent); }
+.hs-text { position: relative; z-index: 1; display: grid; gap: .1rem; padding-right: 1.1rem; min-width: 0; }
+.hs-tile b { font: 650 var(--fs-base) var(--body); line-height: 1.2; }
+.hs-tile small { color: var(--tone-muted); }
+.hs-go { position: absolute; right: .45rem; bottom: .8rem; z-index: 1; color: var(--tone-muted); display: flex; }
+.hs-key::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--spring); z-index: 2; }
+.hs-photo { border-color: transparent; color: #FFFFFF; background: #1B1D20; }
+.hs-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hs-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,.55) 60%, rgba(0,0,0,.85)); }
+.hs-photo .hs-icon { display: none; }
+.hs-photo small, .hs-photo .hs-go { color: rgba(255,255,255,.88); }
+@media (max-width: 360px) { .hs-tile { min-height: 8.25rem; } .hs-tile b { font-size: var(--fs-sm); } }
+
+.hw { background: var(--tone); border-color: var(--tone-line); color: var(--on-tone); --ink: var(--on-tone); --muted: var(--tone-muted); --accent: var(--tone-accent);
+  --h-prayer: var(--spring); --h-scripture: var(--spring); --h-study: var(--spring); }
+[data-theme="dark"] .hw { --h-prayer: var(--spring); --h-scripture: var(--spring); --h-study: var(--spring); }
+@media (prefers-color-scheme: dark) { [data-theme="auto"] .hw { --h-prayer: var(--spring); --h-scripture: var(--spring); --h-study: var(--spring); } }
+.hw-main { display: grid; gap: .6rem; min-width: 0; }
+.hw .hw-bar { background: var(--surface-2); }
+.hw.hw-has-pic { grid-template-columns: 30% 1fr; padding: 0; gap: 0; overflow: hidden; }
+.hw-pic { position: relative; min-height: 100%; }
+.hw-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hw-has-pic .hw-main { padding: .95rem 1rem; }

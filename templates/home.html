@@ -14,8 +14,8 @@
     <p class="sw-hero-when" data-load>{{ hero.home_eyebrow }}</p>
     <p class="sw-hero-where" data-load>{{ hero.home_sub }}</p>
     <div class="sw-hero-actions" data-load>
-      <a href="{{ url_for('plan_visit') }}" class="btn-primary sw-cta">{{ hero.home_cta }}</a>
-      <a href="https://www.google.com/maps/search/?api=1&query={{ hero.home_sub | urlencode }}" class="btn-ghost sw-cta" target="_blank" rel="noopener">Directions</a>
+      <a href="{{ url_for('plan_visit') }}" class="btn-primary sw-cta">{{ icon('calendar', 20) }}{{ hero.home_cta }}</a>
+      <a href="https://www.google.com/maps/search/?api=1&query={{ hero.home_sub | urlencode }}" class="btn-ghost sw-cta" target="_blank" rel="noopener">{{ icon('compass', 20) }}Directions</a>
     </div>
   </div>
 </header>
@@ -31,7 +31,9 @@
   {% endif %}
 
   <!-- Continue where they left off -->
-  <a href="#" id="continueCard" class="continue-card" hidden>
+  {% set cp = page_photo('card-continue') %}
+  <a href="#" id="continueCard" class="continue-card hc-pic-card" hidden>
+    <span class="hc-pic">{% if cp %}<img src="{{ cp }}" alt="" loading="lazy">{% else %}<span class="hc-pic-icon">{{ icon('book', 30) }}</span>{% endif %}</span>
     <span class="continue-body">
       <span class="continue-label">Continue reading</span>
       <span class="continue-ref" id="continueRef"></span>
@@ -47,19 +49,30 @@
   </form>
 
   <!-- Shortcuts: straight into the Bible and prayer -->
+  {% set tiles = [
+    ('tile-bible', url_for('bible_tab'), 'book', 'Bible', 'Open and read', 'hsBible'),
+    ('tile-today', url_for('bible_today'), 'sunrise', 'Today', "Today's reading", ''),
+    ('tile-listen', url_for('bible_listen'), 'headphones', 'Listen', 'The audio Bible', ''),
+    ('tile-pray', url_for('prayer_session'), 'hands', 'Pray now', 'A guided few minutes', ''),
+    ('tile-ask', url_for('prayer_new'), 'heart', 'Ask for prayer', 'Public or private', ''),
+    ('tile-wall', url_for('prayer_wall'), 'users', 'Prayer wall', 'Pray for others', ''),
+  ] %}
   <nav class="hs" aria-label="Shortcuts">
-    <a class="hs-tile hs-main" href="{{ url_for('bible_tab') }}" id="hsBible">
-      <span class="hs-icon">{{ icon('book', 22) }}</span><b>Bible</b><small id="hsBibleSub">Open and read</small>
+    {% for key, href, ic, name, sub, id in tiles %}{% set ph = page_photo(key) %}
+    <a class="hs-tile{{ ' hs-photo' if ph }}{{ ' hs-key' if loop.first }}" href="{{ href }}"{% if id %} id="{{ id }}"{% endif %}>
+      {% if ph %}<img class="hs-img" src="{{ ph }}" alt="" loading="lazy">{% endif %}
+      <span class="hs-icon">{{ icon(ic, 22) }}</span>
+      <span class="hs-text"><b>{{ name }}</b><small{% if id %} id="hsBibleSub"{% endif %}>{{ sub }}</small></span>
+      <span class="hs-go">{{ icon('chevron-right', 18) }}</span>
     </a>
-    <a class="hs-tile" href="{{ url_for('bible_today') }}"><span class="hs-icon">{{ icon('sunrise', 22) }}</span><b>Today</b><small>Today's reading</small></a>
-    <a class="hs-tile" href="{{ url_for('bible_listen') }}"><span class="hs-icon">{{ icon('headphones', 22) }}</span><b>Listen</b><small>The audio Bible</small></a>
-    <a class="hs-tile hs-main" href="{{ url_for('prayer_session') }}"><span class="hs-icon">{{ icon('hands', 22) }}</span><b>Pray now</b><small>A guided few minutes</small></a>
-    <a class="hs-tile" href="{{ url_for('prayer_new') }}"><span class="hs-icon">{{ icon('heart', 22) }}</span><b>Ask for prayer</b><small>Public or private</small></a>
-    <a class="hs-tile" href="{{ url_for('prayer_wall') }}"><span class="hs-icon">{{ icon('users', 22) }}</span><b>Prayer wall</b><small>Pray for others</small></a>
+    {% endfor %}
   </nav>
 
   <!-- Your week with God: a glance at prayer, scripture and study -->
-  <a class="hw" href="{{ url_for('discipleship') }}" id="hwCard">
+  {% set wp = page_photo('card-week') %}
+  <a class="hw{{ ' hw-has-pic' if wp }}" href="{{ url_for('discipleship') }}" id="hwCard">
+    {% if wp %}<span class="hw-pic"><img src="{{ wp }}" alt="" loading="lazy"></span>{% endif %}
+    <span class="hw-main">
     <span class="hw-top"><b>Your week with God</b><span class="hw-go">My discipleship {{ icon('chevron-right', 16) }}</span></span>
     <span class="hw-rows" id="hwRows">
       <span class="hw-row dp-prayer"><span>Prayer</span><span class="hw-bar"><i></i></span><small>–</small></span>
@@ -67,6 +80,7 @@
       <span class="hw-row dp-study"><span>Study</span><span class="hw-bar"><i></i></span><small>–</small></span>
     </span>
     <span class="hw-sub" id="hwSub">See how you’re growing in prayer and the Bible</span>
+    </span>
   </a>
   <script src="{{ url_for('static', filename='plans.js') }}" defer></script>
   <script src="{{ url_for('static', filename='prayers.js') }}" defer></script>

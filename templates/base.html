@@ -31,8 +31,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="member-signed-in" content="{{ 'true' if member else 'false' }}">
-<meta name="theme-color" content="#F2F2F2" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#5A5A5A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F3F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)">
 <script>
 // Match the phone's status bar to the theme the person picked in Settings,
 // not just the phone's own setting.
@@ -40,14 +40,14 @@
   try {
     var t = localStorage.getItem("cs_theme") || "auto";
     if (t === "auto") return;
-    var c = t === "dark" ? "#5A5A5A" : "#F2F2F2";
+    var c = t === "dark" ? "#0F0F0F" : "#F2F3F5";
     document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
       m.setAttribute("content", c);
     });
   } catch (e) {}
 })();
 </script>
-<script src="{{ url_for('static', filename='palette.js', v='48') }}"></script>
+<script src="{{ url_for('static', filename='palette.js', v='49') }}"></script>
 <title>{% block title %}Clearspring Church, Cheltenham{% endblock %}</title>
 
 <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -57,7 +57,7 @@
 <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ url_for('static', filename='fonts/literata.woff2') }}" as="font" type="font/woff2" crossorigin>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='48') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='49') }}">
 <script>
 // Attach the CSRF token to every same-origin state-changing fetch, so
 // individual scripts don't each have to remember to do it.

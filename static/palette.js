@@ -116,7 +116,7 @@
   function apply(choice) {
     var el = document.getElementById("cs-palette");
     var built = choice ? build(choice) : null;
-    if (!built) { if (el) el.remove(); setMeta("#F2F2F2", "#5A5A5A"); return null; }
+    if (!built) { if (el) el.remove(); setMeta("#F2F3F5", "#0F0F0F"); return null; }
     if (!el) { el = document.createElement("style"); el.id = "cs-palette"; (document.head || document.documentElement).appendChild(el); }
     el.textContent = built.css;
     setMeta(built.light, built.dark);

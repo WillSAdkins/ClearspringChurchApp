@@ -38,14 +38,14 @@
     <p class="set-hint" style="margin-top:0">Pick any colour and the whole app follows it, in light and dark. Text is always kept easy to read.</p>
     <div class="col-now">
       <span class="col-now-dot" id="colNowDot" aria-hidden="true"></span>
-      <span class="col-now-name" id="colNowName">Clearspring grey and blue</span>
+      <span class="col-now-name" id="colNowName">Clearspring blue</span>
       <button type="button" class="btn-ghost small" id="colReset" hidden>Back to the default</button>
     </div>
     <div class="col-named" role="radiogroup" aria-label="Favourite colours" id="colNamed"></div>
     <h3 class="col-sub">Every colour</h3>
     <div class="col-grid" role="radiogroup" aria-label="Every colour" id="colGrid"></div>
     <label class="col-custom" for="colPick">
-      <span class="col-custom-swatch"><input type="color" id="colPick" value="#006ec2"></span>
+      <span class="col-custom-swatch"><input type="color" id="colPick" value="#1685ff"></span>
       <span><b>Any colour at all</b><small>Opens your phone's colour picker</small></span>
     </label>
   </section>
@@ -153,7 +153,7 @@
   updateThemeColorMeta();
 
   /* ---- Colour ---- */
-  const NAMED = [["", "Clearspring grey", "#006EC2"], ["#0A7269", "Teal"], ["#1E6FD9", "Ocean"], ["#4F46E5", "Indigo"], ["#7C3AED", "Violet"],
+  const NAMED = [["", "Clearspring blue", "#1685FF"], ["#0A7269", "Teal"], ["#1E6FD9", "Ocean"], ["#4F46E5", "Indigo"], ["#7C3AED", "Violet"],
     ["#C026D3", "Orchid"], ["#E11D48", "Rose"], ["#EA580C", "Ember"], ["#D97706", "Amber"], ["#A16207", "Gold"],
     ["#65A30D", "Olive"], ["#15803D", "Forest"], ["#0E7490", "Lagoon"], ["#64748B", "Slate"], ["#3F3F46", "Graphite"],
     ["#9F1239", "Wine"], ["#7C2D12", "Clay"]];
@@ -185,7 +185,7 @@
     }
   });
   function nameOf(v) {
-    if (!v) return "Clearspring grey and blue";
+    if (!v) return "Clearspring blue";
     const n = NAMED.find((x) => x[0].toUpperCase() === v.toUpperCase());
     if (n) return n[1];
     const g = grid.querySelector(`[data-col="${v.toUpperCase()}"]`);
@@ -197,7 +197,7 @@
       const on = (b.dataset.col || "").toUpperCase() === v;
       b.classList.toggle("on", on); b.setAttribute("aria-checked", on ? "true" : "false");
     });
-    document.getElementById("colNowDot").style.background = v || "#006EC2";
+    document.getElementById("colNowDot").style.background = v || "#1685FF";
     document.getElementById("colNowName").textContent = nameOf(v);
     document.getElementById("colReset").hidden = !v;
     if (v) pick.value = v.toLowerCase();

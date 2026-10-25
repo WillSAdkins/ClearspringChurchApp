@@ -2993,7 +2993,13 @@ def service_worker():
 
 PHOTO_TYPES = {b"\xff\xd8\xff": "image/jpeg", b"\x89PNG\r\n\x1a\n": "image/png", b"RIFF": "image/webp"}
 PHOTO_MAX = 4 * 1024 * 1024
-PHOTO_KEYS = ["home"] + list(scenes.PAGES)
+# Pictures for the home screen's tiles and cards (shown with an icon until
+# the church uploads one).
+HOME_PHOTOS = [("tile-bible", "Home tile: Bible"), ("tile-today", "Home tile: Today"), ("tile-listen", "Home tile: Listen"),
+               ("tile-pray", "Home tile: Pray now"), ("tile-ask", "Home tile: Ask for prayer"), ("tile-wall", "Home tile: Prayer wall"),
+               ("card-continue", "Home card: Continue reading"), ("card-week", "Home card: Your week with God")]
+HOME_PHOTO_TITLES = dict(HOME_PHOTOS)
+PHOTO_KEYS = ["home"] + [k for k, _ in HOME_PHOTOS] + list(scenes.PAGES)
 
 
 def _photo_versions():
@@ -3049,7 +3055,8 @@ def admin_pictures():
         if request.form.get("action") == "remove":
             db.execute("DELETE FROM page_photos WHERE key=?", (key,))
             db.commit()
-            flash("Photo removed. The page shows its illustration again." if key != "home" else "Photo removed. The home page shows the original picture again.")
+            flash("Photo removed. The home page shows the original picture again." if key == "home" else
+                  "Photo removed. The tile shows its icon again." if key in HOME_PHOTO_TITLES else "Photo removed. The page shows its illustration again.")
             return redirect(url_for("admin_pictures") + f"#p-{key}")
         f = request.files.get("photo")
         data = f.read(PHOTO_MAX + 1) if f else b""
@@ -3069,7 +3076,7 @@ def admin_pictures():
             db.commit()
             flash("Photo saved.")
         return redirect(url_for("admin_pictures") + f"#p-{key}")
-    pages = [{"key": k, "title": "Home page" if k == "home" else scenes.TITLES.get(k, k.title()),
+    pages = [{"key": k, "title": "Home page" if k == "home" else HOME_PHOTO_TITLES.get(k) or scenes.TITLES.get(k, k.title()),
               "photo": page_photo(k), "scene": scenes.render(scenes.PAGES[k][0]) if k in scenes.PAGES else None,
               "line": scenes.PAGES.get(k, ("", ""))[1]} for k in PHOTO_KEYS]
     return render_template("admin_pictures.html", pages=pages)
