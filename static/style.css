@@ -15,32 +15,32 @@
 @font-face { font-family: "Instrument Serif"; src: url("fonts/instrument-serif-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 
 :root {
-  --bg: #F5F8F7;          /* mineral white — cool, never cream */
+  --bg: #F2F2F2;          /* the 60%: light grey page (dark mode: #5A5A5A) */
   --surface: #FFFFFF;
-  --surface-2: #E8F0EE;   /* limestone */
-  --ink: #0B2E2F;         /* deep pool */
-  --muted: #506A68;
-  --line: #DAE5E2;
+  --surface-2: #E9E9E9;
+  --ink: #1E1E1E;
+  --muted: #4F4F4F;
+  --line: #D4D4D4;
   --white: #FFFFFF;
-  --accent: #0A7269;      /* text-safe spring teal: 4.8:1 even on --wash */
-  --accent-soft: #19A79B;
+  --accent: #005A9E;      /* the 10%: blue for links and text, 4.9:1 on --tone */
+  --accent-soft: #2F8FD8;
   --on-accent: #FFFFFF;
-  --accent-fill: #0B2E2F; /* filled/selected things are deep pool */
+  --accent-fill: #006EC2; /* buttons and selected things: blue, white text 5.2:1 */
   --on-accent-fill: #FFFFFF;
-  --spring: #19A79B;      /* bright turquoise — dots, bars, numerals only */
-  --wash: rgba(25,167,155,0.12);
-  --tone: #E3EEEB;        /* the 30%: sea-glass surface for feature cards */
-  --tone-line: #D2E2DE;
-  --glass: rgba(255,255,255,0.8);
-  --quest-deep: #06201F;
-  --quest-mid: #0D5C5E;
-  --quest-ember: #2DD4BF;
-  --shadow-sm: 0 1px 2px rgba(11,46,47,0.06);
-  --shadow-md: 0 8px 24px -16px rgba(11,46,47,0.30);
-  --shadow-lg: 0 18px 40px -20px rgba(11,46,47,0.40);
-  --invert-bg: #0B2E2F;
-  --invert-ink: #F5F8F7;
-  --invert-muted: rgba(245,248,247,0.7);
+  --spring: #0191A1;      /* second blue: dots, bars, progress */
+  --wash: rgba(0,110,194,0.12);
+  --tone: #D6D6D6;        /* the 30%: grey feature cards (dark mode: #AFAFAF) */
+  --tone-line: #C4C4C4;
+  --glass: rgba(255,255,255,0.85);
+  --quest-deep: #2B2B2B;
+  --quest-mid: #3D5A73;
+  --quest-ember: #4FB3FF;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 24px -16px rgba(0,0,0,0.28);
+  --shadow-lg: 0 18px 40px -20px rgba(0,0,0,0.38);
+  --invert-bg: #5A5A5A;
+  --invert-ink: #FFFFFF;
+  --invert-muted: rgba(255,255,255,0.75);
   --danger: #B42318;
   --success: #2E7D32;
 
@@ -68,68 +68,85 @@
   --body: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --label: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --on-tone: #1E1E1E;
+  --tone-muted: #4F4F4F;
+  --tone-accent: #005A9E;
+  --on-spring: #0B1F22;
+  --art-filter: hue-rotate(32deg) saturate(.55);
 }
 
 [data-theme="dark"] {
-  --bg: #061719;          /* night water */
-  --surface: #0C2326;
-  --surface-2: #12302F;
-  --ink: #E7F2F0;
-  --muted: #8DA8A5;
-  --line: #1A3A3C;
-  --white: #0C2326;
-  --accent: #5FDCCB;
-  --accent-soft: #8DE9DC;
-  --on-accent: #061719;
-  --accent-fill: #5FDCCB;
-  --on-accent-fill: #061719;
-  --spring: #3CC9B8;
-  --wash: rgba(95,220,203,0.13);
-  --tone: #12383A;
-  --tone-line: #1D4A4C;
-  --glass: rgba(12,35,38,0.8);
-  --quest-deep: #041514;
-  --quest-mid: #0A4A4C;
-  --quest-ember: #5EEAD4;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
-  --shadow-md: 0 10px 26px -16px rgba(0,0,0,0.7);
-  --shadow-lg: 0 18px 40px -18px rgba(0,0,0,0.8);
-  --invert-bg: #11393A;
-  --invert-ink: #E7F2F0;
-  --invert-muted: rgba(231,242,240,0.7);
-  --danger: #F87171;
-  --success: #4ADE80;
+  --bg: #5A5A5A;          /* night water */
+  --surface: #616161;
+  --surface-2: #535353;
+  --ink: #FFFFFF;
+  --muted: #EFEFEF;
+  --line: #6E6E6E;
+  --white: #616161;
+  --accent: #C4E4FF;
+  --accent-soft: #9FD3FF;
+  --on-accent: #1B1B1B;
+  --accent-fill: #006EC2;
+  --on-accent-fill: #FFFFFF;
+  --spring: #0191A1;
+  --wash: rgba(0,110,194,0.22);
+  --tone: #AFAFAF;
+  --tone-line: #9E9E9E;
+  --glass: rgba(78,78,78,0.92);
+  --quest-deep: #2B2B2B;
+  --quest-mid: #3D5A73;
+  --quest-ember: #4FB3FF;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.25);
+  --shadow-md: 0 10px 26px -16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 18px 40px -18px rgba(0,0,0,0.6);
+  --invert-bg: #3A3A3A;
+  --invert-ink: #FFFFFF;
+  --invert-muted: rgba(255,255,255,0.75);
+  --danger: #FFDAD6;
+  --success: #C6F6CC;
+  --on-tone: #1B1B1B;
+  --tone-muted: #383838;
+  --tone-accent: #003F73;
+  --on-spring: #0B1F22;
+  --art-filter: hue-rotate(32deg) saturate(.55) brightness(.9);
 }
 
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] {
-    --bg: #061719;          /* night water */
-    --surface: #0C2326;
-    --surface-2: #12302F;
-    --ink: #E7F2F0;
-    --muted: #8DA8A5;
-    --line: #1A3A3C;
-    --white: #0C2326;
-    --accent: #5FDCCB;
-    --accent-soft: #8DE9DC;
-    --on-accent: #061719;
-    --accent-fill: #5FDCCB;
-    --on-accent-fill: #061719;
-    --spring: #3CC9B8;
-    --wash: rgba(95,220,203,0.13);
-    --glass: rgba(12,35,38,0.8);
-    --quest-deep: #041514;
-    --quest-mid: #0A4A4C;
-    --quest-ember: #5EEAD4;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
-    --shadow-md: 0 10px 26px -16px rgba(0,0,0,0.7);
-    --shadow-lg: 0 18px 40px -18px rgba(0,0,0,0.8);
-    --invert-bg: #11393A;
-    --invert-ink: #E7F2F0;
-    --invert-muted: rgba(231,242,240,0.7);
-    --danger: #F87171;
-    --success: #4ADE80;
-  }
+    --bg: #5A5A5A;          /* night water */
+    --surface: #616161;
+    --surface-2: #535353;
+    --ink: #FFFFFF;
+    --muted: #EFEFEF;
+    --line: #6E6E6E;
+    --white: #616161;
+    --accent: #C4E4FF;
+    --accent-soft: #9FD3FF;
+    --on-accent: #1B1B1B;
+    --accent-fill: #006EC2;
+    --on-accent-fill: #FFFFFF;
+    --spring: #0191A1;
+    --wash: rgba(0,110,194,0.22);
+    --glass: rgba(78,78,78,0.92);
+    --quest-deep: #2B2B2B;
+    --quest-mid: #3D5A73;
+    --quest-ember: #4FB3FF;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.25);
+    --shadow-md: 0 10px 26px -16px rgba(0,0,0,0.5);
+    --shadow-lg: 0 18px 40px -18px rgba(0,0,0,0.6);
+    --invert-bg: #3A3A3A;
+    --invert-ink: #FFFFFF;
+    --invert-muted: rgba(255,255,255,0.75);
+    --danger: #FFDAD6;
+    --success: #C6F6CC;
+    --tone: #AFAFAF;
+    --tone-line: #9E9E9E;
+    --on-tone: #1B1B1B;
+    --tone-muted: #383838;
+    --tone-accent: #003F73;
+    --on-spring: #0B1F22;
+    --art-filter: hue-rotate(32deg) saturate(.55) brightness(.9);
+}
 }
 
 /* Colour changes shouldn't flash when switching theme */
@@ -3680,12 +3697,12 @@ mark.hl {
   border: 1px solid var(--line);
 }
 .theme-swatch span { flex: 1; }
-.theme-swatch.light span:first-child { background: #F5F8F7; }
-.theme-swatch.light span:last-child  { background: #0B2E2F; }
-.theme-swatch.dark  span:first-child { background: #061719; }
-.theme-swatch.dark  span:last-child  { background: #5FDCCB; }
-.theme-swatch.auto  span:first-child { background: #F5F8F7; }
-.theme-swatch.auto  span:last-child  { background: #061719; }
+.theme-swatch.light span:first-child { background: #F2F2F2; }
+.theme-swatch.light span:last-child  { background: #006EC2; }
+.theme-swatch.dark  span:first-child { background: #5A5A5A; }
+.theme-swatch.dark  span:last-child  { background: #AFAFAF; }
+.theme-swatch.auto  span:first-child { background: #F2F2F2; }
+.theme-swatch.auto  span:last-child  { background: #5A5A5A; }
 
 /* Text size picker */
 .set-row { display: flex; padding: 0 0 .75rem; }
@@ -6007,8 +6024,8 @@ a.il-word:active, a.il-word:hover { border-color: var(--accent); background: var
 @font-face { font-family: "OpenDyslexic"; src: url("fonts/opendyslexic.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "OpenDyslexic"; src: url("fonts/opendyslexic-bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
 :root { --wj: #B42318; }
-[data-theme="dark"] { --wj: #F87171; }
-@media (prefers-color-scheme: dark) { [data-theme="auto"] { --wj: #F87171; } }
+[data-theme="dark"] { --wj: #FFD6D6; }
+@media (prefers-color-scheme: dark) { [data-theme="auto"] { --wj: #FFD6D6; } }
 
 /* Font, spacing, layout */
 .scripture[data-font="sans"] { font-family: var(--body); }
@@ -7249,7 +7266,7 @@ a.tl-title:hover { color: var(--accent); }
 .fl-help li { display: grid; padding: .6rem .8rem; border-radius: var(--r-md); background: var(--surface); }
 .fl-help li a { text-decoration: none; color: var(--ink); font-size: var(--fs-base); }
 .fl-help li a span { color: #B3261E; font-weight: 700; }
-[data-theme="dark"] .fl-help li a span { color: #F2A196; }
+[data-theme="dark"] .fl-help li a span { color: var(--danger); }
 .fl-help li small { font-size: var(--fs-xs); color: var(--muted); }
 .fl-help a { color: var(--accent); font-weight: 600; }
 .gw-read > .ps-scripture, .gw-read > .gw-scripture { margin-bottom: .65rem; }
@@ -7487,7 +7504,7 @@ a.tl-title:hover { color: var(--accent); }
 .gr-switch.on { background: var(--accent-fill); }
 .gr-switch.on i { left: 23px; }
 .gr-danger { color: #B3261E; border-color: rgba(179,38,30,.35); }
-[data-theme="dark"] .gr-danger { color: #F2A196; }
+[data-theme="dark"] .gr-danger { color: var(--danger); }
 .gr-leave { text-align: center; margin-top: 1.5rem; }
 .vp-group-share { margin: 0 0 1.5rem; }
 /* account */
@@ -7672,6 +7689,7 @@ form.gd-form .gd-input { flex: 1; min-width: 0; width: auto; font: inherit; font
 .sc { position: relative; height: clamp(9.5rem, 34vw, 13.5rem); margin: .25rem 0 1.25rem; border-radius: var(--r-lg, 20px);
   overflow: hidden; isolation: isolate; background: var(--surface-2); box-shadow: var(--shadow-md); }
 .sc-art { position: absolute; inset: 0; opacity: var(--sc-fade, 1); }
+svg.sc-layer { filter: var(--art-filter, none); }
 .sc-layer { position: absolute; left: -2%; width: 104%; top: -12%; height: 124%; will-change: transform; display: block; }
 .sc-photo { object-fit: cover; }
 .sc::after { content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -8089,7 +8107,7 @@ a.il-chip:hover { border-color: var(--accent-soft); }
 .ps2-tabs::-webkit-scrollbar { display: none; }
 .ps2-tabs button { flex: none; appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--r-full); padding: .45rem .85rem; font: 600 var(--fs-xs) var(--body); cursor: pointer; min-height: 38px; }
 .ps2-tabs button[aria-selected="true"] { background: var(--accent-fill); color: var(--on-accent-fill); border-color: transparent; }
-.ps2-tabs small { opacity: .7; margin-left: .2rem; }
+.ps2-tabs small { opacity: .85; margin-left: .2rem; }
 .ps2:not(.ps2-js) .ps2-tabs { display: none; }
 .ps2-panel[hidden] { display: none; }
 .ps2-step { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: .85rem .9rem; margin: .6rem 0; }
@@ -8698,8 +8716,9 @@ html[data-native] body { overscroll-behavior-y: none; }
    with an accent kicker or button, so the real buttons stand out.
    Pictures (hero photos and illustrations) are content, not UI.
    ============================================================ */
-.devo-feature, .sn-card, .gw-path:not(.alt), .pl-today, .mz-promo, .hs-main, .b3h-wide {
-  background: var(--tone); color: var(--ink); border-color: var(--tone-line);
+.devo-feature, .sn-card, .gw-path:not(.alt), .pl-today, .mz-promo, .hs-main, .b3h-wide, .col-custom {
+  background: var(--tone); color: var(--on-tone, var(--ink)); border-color: var(--tone-line);
+  --ink: var(--on-tone); --muted: var(--tone-muted); --accent: var(--tone-accent);
 }
 /* Home: the two main tiles keep their weight through a filled icon. */
 .hs-main small { color: var(--muted); }
@@ -8753,3 +8772,6 @@ html[data-native] body { overscroll-behavior-y: none; }
 .col-custom-swatch { width: 2.6rem; height: 2.6rem; border-radius: 50%; overflow: hidden; flex: none;
   background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); position: relative; }
 .col-custom-swatch input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+
+/* The verse sheet sits on --invert-bg: its reference uses the inverted ink. */
+.vsheet-ref { color: var(--invert-muted); }

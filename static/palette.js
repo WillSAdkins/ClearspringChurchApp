@@ -3,7 +3,7 @@
    worked out from it, for light and dark, keeping the 60-30-10 balance
    (background / sea-glass tone / accent) and checking every text colour
    against the surface it sits on (at least 4.5:1, the WCAG AA level).
-   Saved as cs_palette ("" = the church's own teal). Loaded in <head> so
+   Saved as cs_palette ("" = the default grey and blue). Loaded in <head> so
    the page never flashes the wrong colour. */
 (function () {
   "use strict";
@@ -75,7 +75,7 @@
     L["invert-bg"] = L["accent-fill"]; L["invert-ink"] = bgL;
     L["quest-deep"] = hsl(h, 0.6 * tint, 0.08); L["quest-mid"] = hsl(h, 0.55 * tint, 0.24); L["quest-ember"] = hsl(h, Math.max(sat, 0.5) * tint, 0.56);
     var onSpringL = contrast(L.spring, black) >= contrast(L.spring, white) ? black : white;
-    var lightVars = { "on-spring": hex(onSpringL), wash: rgba(L.accent, 0.12), glass: "rgba(255,255,255,0.8)", "invert-muted": rgba(bgL, 0.7), white: "#FFFFFF" };
+    var lightVars = { "on-tone": hex(L.ink), "tone-muted": hex(L.muted), "tone-accent": hex(L.accent), danger: "#B42318", success: "#2E7D32", wj: "#B42318", "on-spring": hex(onSpringL), wash: rgba(L.accent, 0.12), glass: "rgba(255,255,255,0.8)", "invert-muted": rgba(bgL, 0.7), white: "#FFFFFF" };
 
     // ---- dark
     var D = {}, bgD = hsl(h, 0.55 * tint, 0.06), surfD = hsl(h, 0.45 * tint, 0.1), toneD = hsl(h, 0.42 * tint, 0.155);
@@ -90,7 +90,7 @@
     D["invert-bg"] = hsl(h, 0.45 * tint, 0.17); D["invert-ink"] = D.ink;
     D["quest-deep"] = hsl(h, 0.6 * tint, 0.05); D["quest-mid"] = hsl(h, 0.5 * tint, 0.18); D["quest-ember"] = hsl(h, Math.max(sat, 0.5) * tint, 0.66);
     var onSpringD = contrast(D.spring, black) >= contrast(D.spring, white) ? black : white;
-    var darkVars = { "on-spring": hex(onSpringD), wash: rgba(D.accent, 0.13), glass: rgba(surfD, 0.8), "invert-muted": rgba(D.ink, 0.7), white: hex(surfD) };
+    var darkVars = { "on-tone": hex(D.ink), "tone-muted": hex(D.muted), "tone-accent": hex(D.accent), danger: "#F87171", success: "#4ADE80", wj: "#F87171", "on-spring": hex(onSpringD), wash: rgba(D.accent, 0.13), glass: rgba(surfD, 0.8), "invert-muted": rgba(D.ink, 0.7), white: hex(surfD) };
 
     function block(T, extra) {
       var out = [];
@@ -116,7 +116,7 @@
   function apply(choice) {
     var el = document.getElementById("cs-palette");
     var built = choice ? build(choice) : null;
-    if (!built) { if (el) el.remove(); setMeta("#F5F8F7", "#061719"); return null; }
+    if (!built) { if (el) el.remove(); setMeta("#F2F2F2", "#5A5A5A"); return null; }
     if (!el) { el = document.createElement("style"); el.id = "cs-palette"; (document.head || document.documentElement).appendChild(el); }
     el.textContent = built.css;
     setMeta(built.light, built.dark);
