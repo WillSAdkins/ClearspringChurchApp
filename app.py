@@ -6170,12 +6170,26 @@ def verse_page(book_slug, chapter, verse):
 # ---------- 3D: models built to the Bible's measurements, and a relief map ----------
 
 MODELS_3D = [
-    {"slug": "map", "title": "The land in 3D", "sub": "Hills, valleys and the Jordan rift, with the places of the Bible pinned on", "ref": "", "emoji": "🗺️"},
-    {"slug": "tabernacle", "title": "The tabernacle", "sub": "The tent of meeting in the wilderness, 100 × 50 cubits", "ref": "Exodus 25–27", "emoji": "⛺"},
-    {"slug": "temple", "title": "Solomon's temple", "sub": "The house, the pillars Jachin and Boaz, and the bronze Sea", "ref": "1 Kings 6–7", "emoji": "🏛️"},
-    {"slug": "ark", "title": "Noah's ark", "sub": "300 cubits long: see how big it really was", "ref": "Genesis 6", "emoji": "🛶"},
-    {"slug": "ark-of-the-covenant", "title": "The ark of the covenant", "sub": "The gold chest with the mercy seat and cherubim", "ref": "Exodus 25:10–22", "emoji": "✨"},
+    # kind: places, objects, scenes, size
+    {"slug": "map", "kind": "places", "title": "The land in 3D", "sub": "Hills, valleys and the Jordan rift, with the places of the Bible pinned on", "ref": "", "emoji": "🗺️"},
+    {"slug": "tabernacle", "kind": "places", "inside": "closed", "title": "The tabernacle", "sub": "The tent of meeting in the wilderness, 100 × 50 cubits", "ref": "Exodus 25–27", "emoji": "⛺"},
+    {"slug": "temple", "kind": "places", "inside": "closed", "title": "Solomon's temple", "sub": "The house, the pillars Jachin and Boaz, and the bronze Sea", "ref": "1 Kings 6–7", "emoji": "🏛️"},
+    {"slug": "ark-of-the-covenant", "kind": "objects", "title": "The ark of the covenant", "sub": "The gold chest with the mercy seat and cherubim", "ref": "Exodus 25:10–22", "emoji": "✨"},
+    {"slug": "lampstand", "kind": "objects", "title": "The golden lampstand", "sub": "Seven lamps, hammered from one piece of gold", "ref": "Exodus 25:31–40", "emoji": "🕎"},
+    {"slug": "table-of-showbread", "kind": "objects", "title": "The table and the bread", "sub": "Twelve loaves of the bread of the Presence", "ref": "Exodus 25:23–30; Leviticus 24:5–9", "emoji": "🍞"},
+    {"slug": "altar-of-incense", "kind": "objects", "title": "The altar of incense", "sub": "Prayer rising like incense before the veil", "ref": "Exodus 30:1–10", "emoji": "🕯️"},
+    {"slug": "bronze-altar", "kind": "objects", "title": "The bronze altar", "sub": "Where the sacrifices were offered, 5 cubits square", "ref": "Exodus 27:1–8", "emoji": "🔥"},
+    {"slug": "breastplate", "kind": "objects", "title": "The high priest's breastplate", "sub": "Twelve stones for the twelve tribes", "ref": "Exodus 28:15–30", "emoji": "💎"},
+    {"slug": "throne", "kind": "objects", "title": "Solomon's throne", "sub": "Ivory and gold, six steps and twelve lions", "ref": "1 Kings 10:18–20", "emoji": "👑"},
+    {"slug": "david-and-goliath", "kind": "scenes", "title": "David and Goliath", "sub": "The Valley of Elah, two armies and a giant", "ref": "1 Samuel 17", "emoji": "🪨"},
+    {"slug": "galilee-boat", "kind": "scenes", "title": "A boat on Galilee", "sub": "Jesus asleep in the stern as the storm rises", "ref": "Mark 4:35–41", "emoji": "⛵"},
+    {"slug": "nativity", "kind": "scenes", "inside": "open", "title": "The first Christmas", "sub": "A manger in a Bethlehem house, and shepherds", "ref": "Luke 2:1–20", "emoji": "⭐"},
+    {"slug": "last-supper", "kind": "scenes", "title": "The Last Supper", "sub": "Reclining round the table in the upper room", "ref": "Luke 22:7–20; John 13", "emoji": "🍷"},
+    {"slug": "empty-tomb", "kind": "scenes", "title": "The empty tomb", "sub": "The stone rolled away, in a garden", "ref": "Mark 16; John 20", "emoji": "🌅"},
+    {"slug": "ark", "kind": "size", "title": "Noah's ark", "sub": "300 cubits long: see how big it really was", "ref": "Genesis 6", "emoji": "🛶"},
+    {"slug": "nebuchadnezzar-statue", "kind": "size", "title": "Nebuchadnezzar's statue", "sub": "60 cubits of gold, and the fiery furnace", "ref": "Daniel 3", "emoji": "🗿"},
 ]
+MODELS_3D_KINDS = [("places", "Places"), ("objects", "Holy objects"), ("scenes", "Scenes from the Bible"), ("size", "How big was it?")]
 MODELS_3D_BY_SLUG = {m["slug"]: m for m in MODELS_3D}
 
 
@@ -6223,7 +6237,7 @@ def fathers_chapter(book_slug, chapter):
 
 @app.route("/bible/3d")
 def bible_3d_hub():
-    return render_template("bible3d_hub.html", models=MODELS_3D)
+    return render_template("bible3d_hub.html", models=MODELS_3D, kinds=MODELS_3D_KINDS)
 
 
 @app.route("/bible/3d/<slug>")

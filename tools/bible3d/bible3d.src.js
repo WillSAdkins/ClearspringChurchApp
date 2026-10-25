@@ -173,6 +173,53 @@ function person(scene, labels, x, z) {
   labels.push({ pos: new THREE.Vector3(x, 4.4, z), text: "A person, for scale", minor: true,
     detail: "About 4 cubits (1.8 m) tall. A cubit was the length from elbow to fingertip, roughly 45 cm." });
 }
+
+// A simple figure for scenes: robe, head and headcloth. h = height in cubits.
+const SKIN = [0xc68a5e, 0xa8714a, 0x8d5a3b, 0xd29c74];
+function figure(scene, x, z, o = {}) {
+  const h = o.h || 4, k = h / 4, g = new THREE.Group();
+  const robe = mat(o.robe ?? 0x8b6f4e);
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32 * k, 0.62 * k, 2.85 * k, 14), robe); body.position.y = 1.43 * k; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.36 * k, 16, 12), mat(SKIN[o.skin ?? 0])); head.position.y = 3.25 * k; g.add(head);
+  if (o.cloth !== false) { const c = new THREE.Mesh(new THREE.SphereGeometry(0.4 * k, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(o.cloth ?? 0xe8e0cc)); c.position.y = 3.3 * k; g.add(c); }
+  if (o.sit) { body.scale.y = 0.62; body.position.y = 0.9 * k; head.position.y -= 1.05 * k; g.children[2] && (g.children[2].position.y -= 1.05 * k); }
+  g.position.set(x, o.y || 0, z); g.rotation.y = o.face || 0; scene.add(g);
+  return g;
+}
+// Lying or reclining on one elbow (for a meal).
+function recliner(scene, x, z, rot, robe, skin = 0) {
+  const g = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 2.4, 6, 12), mat(robe)); b.rotation.z = Math.PI / 2 - 0.25; b.position.set(0, 0.75, 0); g.add(b);
+  const hd = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 10), mat(SKIN[skin])); hd.position.set(-1.45, 1.35, 0); g.add(hd);
+  g.position.set(x, 0, z); g.rotation.y = rot; scene.add(g); return g;
+}
+// A four-legged animal from simple shapes (ox, donkey, sheep, lion).
+function beast(scene, x, z, o = {}) {
+  const s = o.s || 1, m = mat(o.color ?? 0x7a5c44), g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.55 * s, 1.5 * s, 6, 12), m); body.rotation.z = Math.PI / 2; body.position.y = 1.35 * s; g.add(body);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.8 * s, 0.6 * s, 0.55 * s), m); head.position.set(1.45 * s, 1.75 * s, 0); g.add(head);
+  [[-0.7, -0.3], [-0.7, 0.3], [0.7, -0.3], [0.7, 0.3]].forEach(([a, b]) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * s, 0.1 * s, 1.0 * s, 8), m); l.position.set(a * s, 0.5 * s, b * s); g.add(l); });
+  if (o.ears) [-0.15, 0.15].forEach((b) => { const e = new THREE.Mesh(new THREE.ConeGeometry(0.08 * s, 0.55 * s, 6), m); e.position.set(1.4 * s, 2.25 * s, b * s); g.add(e); });
+  if (o.horns) [-0.32, 0.32].forEach((b) => { const e = new THREE.Mesh(new THREE.ConeGeometry(0.07 * s, 0.5 * s, 6), mat(0xe9dfc8)); e.position.set(1.4 * s, 2.15 * s, b * s); e.rotation.x = b > 0 ? -0.9 : 0.9; g.add(e); });
+  if (o.mane) { const mn = new THREE.Mesh(new THREE.SphereGeometry(0.62 * s, 14, 10), mat(o.mane)); mn.position.set(1.25 * s, 1.85 * s, 0); g.add(mn); head.position.x = 1.7 * s; }
+  if (o.wool) { body.scale.set(1.25, 1.1, 1.25); }
+  g.position.set(x, o.y || 0, z); g.rotation.y = o.face || 0; scene.add(g); return g;
+}
+function flame(scene, x, y, z, s = 1) {
+  const f = new THREE.Mesh(new THREE.ConeGeometry(0.09 * s, 0.32 * s, 10), new THREE.MeshBasicMaterial({ color: 0xffb33b }));
+  f.position.set(x, y + 0.16 * s, z); scene.add(f); return f;
+}
+function rock(scene, r, x, y, z, color = 0xb9ad96, sx = 1, sy = 1, sz = 1) {
+  const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), mat(color, { rough: 1 })); m.scale.set(sx, sy, sz); m.position.set(x, y, z); scene.add(m); return m;
+}
+function hill(scene, r, x, z, h, color = 0x9aa36b) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat(color, { rough: 1 })); m.scale.y = h / r; m.position.set(x, 0, z); scene.add(m); return m;
+}
+function tree(scene, x, z, h = 8) {
+  cyl(scene, 0.35, h * 0.55, x, 0, z, mat(0x6b5136), 8);
+  const c = new THREE.Mesh(new THREE.SphereGeometry(h * 0.32, 14, 10), mat(0x6f8a4f, { rough: 1 })); c.scale.y = 0.75; c.position.set(x, h * 0.72, z); scene.add(c);
+}
+function horn(scene, x, y, z, s, m) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.12 * s, 0.32 * s, 10), m); c.position.set(x, y + 0.16 * s, z); scene.add(c); }
 const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const ref = (r) => "/bible/search?q=" + encodeURIComponent(r);
 
@@ -327,6 +374,302 @@ const MODELS = {
     );
     person(scene, labels, -3.6, -1.8);
     return { camera: v3(5.5, 4.2, 7), target: v3(0, 1.2, 0), maxDist: 30, minDist: 2.5, minorDist: 14 };
+  },
+
+  lampstand({ scene, labels }) {
+    ground(scene, 8, C.sand, false);
+    // Hammered from one talent of pure gold, with six branches and seven lamps (Exodus 25:31-40).
+    // No size is given; this is about 3 cubits high, as later tradition describes.
+    const top = 3.1, cy = 3.1;
+    cyl(scene, 0.55, 0.12, 0, 0, 0, GOLD, 32); cyl(scene, 0.3, 0.25, 0, 0.12, 0, GOLD, 24);
+    cyl(scene, 0.07, top - 0.3, 0, 0.3, 0, GOLD, 12);
+    [0.9, 1.6, 2.3, 2.9].forEach((y) => { const k = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), GOLD); k.position.set(0, y, 0); scene.add(k); });
+    [0.45, 0.9, 1.35].forEach((r) => {
+      const pts = []; for (let i = 0; i <= 24; i++) { const a = Math.PI + (i / 24) * Math.PI; pts.push(v3(r * Math.cos(a), cy + r * Math.sin(a), 0)); }
+      scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.045, 8), GOLD));
+      [Math.PI * 1.25, Math.PI * 1.75].forEach((a) => { const k = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), GOLD); k.position.set(r * Math.cos(a), cy + r * Math.sin(a), 0); scene.add(k); });
+    });
+    [-1.35, -0.9, -0.45, 0, 0.45, 0.9, 1.35].forEach((x) => {
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 8), GOLD); lamp.scale.y = 0.55; lamp.position.set(x, top + 0.04, 0); scene.add(lamp);
+      flame(scene, x, top + 0.1, 0, 1);
+    });
+    labels.push(
+      { pos: v3(0, 3.7, 0), text: "Seven lamps", detail: "Filled with pure olive oil and kept burning from evening till morning, the only light in the Holy Place.", href: ref("Exodus 27:20"), hrefText: "Exodus 27:20–21" },
+      { pos: v3(1.35, 2.5, 0), text: "Six branches", detail: "Three branches on each side, each with cups shaped like almond blossoms, buds and flowers.", href: ref("Exodus 25:32"), hrefText: "Exodus 25:31–36" },
+      { pos: v3(0, 0.6, 0.3), text: "One piece of gold", minor: true, detail: "The whole lampstand and its tools were hammered from a single talent of gold, about 34 kg. The Bible doesn't give its height.", href: ref("Exodus 25:39"), hrefText: "Exodus 25:39" },
+    );
+    return { camera: v3(3.2, 3.2, 5.2), target: v3(0, 1.9, 0), maxDist: 20, minDist: 1.5, minorDist: 8 };
+  },
+
+  "table-of-showbread"({ scene, labels }) {
+    ground(scene, 8, C.sand, false);
+    const wood = GOLD;
+    // 2 cubits long, 1 wide, 1.5 high, overlaid with gold, with a rim and moulding (Exodus 25:23-30).
+    box(scene, 2.1, 0.08, 1.1, 0, 1.42, 0, wood);
+    [[-0.95, -0.45], [-0.95, 0.45], [0.95, -0.45], [0.95, 0.45]].forEach(([x, z]) => cyl(scene, 0.05, 1.42, x, 0, z, wood, 10));
+    box(scene, 2.1, 0.12, 0.04, 0, 1.5, -0.53, wood); box(scene, 2.1, 0.12, 0.04, 0, 1.5, 0.53, wood);
+    box(scene, 0.04, 0.12, 1.1, -1.03, 1.5, 0, wood); box(scene, 0.04, 0.12, 1.1, 1.03, 1.5, 0, wood);
+    box(scene, 1.9, 0.07, 0.9, 0, 0.5, 0, wood);
+    // Twelve loaves in two piles of six (Leviticus 24:5-6), frankincense on each pile.
+    const bread = mat(0xcf9b5b, { rough: 0.9 });
+    [-0.5, 0.5].forEach((x) => { for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.36, 0.09, 20), bread); l.position.set(x, 1.55 + i * 0.1, 0); scene.add(l); }
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.08, 12), GOLD); cup.position.set(x, 2.2, 0); scene.add(cup); });
+    const pole = mat(C.acacia);
+    [-0.62, 0.62].forEach((z) => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 3.4, 10), pole); p.rotation.z = Math.PI / 2; p.position.set(0, 1.15, z); scene.add(p); });
+    labels.push(
+      { pos: v3(0, 2.5, 0), text: "Twelve loaves", detail: "The bread of the Presence: twelve loaves, one for each tribe, set out fresh every Sabbath and then eaten by the priests.", href: ref("Leviticus 24:5"), hrefText: "Leviticus 24:5–9" },
+      { pos: v3(0.9, 1.7, 0.6), text: "The table", detail: "Acacia wood, 2 cubits long, 1 wide and 1.5 high (about 90 × 45 × 70 cm), covered with gold, with a gold rim around the top.", href: ref("Exodus 25:23"), hrefText: "Exodus 25:23–30" },
+      { pos: v3(1.6, 1.25, 0.62), text: "Carrying poles", minor: true, detail: "Through gold rings near the legs, so it could be carried on the journey.", href: ref("Exodus 25:26"), hrefText: "Exodus 25:26–28" },
+    );
+    return { camera: v3(3.2, 3.2, 4.4), target: v3(0, 1.4, 0), maxDist: 20, minDist: 1.5, minorDist: 8 };
+  },
+
+  "altar-of-incense"({ scene, labels }) {
+    ground(scene, 8, C.sand, false);
+    // 1 cubit square and 2 high, with horns, a gold moulding and rings for poles (Exodus 30:1-10).
+    box(scene, 1, 2, 1, 0, 0, 0, GOLD);
+    box(scene, 1.12, 0.1, 1.12, 0, 1.85, 0, GOLD);
+    [[-0.42, -0.42], [-0.42, 0.42], [0.42, -0.42], [0.42, 0.42]].forEach(([x, z]) => horn(scene, x, 2, z, 1, GOLD));
+    const coal = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.7), new THREE.MeshBasicMaterial({ color: 0xd9582b })); coal.position.set(0, 2.02, 0); scene.add(coal);
+    const smoke = mat(0xffffff, { opacity: 0.35, rough: 1 });
+    [[0, 2.5, 0, 0.18], [0.08, 2.95, 0.04, 0.24], [-0.05, 3.45, -0.03, 0.3], [0.06, 3.95, 0, 0.36]].forEach(([x, y, z, r]) => { const p = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), smoke); p.position.set(x, y, z); scene.add(p); });
+    const pole = mat(C.acacia);
+    [-0.6, 0.6].forEach((z) => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.6, 10), pole); p.rotation.z = Math.PI / 2; p.position.set(0, 1.6, z); scene.add(p); });
+    labels.push(
+      { pos: v3(0, 4.4, 0), text: "Incense", detail: "Burned every morning and evening, a picture of prayer rising to God.", href: ref("Psalm 141:2"), hrefText: "Psalm 141:2" },
+      { pos: v3(0.42, 2.45, 0.42), text: "Horns", detail: "Once a year the high priest put blood on its horns to make atonement.", href: ref("Exodus 30:10"), hrefText: "Exodus 30:10" },
+      { pos: v3(0, 1.0, 0.55), text: "The altar", detail: "1 cubit square and 2 high (about 45 × 45 × 90 cm), acacia overlaid with gold, standing just in front of the veil.", href: ref("Exodus 30:1"), hrefText: "Exodus 30:1–10" },
+    );
+    return { camera: v3(2.8, 3.0, 3.8), target: v3(0, 1.6, 0), maxDist: 20, minDist: 1.5, minorDist: 8 };
+  },
+
+  "bronze-altar"({ scene, labels }) {
+    ground(scene, 30, C.sand);
+    // 5 cubits square and 3 high, acacia overlaid with bronze, horns at the corners,
+    // a bronze grating halfway up, and rings and poles (Exodus 27:1-8).
+    box(scene, 5, 3, 5, 0, 0, 0, BRONZE);
+    box(scene, 5.3, 0.3, 5.3, 0, 1.2, 0, mat(0x6d4529, { rough: 0.6, metal: 0.5 }));
+    [[-2.2, -2.2], [-2.2, 2.2], [2.2, -2.2], [2.2, 2.2]].forEach(([x, z]) => horn(scene, x, 3, z, 3, BRONZE));
+    const wood = mat(0x5a3b22);
+    for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 3.2, 8), wood); l.rotation.z = Math.PI / 2; l.rotation.y = i * 0.5; l.position.set(0, 3.15 + (i % 2) * 0.25, 0); scene.add(l); }
+    const fire = new THREE.MeshBasicMaterial({ color: 0xff8a2a });
+    [[0, 0], [0.6, 0.4], [-0.5, -0.4], [0.3, -0.6]].forEach(([x, z], i) => { const f = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.3 + i * 0.2, 10), fire); f.position.set(x, 3.9, z); scene.add(f); });
+    const pole = mat(C.bronze, { rough: 0.45, metal: 0.6 });
+    [-2.9, 2.9].forEach((z) => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 9, 10), pole); p.rotation.z = Math.PI / 2; p.position.set(0, 1.35, z); scene.add(p); });
+    labels.push(
+      { pos: v3(0, 5.6, 0), text: "Fire that never went out", detail: "“The fire on the altar must be kept burning; it must not go out.”", href: ref("Leviticus 6:13"), hrefText: "Leviticus 6:12–13" },
+      { pos: v3(2.2, 4.4, 2.2), text: "Horns", detail: "One at each corner, made in one piece with the altar. Someone in danger could take hold of them.", href: ref("Exodus 27:2"), hrefText: "Exodus 27:2" },
+      { pos: v3(2.7, 1.5, 2.7), text: "Grating", detail: "A bronze network under the ledge, halfway up the altar.", href: ref("Exodus 27:4"), hrefText: "Exodus 27:4–5" },
+      { pos: v3(-1, 2.0, 2.6), text: "The bronze altar", detail: "5 cubits square and 3 high (about 2.3 × 2.3 × 1.4 m): the first thing anyone met inside the gate, where the sacrifices were offered.", href: ref("Exodus 27:1"), hrefText: "Exodus 27:1–8" },
+    );
+    person(scene, labels, 5, 4);
+    return { camera: v3(13, 10, 15), target: v3(0, 2, 0), maxDist: 70, minDist: 4, minorDist: 30 };
+  },
+
+  breastplate({ scene, labels }) {
+    ground(scene, 2.5, 0xe9e2d0, false);
+    // A span square (half a cubit, about 22 cm), of gold, blue, purple and scarlet yarn and linen,
+    // with twelve stones in four rows of three, each engraved with a tribe's name (Exodus 28:15-21).
+    const g = new THREE.Group(); scene.add(g);
+    const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.03), mat(0x5b3a7a, { rough: 0.9 })); g.add(cloth);
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.53, 0.02), GOLD); frame.position.z = -0.006; g.add(frame);
+    const rows = [
+      [["ruby", 0xb3122e], ["topaz", 0xd9b44a], ["emerald", 0x1f8a4c]],
+      [["turquoise", 0x3fb8b0], ["sapphire", 0x1f4fb3], ["diamond", 0xe8f1f5]],
+      [["jacinth", 0xd9721e], ["agate", 0x9b6b4f], ["amethyst", 0x8a4fb8]],
+      [["beryl", 0x9fd8c4], ["onyx", 0x2a2a2a], ["jasper", 0x8f2f2a]],
+    ];
+    rows.forEach((row, r) => row.forEach(([name, color], c) => {
+      const set = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.095, 0.02), GOLD); set.position.set((c - 1) * 0.15, (1.5 - r) * 0.115, 0.022); g.add(set);
+      const st = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.072, 0.03), new THREE.MeshStandardMaterial({ color, roughness: 0.15, metalness: 0.1 })); st.position.set((c - 1) * 0.15, (1.5 - r) * 0.115, 0.035); g.add(st);
+    }));
+    [[-0.25, 0.25], [0.25, 0.25], [-0.25, -0.25], [0.25, -0.25]].forEach(([x, y]) => { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.007, 8, 16), GOLD); ring.position.set(x, y, 0.01); g.add(ring); });
+    [-0.25, 0.25].forEach((x) => { const pts = [v3(x, 0.25, 0.01), v3(x * 1.1, 0.45, 0.02), v3(x * 1.3, 0.7, 0)]; g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 20, 0.008, 6), GOLD)); });
+    g.position.y = 0.45; g.rotation.x = -0.15;
+    const names = rows.map((row) => row.map((x) => x[0]).join(", "));
+    labels.push(
+      { pos: v3(0, 0.82, 0.05), text: "Twelve stones", detail: "One for each tribe of Israel, each engraved like a seal with a son of Israel’s name, so Aaron carried the people over his heart before the LORD.", href: ref("Exodus 28:29"), hrefText: "Exodus 28:21, 29" },
+      ...names.map((n, r) => ({ pos: v3(0.33, 0.45 + (1.5 - r) * 0.115 * 0.99, 0.08), text: `Row ${r + 1}`, minor: true, detail: `${n[0].toUpperCase() + n.slice(1)}. Stone names follow the Berean Standard Bible; the Hebrew words are uncertain and translations differ.`, href: ref("Exodus 28:17"), hrefText: "Exodus 28:17–20" })),
+      { pos: v3(-0.36, 0.2, 0.04), text: "A span square", detail: "About 22 cm each way, folded double, woven of gold, blue, purple and scarlet yarn and fine linen, and tied to the ephod with gold chains.", href: ref("Exodus 28:15"), hrefText: "Exodus 28:15–28" },
+    );
+    return { camera: v3(0.4, 0.75, 1.25), target: v3(0, 0.45, 0), maxDist: 5, minDist: 0.4, minorDist: 1.6 };
+  },
+
+  throne({ scene, labels }) {
+    ground(scene, 22, C.stone);
+    // A great throne of ivory overlaid with gold, six steps, a rounded top, armrests with a lion
+    // beside each, and twelve lions on the steps (1 Kings 10:18-20). No sizes are given.
+    const ivory = mat(0xf2e8d2, { rough: 0.5 });
+    for (let i = 0; i < 6; i++) box(scene, 7 - i * 0.6, 0.5, 6 - i * 0.6, 0, i * 0.5, 0.3 * i, i % 2 ? ivory : GOLD);
+    const y0 = 3;
+    box(scene, 2.6, 1.2, 2.2, 0, y0, 1.2, ivory);
+    box(scene, 2.6, 3.4, 0.4, 0, y0, 0.15, GOLD);
+    const arch = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.4, 32, 1, false, -Math.PI / 2, Math.PI), GOLD); arch.rotation.x = Math.PI / 2; arch.rotation.z = Math.PI / 2; arch.position.set(0, y0 + 3.4, 0.15); scene.add(arch);
+    [-1.45, 1.45].forEach((x) => { box(scene, 0.3, 1.0, 2.2, x, y0 + 1.2, 1.2, GOLD); beast(scene, x * 1.45, 2.4, { color: 0xc9a13b, mane: 0xb8862b, s: 0.55, y: y0, face: -Math.PI / 2 }); });
+    for (let i = 0; i < 6; i++) [-1, 1].forEach((sd) => beast(scene, sd * (3.2 - i * 0.3), 3.3 - i * 0.3 + 0.3, { color: 0xc9a13b, mane: 0xb8862b, s: 0.38, y: i * 0.5 + 0.5, face: -Math.PI / 2 }));
+    labels.push(
+      { pos: v3(0, 8.1, 0.2), text: "Ivory and gold", detail: "“Nothing like it had ever been made for any kingdom.” Built of ivory and overlaid with fine gold.", href: ref("1 Kings 10:18"), hrefText: "1 Kings 10:18–20" },
+      { pos: v3(3.3, 1.6, 3.4), text: "Six steps, twelve lions", detail: "A lion stood at each end of every step: twelve in all, perhaps one for each tribe.", href: ref("1 Kings 10:20"), hrefText: "1 Kings 10:19–20" },
+      { pos: v3(-2.1, 5.2, 2.4), text: "Lions by the armrests", minor: true, detail: "Two lions stood beside the armrests. The Bible gives no sizes, so the proportions here are a guess.", href: ref("1 Kings 10:19"), hrefText: "1 Kings 10:19" },
+    );
+    person(scene, labels, 5.5, 6);
+    return { camera: v3(10, 9, 15), target: v3(0, 3.2, 0), maxDist: 60, minDist: 4, minorDist: 26 };
+  },
+
+  "david-and-goliath"({ scene, labels }) {
+    ground(scene, 140, 0xb8ad7c, false);
+    // The Valley of Elah: two armies on the hillsides, a brook between (1 Samuel 17:1-3).
+    hill(scene, 60, -15, -85, 18, 0x9aa36b); hill(scene, 60, 15, 85, 18, 0xa39f6b);
+    const brook = new THREE.Mesh(new THREE.PlaneGeometry(200, 3.5), mat(0x5d9cb0, { rough: 0.2 })); brook.rotation.x = -Math.PI / 2; brook.rotation.z = 0.08; brook.position.set(0, 0.04, 6); scene.add(brook);
+    for (let i = 0; i < 5; i++) rock(scene, 0.22, -3 + i * 0.5, 0.12, 4.2 + (i % 2) * 0.4, 0x9c9488);
+    for (let i = 0; i < 40; i++) { figure(scene, -45 + (i % 20) * 4.5, -52 - Math.floor(i / 20) * 4, { robe: 0x6b7a4f, h: 3.8, skin: i % 4, face: Math.PI / 2 }); figure(scene, -45 + (i % 20) * 4.5, 52 + Math.floor(i / 20) * 4, { robe: 0x8a5a3c, h: 3.8, skin: (i + 2) % 4, face: -Math.PI / 2, cloth: 0xa88a52 }); }
+    // Goliath: six cubits and a span (about 2.9 m) in the Hebrew text.
+    const G = figure(scene, 0, 14, { h: 6.5, robe: 0x8f6a3c, skin: 2, cloth: 0xa86b3c, face: -Math.PI / 2 });
+    const helm = new THREE.Mesh(new THREE.SphereGeometry(0.66, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), BRONZE); helm.position.set(0, 5.6, 14); scene.add(helm);
+    const spear = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 9, 8), mat(0x6b4a2b)); spear.position.set(1.3, 4.2, 14); spear.rotation.x = 0.15; scene.add(spear);
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.2, 1, 8), mat(0x6f6f6f, { metal: 0.6, rough: 0.4 })); head.position.set(1.3, 8.9, 14.7); head.rotation.x = 0.15; scene.add(head);
+    figure(scene, -0.5, 10.5, { h: 3.8, robe: 0x7c5a38, skin: 1, face: -Math.PI / 2 });
+    box(scene, 2.4, 3.6, 0.2, -0.5, 0.3, 9.6, mat(0x8a6a40));
+    // David: a youth with a staff, a sling and five smooth stones.
+    figure(scene, 0, -2, { h: 3.7, robe: 0xb58a55, skin: 3, cloth: false, face: Math.PI / 2 });
+    const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 4.5, 8), mat(0x6b5136)); staff.position.set(-0.8, 2.2, -2); scene.add(staff);
+    labels.push(
+      { pos: v3(0, 7.6, 14), text: "Goliath", detail: "“Six cubits and a span” (about 2.9 m) in the Hebrew text; the Greek Septuagint and the Dead Sea Scrolls say four cubits and a span (about 2 m). His bronze armour weighed 5,000 shekels (about 57 kg).", href: ref("1 Samuel 17:4"), hrefText: "1 Samuel 17:4–7" },
+      { pos: v3(1.3, 10, 14.7), text: "His spear", minor: true, detail: "A shaft like a weaver’s beam, its iron point weighing 600 shekels (about 7 kg).", href: ref("1 Samuel 17:7"), hrefText: "1 Samuel 17:7" },
+      { pos: v3(-0.5, 4.6, 9.6), text: "Shield-bearer", minor: true, detail: "Goliath’s shield-bearer went ahead of him.", href: ref("1 Samuel 17:41"), hrefText: "1 Samuel 17:41" },
+      { pos: v3(0, 4.6, -2), text: "David", detail: "“You come against me with sword and spear and javelin, but I come against you in the name of the LORD of Hosts.”", href: ref("1 Samuel 17:45"), hrefText: "1 Samuel 17:45–47" },
+      { pos: v3(-2, 1.4, 4.4), text: "Five smooth stones", detail: "Chosen from the brook and put in his shepherd’s bag.", href: ref("1 Samuel 17:40"), hrefText: "1 Samuel 17:40" },
+      { pos: v3(0, 8, -54), text: "Israel’s army", minor: true, detail: "Saul and the men of Israel, drawn up on one hill.", href: ref("1 Samuel 17:2"), hrefText: "1 Samuel 17:1–3" },
+      { pos: v3(0, 8, 54), text: "The Philistines", minor: true, detail: "On the opposite hill, with the valley between them.", href: ref("1 Samuel 17:3"), hrefText: "1 Samuel 17:3" },
+    );
+    return { camera: v3(26, 9, 6), target: v3(0, 3, 6), maxDist: 220, minDist: 6, minorDist: 90 };
+  },
+
+  "galilee-boat"({ scene, labels }) {
+    const water = new THREE.Mesh(new THREE.CircleGeometry(160, 64), mat(0x4f8fa6, { rough: 0.25 })); water.rotation.x = -Math.PI / 2; scene.add(water);
+    hill(scene, 70, -90, -110, 22, 0x8fa36e); hill(scene, 80, 70, -130, 28, 0x9da874);
+    // A first-century fishing boat like the one found by the Sea of Galilee in 1986:
+    // about 8.3 m long, 2.3 m wide and 1.3 m deep (about 18 × 5 × 3 cubits).
+    const wood = mat(0x7a5232, { side: THREE.DoubleSide });
+    const hull = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 20, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), wood);
+    hull.scale.set(9.2, 3, 2.6); hull.position.y = 1.8; scene.add(hull);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.03, 8, 48), mat(0x5a3b22)); rim.rotation.x = Math.PI / 2; rim.scale.set(9.2, 2.6, 1); rim.position.y = 1.8; scene.add(rim);
+    for (let i = -2; i <= 2; i++) box(scene, 0.4, 0.12, 4.2 * Math.sqrt(1 - (i * 2.6 / 9.2) ** 2), i * 2.6, 1.15, 0, mat(0x8a6040));
+    cyl(scene, 0.13, 13, 2.5, 0.4, 0, mat(0x6b4a2b), 10);
+    const sail = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), mat(0xe9dfc6, { side: THREE.DoubleSide })); sail.position.set(2.5, 9, 0.3); scene.add(sail);
+    const yard = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 7, 8), mat(0x6b4a2b)); yard.rotation.x = Math.PI / 2; yard.rotation.z = Math.PI / 2; yard.position.set(2.5, 12, 0.3); scene.add(yard);
+    [[-5, 1.2, 0], [-3.4, -1.1, 0.4], [-1.6, 1.3, 0.2], [0.2, -1.2, 1], [1.6, 1.2, 2], [3.6, -1, 3], [4.8, 0.9, 1], [-2.4, 0, 2], [0.8, 0.1, 0], [5.8, -0.2, 3], [-4.2, -0.4, 1], [3, 0.1, 2]].forEach(([x, z, sk], i) =>
+      figure(scene, x, z, { h: 3.6, robe: [0x6f5a45, 0x5a6d7a, 0x8a6a44, 0x7a4e3a][i % 4], skin: sk, sit: true, y: 0.9, face: Math.PI / 2 + (z > 0 ? 0.6 : -0.6) }));
+    const cushion = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.3, 0.9), mat(0x9c3b2b)); cushion.position.set(-7.4, 1.2, 0); scene.add(cushion);
+    recliner(scene, -7.2, 0, Math.PI, 0xe7dccb, 0);
+    const net = new THREE.Mesh(new THREE.SphereGeometry(1.3, 12, 8), new THREE.MeshStandardMaterial({ color: 0xcfc6a8, wireframe: true })); net.scale.y = 0.35; net.position.set(6.5, 1.3, 0); scene.add(net);
+    labels.push(
+      { pos: v3(0, 4.5, 0), text: "A fishing boat", detail: "Built like the 2,000-year-old boat found in the mud of the Sea of Galilee in 1986: about 8.3 m long and 2.3 m wide, big enough for Jesus and the Twelve.", href: ref("Mark 4:35"), hrefText: "Mark 4:35–41" },
+      { pos: v3(-7.4, 3.0, 0), text: "Asleep on a cushion", detail: "“Jesus was in the stern, sleeping on a cushion.” Then he rebuked the wind: “Silence! Be still!”", href: ref("Mark 4:38"), hrefText: "Mark 4:38–39" },
+      { pos: v3(6.5, 2.6, 0), text: "Nets", minor: true, detail: "Peter, Andrew, James and John were fishermen when Jesus called them.", href: ref("Luke 5:4"), hrefText: "Luke 5:1–11" },
+      { pos: v3(2.5, 13.5, 0), text: "Mast and sail", minor: true, detail: "Boats like this had a single square sail and four oars.", href: ref("Mark 6:48"), hrefText: "Mark 6:45–52" },
+    );
+    return { camera: v3(18, 12, 22), target: v3(0, 2.5, 0), maxDist: 140, minDist: 5, minorDist: 50 };
+  },
+
+  nativity({ scene, labels }) {
+    ground(scene, 60, 0xc9b98f);
+    const stone = mat(0xd8cbb0, { rough: 0.95 });
+    // A village house: a lower room where the animals came in at night and a raised family
+    // room. Luke says there was no room in the kataluma (guest room), so the baby was laid in a manger.
+    box(scene, 14, 6, 0.6, 0, 0, -5, stone); box(scene, 0.6, 6, 10, -7, 0, 0, stone); box(scene, 0.6, 6, 10, 7, 0, 0, stone);
+    box(scene, 5, 6, 0.6, -4.5, 0, 5, stone); box(scene, 5, 6, 0.6, 4.5, 0, 5, stone);
+    const roof = box(scene, 14.6, 0.5, 10.6, 0, 6, 0, mat(0x9c8a6a)); roof.visible = false;
+    box(scene, 13.4, 1.4, 4.4, 0, 0, -2.6, mat(0xcbb894));
+    const manger = box(scene, 2, 1, 1, -1.5, 1.4, -0.7, stone);
+    const hay = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.2, 0.7), mat(0xd9b95c)); hay.position.set(-1.5, 2.45, -0.7); scene.add(hay);
+    const baby = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.6, 6, 10), mat(0xf3eee2)); baby.rotation.z = Math.PI / 2; baby.position.set(-1.5, 2.7, -0.7); scene.add(baby);
+    figure(scene, 0.4, -1.8, { robe: 0x3e5f8a, cloth: 0x5a7fb0, skin: 0, sit: true, y: 1.4, face: -2.3 });
+    figure(scene, -3.8, -1.6, { robe: 0x7a5a3c, cloth: 0xc9b48a, skin: 1, y: 1.4, face: -0.6 });
+    beast(scene, 3.5, 2, { color: 0x6b4f3a, horns: true, face: Math.PI });
+    beast(scene, -4.6, 2.2, { color: 0x8f877d, ears: true, s: 0.8, face: 0 });
+    [[9, 7], [11, 9], [12.5, 6.5]].forEach(([x, z], i) => figure(scene, x, z, { robe: 0x8a7a5a, skin: i + 1, cloth: 0xd8cfb8, face: Math.PI * 0.8 }));
+    for (let i = 0; i < 6; i++) beast(scene, 15 + (i % 3) * 2.2, 10 + Math.floor(i / 3) * 2, { color: 0xeeeae0, wool: true, s: 0.45, face: Math.PI });
+    const star = new THREE.Mesh(new THREE.OctahedronGeometry(1.2), new THREE.MeshBasicMaterial({ color: 0xfff1b0 })); star.position.set(0, 24, 0); scene.add(star);
+    labels.push(
+      { pos: v3(-1.5, 3.6, -0.7), text: "Laid in a manger", detail: "“She wrapped him in swaddling cloths and laid him in a manger, because there was no room for them in the inn” (or “guest room”).", href: ref("Luke 2:7"), hrefText: "Luke 2:1–7" },
+      { pos: v3(0, 7.2, 0), text: "A family house?", detail: "Many village houses had a lower level where animals were brought in at night, with mangers cut into the floor, and a raised room for the family. The Bible doesn’t describe the building or mention a stable.", href: ref("Luke 2:7"), hrefText: "Luke 2:7" },
+      { pos: v3(3.5, 3.2, 2), text: "Ox and donkey", minor: true, detail: "Not in the Gospels: they come from later tradition, drawing on Isaiah 1:3.", href: ref("Isaiah 1:3"), hrefText: "Isaiah 1:3" },
+      { pos: v3(11, 5, 8), text: "Shepherds", detail: "Told by angels, they hurried to Bethlehem and found Mary and Joseph, and the baby lying in the manger.", href: ref("Luke 2:16"), hrefText: "Luke 2:8–20" },
+      { pos: v3(0, 26, 0), text: "The star", minor: true, detail: "Matthew’s wise men followed a star to the house where the child was, probably some months later.", href: ref("Matthew 2:9"), hrefText: "Matthew 2:1–12" },
+    );
+    let inside = true;
+    return { camera: v3(5, 15, 19), target: v3(-0.5, 1.5, -1), maxDist: 90, minDist: 5, minorDist: 40,
+      toggleInside: () => { inside = !inside; roof.visible = !inside; return inside; } };
+  },
+
+  "last-supper"({ scene, labels }) {
+    ground(scene, 30, 0xb8a888);
+    const plaster = mat(0xe6dccb, { rough: 0.95 });
+    box(scene, 22, 9, 0.5, 0, 0, -10, plaster); box(scene, 0.5, 9, 20, -11, 0, 0, plaster); box(scene, 0.5, 9, 20, 11, 0, 0, plaster);
+    // A triclinium: three low tables in a U, the guests reclining on their left side.
+    const table = mat(0x7a5a3a);
+    box(scene, 12, 1, 2.4, 0, 0, -3, table); box(scene, 2.4, 1, 8, -6, 0, 2.2, table); box(scene, 2.4, 1, 8, 6, 0, 2.2, table);
+    const cushions = mat(0x8c3b2e);
+    box(scene, 13, 0.4, 2, 0, 0, -5.6, cushions); box(scene, 2, 0.4, 9, -8.6, 0, 2.4, cushions); box(scene, 2, 0.4, 9, 8.6, 0, 2.4, cushions);
+    const robes = [0xe9e1d0, 0x6f5a45, 0x5a6d7a, 0x8a6a44, 0x7a4e3a, 0x6b7a4f];
+    for (let i = 0; i < 5; i++) recliner(scene, -4.8 + i * 2.4, -5.6, -Math.PI / 2 + 0.2, robes[i % 6], i % 4);
+    for (let i = 0; i < 4; i++) recliner(scene, -8.6, -1 + i * 2.2, 0.2, robes[(i + 2) % 6], (i + 1) % 4);
+    for (let i = 0; i < 4; i++) recliner(scene, 8.6, -1 + i * 2.2, Math.PI + 0.2, robes[(i + 4) % 6], (i + 2) % 4);
+    const bread = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.42, 0.15, 18), mat(0xcf9b5b)); bread.position.set(-0.6, 1.1, -3); scene.add(bread);
+    const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.12, 0.45, 16), mat(0xb08d57, { metal: 0.3, rough: 0.5 })); cup.position.set(0.6, 1.25, -3); scene.add(cup);
+    [[-4, -3], [4, -3], [-6, 3], [6, 3]].forEach(([x, z]) => { const l = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), mat(0xb7865a)); l.scale.y = 0.5; l.position.set(x, 1.1, z); scene.add(l); flame(scene, x + 0.2, 1.1, z, 0.9); });
+    labels.push(
+      { pos: v3(0, 2.6, -3), text: "Bread and cup", detail: "“This is my body, given for you; do this in remembrance of me… This cup is the new covenant in my blood.”", href: ref("Luke 22:19"), hrefText: "Luke 22:14–20" },
+      { pos: v3(-2.4, 2.6, -5.6), text: "Reclining at the table", detail: "Guests lay on cushions on their left side round low tables, which is how the beloved disciple could lean back against Jesus. Famous paintings show them sitting on one side of a long table.", href: ref("John 13:23"), hrefText: "John 13:23–25" },
+      { pos: v3(0, 9.6, -10), text: "A large upper room", minor: true, detail: "“He will show you a large upper room, furnished and ready.”", href: ref("Mark 14:15"), hrefText: "Mark 14:12–16" },
+    );
+    return { camera: v3(10, 15, 20), target: v3(0, 1, -1), maxDist: 70, minDist: 4, minorDist: 32 };
+  },
+
+  "empty-tomb"({ scene, labels }) {
+    ground(scene, 60, 0x9fae74);
+    const stone = 0xc4b89f;
+    // A rock-cut tomb in a garden, sealed with a large rolling stone (John 19:41, Mark 16:3-4).
+    box(scene, 26, 11, 9, 0, 0, -6, mat(stone, { rough: 1 }));
+    rock(scene, 6, -11, 6, -5, stone, 1.2, 1.1, 1); rock(scene, 5, 12, 5, -4, stone, 1.3, 1.1, 1); rock(scene, 4, 2, 11, -6, stone, 2.5, 0.6, 1.2);
+    const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 0.3), mat(0x1c1915)); door.position.set(0, 1.6, -1.4); scene.add(door);
+    box(scene, 9, 0.4, 1.2, 3.5, 0, -0.9, mat(0xab9f86, { rough: 1 }));
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.8, 32), mat(0xb5a88d, { rough: 0.95 })); disc.rotation.x = Math.PI / 2; disc.position.set(4.6, 2.6, -0.9); scene.add(disc);
+    const cloth = mat(0xf2ede0);
+    box(scene, 1.6, 0.25, 0.7, 0.8, 0, -3.6, cloth); box(scene, 0.6, 0.18, 0.5, -0.8, 0, -3.6, cloth);
+    figure(scene, 1.6, 0.8, { robe: 0xffffff, cloth: 0xffffff, skin: 0, sit: true, y: 0.3, face: -Math.PI / 2 });
+    tree(scene, -9, 9, 9); tree(scene, 13, 10, 7); tree(scene, -16, 3, 8);
+    for (let i = 0; i < 10; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.9 + (i % 3) * 0.3, 10, 8), mat(0x6c8a4c, { rough: 1 })); b.position.set(-14 + i * 3, 0.5, 4 + (i % 2) * 2); scene.add(b); }
+    const sun = new THREE.Mesh(new THREE.SphereGeometry(3, 20, 14), new THREE.MeshBasicMaterial({ color: 0xffd98a })); sun.position.set(-60, 14, -70); scene.add(sun);
+    labels.push(
+      { pos: v3(4.6, 5.6, -0.9), text: "The stone rolled away", detail: "“Who will roll away the stone from the entrance of the tomb?” But when they looked up, they saw that it had been rolled away, even though it was extremely large.", href: ref("Mark 16:3"), hrefText: "Mark 16:1–4" },
+      { pos: v3(0, 4.2, -1.4), text: "He is not here", detail: "“Why do you look for the living among the dead? He is not here; he has risen!”", href: ref("Luke 24:5"), hrefText: "Luke 24:1–8" },
+      { pos: v3(0.8, 1.2, -3.2), text: "The linen cloths", minor: true, detail: "Peter saw the linen cloths lying there, and the cloth that had been around Jesus’ head folded up by itself.", href: ref("John 20:6"), hrefText: "John 20:3–9" },
+      { pos: v3(1.6, 3.4, 0.8), text: "A young man in white", minor: true, detail: "Sitting on the right side, dressed in a white robe: “Do not be alarmed.”", href: ref("Mark 16:5"), hrefText: "Mark 16:5–7" },
+      { pos: v3(-9, 10, 9), text: "A garden", minor: true, detail: "“In the place where he was crucified there was a garden, and in the garden a new tomb.”", href: ref("John 19:41"), hrefText: "John 19:41–42" },
+    );
+    return { camera: v3(16, 8, 20), target: v3(0, 2.5, -2), maxDist: 90, minDist: 4, minorDist: 36 };
+  },
+
+  "nebuchadnezzar-statue"({ scene, labels }) {
+    ground(scene, 220, 0xd8c79c);
+    // On the plain of Dura: an image of gold 60 cubits high and 6 wide (Daniel 3:1). Its form isn't described.
+    box(scene, 12, 3, 12, 0, 0, 0, mat(0xb9a57e));
+    box(scene, 6, 42, 4, 0, 3, 0, GOLD);
+    box(scene, 9, 3, 4.4, 0, 45, 0, GOLD);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(3, 20, 14), GOLD); head.scale.y = 1.3; head.position.set(0, 52, 0); scene.add(head);
+    box(scene, 4, 5, 3, 0, 56, 0, GOLD);
+    // The furnace, heated seven times hotter (Daniel 3:19).
+    box(scene, 12, 10, 10, 40, 0, 20, mat(0x9b6a4a, { rough: 1 }));
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 4), new THREE.MeshBasicMaterial({ color: 0xff7a1a })); mouth.position.set(33.95, 2.5, 20); scene.add(mouth);
+    for (let i = 0; i < 80; i++) figure(scene, -30 + (i % 16) * 4, 22 + Math.floor(i / 16) * 4, { h: 3.8, robe: [0x7a5a3c, 0x5a6d7a, 0x8a6a44, 0x6b7a4f][i % 4], skin: i % 4, face: Math.PI, cloth: i % 3 ? 0xd8cfb8 : false });
+    labels.push(
+      { pos: v3(0, 62, 0), text: "60 cubits high", detail: "About 27 m, roughly the height of a nine-storey building, and 6 cubits (2.7 m) wide. The Bible doesn’t describe its shape; this one is a simple figure.", href: ref("Daniel 3:1"), hrefText: "Daniel 3:1–7" },
+      { pos: v3(34, 11, 20), text: "The fiery furnace", detail: "Shadrach, Meshach and Abednego would not bow, and were thrown in. The king saw four men walking unharmed in the fire.", href: ref("Daniel 3:24"), hrefText: "Daniel 3:19–27" },
+      { pos: v3(0, 8, 30), text: "Everyone bowed", minor: true, detail: "When the music sounded, the officials of every province were to fall down and worship.", href: ref("Daniel 3:5"), hrefText: "Daniel 3:4–7" },
+    );
+    return { camera: v3(70, 40, 95), target: v3(0, 22, 0), maxDist: 400, minDist: 10, minorDist: 140 };
   },
 
   map({ scene, labels, root }) {

@@ -21,7 +21,7 @@
   <div class="b3d-tools">
     <button type="button" data-b3d="reset">Reset view</button>
     <button type="button" data-b3d="labels" aria-pressed="true">Labels</button>
-    {% if m.slug in ('tabernacle', 'temple') %}<button type="button" data-b3d="inside" aria-pressed="false">Look inside</button>{% endif %}
+    {% if m.inside %}<button type="button" data-b3d="inside" aria-pressed="{{ 'true' if m.inside == 'open' else 'false' }}">Look inside</button>{% endif %}
     <button type="button" data-b3d="spin">Spin</button>
   </div>
   <p class="b3d-help">Drag to turn · pinch or scroll to zoom · two fingers to move · tap a label</p>
@@ -31,5 +31,5 @@
   </nav>
   <p class="b3d-credit">3D drawn with three.js (MIT licence).</p>
 </main>
-<script type="module" src="{{ url_for('static', filename='vendor/bible3d.min.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='vendor/bible3d.min.js', v='2') }}"></script>
 {% endblock %}
