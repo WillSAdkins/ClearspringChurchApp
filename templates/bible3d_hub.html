@@ -21,13 +21,11 @@
 <style>
   .b3h-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; margin: 1rem 0; }
   .b3h-card { display: grid; gap: .25rem; align-content: start; padding: 1rem; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; min-width: 0; }
-  .b3h-wide { grid-column: 1 / -1; background: var(--invert-bg); border-color: var(--invert-bg); color: var(--invert-ink); }
-  .b3h-wide span:not(.b3h-emoji) { color: var(--invert-muted) !important; }
+  .b3h-wide { grid-column: 1 / -1; background: var(--tone); border-color: var(--tone-line); }
   .b3h-emoji { font-size: 1.75rem; }
   .b3h-card b { font: 600 var(--fs-md) var(--display); }
   .b3h-card span:not(.b3h-emoji) { font-size: var(--fs-sm); color: var(--muted); line-height: 1.4; }
   .b3h-card small { font-size: var(--fs-xs); color: var(--accent); font-weight: 600; }
-  .b3h-wide small { color: var(--invert-ink); }
   .b3h-note { font-size: var(--fs-sm); color: var(--muted); line-height: 1.55; }
 </style>
 {% endblock %}

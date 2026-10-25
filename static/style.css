@@ -29,6 +29,8 @@
   --on-accent-fill: #FFFFFF;
   --spring: #19A79B;      /* bright turquoise — dots, bars, numerals only */
   --wash: rgba(25,167,155,0.12);
+  --tone: #E3EEEB;        /* the 30%: sea-glass surface for feature cards */
+  --tone-line: #D2E2DE;
   --glass: rgba(255,255,255,0.8);
   --quest-deep: #06201F;
   --quest-mid: #0D5C5E;
@@ -83,6 +85,8 @@
   --on-accent-fill: #061719;
   --spring: #3CC9B8;
   --wash: rgba(95,220,203,0.13);
+  --tone: #12383A;
+  --tone-line: #1D4A4C;
   --glass: rgba(12,35,38,0.8);
   --quest-deep: #041514;
   --quest-mid: #0A4A4C;
@@ -8681,3 +8685,46 @@ html[data-native] body { overscroll-behavior-y: none; }
 .cl-section { scroll-margin-top: 5rem; margin-top: 1.25rem; }
 .cl-shelf-h { font-size: 1.05rem; margin: 0 0 .6rem; display: flex; align-items: baseline; gap: .5rem; }
 .cl-shelf-h span { font-size: .8rem; font-weight: 500; opacity: .6; }
+
+
+/* ============================================================
+   Colour balance: the 60-30-10 rule
+   60%  --bg / --surface   the page and plain cards
+   30%  --tone             feature cards, panels, tiles, chips
+   10%  --accent(-fill)    only what you tap or must notice:
+                           primary buttons, the active tab, links,
+                           progress, kickers and small icons.
+   A large card is never filled with the accent: it sits on --tone
+   with an accent kicker or button, so the real buttons stand out.
+   Pictures (hero photos and illustrations) are content, not UI.
+   ============================================================ */
+.devo-feature, .sn-card, .gw-path:not(.alt), .pl-today, .mz-promo, .hs-main, .b3h-wide {
+  background: var(--tone); color: var(--ink); border-color: var(--tone-line);
+}
+/* Home: the two main tiles keep their weight through a filled icon. */
+.hs-main small { color: var(--muted); }
+.hs-main .hs-icon { background: var(--accent-fill); color: var(--on-accent-fill); }
+/* Today's devotional */
+.devo-feature-ref { color: var(--accent); }
+.devo-feature-excerpt { color: var(--muted); }
+.devo-feature-cta { color: var(--accent); }
+/* This Sunday (Watch) */
+.sn-card-k { color: var(--accent); opacity: 1; }
+.sn-card-s { color: var(--muted); opacity: 1; }
+/* Getting started paths */
+.gw-path:not(.alt)::before { background: radial-gradient(circle, var(--wash), transparent 70%); }
+.gw-path:not(.alt) .gw-path-k { color: var(--accent); opacity: 1; }
+.gw-path:not(.alt) .gw-bar { background: var(--tone-line); }
+.gw-path:not(.alt) .gw-bar i { background: var(--accent); }
+/* Today's prayer list */
+.pl-today::before { background: radial-gradient(circle, var(--wash), transparent 70%); }
+.pl-today-k { color: var(--accent); opacity: 1; }
+.pl-today-names span { background: var(--surface); color: var(--ink); }
+.pl-today .pl-today-go { justify-self: start; padding: .5rem 1rem; border-radius: var(--r-full); background: var(--accent-fill); color: var(--on-accent-fill); }
+/* Memorise promo */
+.mz-promo::before { background: repeating-radial-gradient(circle at 85% 15%, transparent 0 20px, var(--wash) 21px 22px, transparent 23px 42px); opacity: 1; }
+.mz-promo-icon { background: var(--accent-fill); color: var(--on-accent-fill); }
+.mz-promo-body small { color: var(--muted); opacity: 1; }
+.mz-promo-streak { background: var(--surface); color: var(--ink); }
+/* 3D Bible: the featured model */
+.b3h-wide span:not(.b3h-emoji) { color: var(--muted) !important; }
