@@ -3015,7 +3015,7 @@ def _photo_versions():
 # Photos that come with the app (static/photos/), used until staff upload
 # their own: the church's own photos for the big banners, and Fin's
 # pictures for the home tiles and cards.
-DEFAULT_PHOTOS = {"home": "home.jpg", "watch": "watch.jpg", "community": "community.jpg",
+DEFAULT_PHOTOS = {"visit": "band.jpg", "watch": "watch.jpg", "community": "community.jpg",
                   **{k: k + ".jpg" for k, _ in HOME_PHOTOS}}
 
 
