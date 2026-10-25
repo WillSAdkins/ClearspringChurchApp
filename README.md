@@ -57,8 +57,8 @@ For any of these:
 2. Connect the repo on the host.
 3. Set the `ADMIN_PASSWORD` and `SECRET_KEY` environment variables in their
    dashboard (don't leave the defaults!).
-4. Set the start command to `python app.py` (or `gunicorn app:app` if the
-   host asks for one — you'll want to add `gunicorn` to requirements.txt).
+4. Set the start command to `python app.py`. On Render this starts gunicorn,
+   the production server, by itself (see the end of app.py).
 
 Once deployed you'll have a real URL (e.g. `gracechapel.onrender.com`) to
 share — put it on your church's existing website, social media, and bulletin.

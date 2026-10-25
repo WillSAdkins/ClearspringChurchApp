@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 
 # The church is in Cheltenham, so "today" means today in the UK. Servers such
@@ -418,6 +419,30 @@ def client_ip():
         return fwd.split(",")[0].strip()
     return request.remote_addr or "unknown"
 
+
+# Crawlers: the library has tens of thousands of pages (every commentary on
+# every chapter, every dictionary entry, every verse). A bot walking through
+# them non-stop can starve the server. robots.txt asks crawlers to stay out;
+# this slows down any one address reading pages faster than a person can.
+CRAWL_PREFIXES = ("/bible/commentary/", "/bible/reference/", "/bible/v/", "/bible/dictionary/", "/bible/offline",
+                  "/bible/read/", "/bible/passage", "/bible/fathers/", "/bible/words", "/bible/search", "/bible/places/",
+                  "/bible/people/", "/bible/topics/", "/library/", "/bible/library/", "/bible/compare", "/bible/interlinear")
+CRAWL_LIMIT = (45, 60)        # pages per minute from one address
+_crawl_hits = {}
+
+
+def too_fast():
+    ip = client_ip()
+    now = time.time()
+    start, n = _crawl_hits.get(ip, (now, 0))
+    if now - start > CRAWL_LIMIT[1]:
+        start, n = now, 0
+    n += 1
+    if len(_crawl_hits) > 20000:
+        _crawl_hits.clear()
+    _crawl_hits[ip] = (start, n)
+    return n > CRAWL_LIMIT[0]
+
 # Cookie hardening. Lax lets ordinary links into the site work while blocking
 # cookies on cross-site POSTs, which is the shape a CSRF attack takes.
 #
@@ -545,6 +570,59 @@ def in_native_app():
         return "ClearspringApp/" in (request.headers.get("User-Agent") or "")
     except RuntimeError:
         return False
+
+
+@app.before_request
+def slow_down_crawlers():
+    """Library pages: past 45 a minute from one address, ask it to wait.
+    Signed-in members and staff are never slowed."""
+    if request.method != "GET" or not request.path.startswith(CRAWL_PREFIXES):
+        return None
+    if session.get("member_id") or session.get("is_admin") or session.get("staff_id"):
+        return None
+    # Saving a book for offline reads many pages at once: the Offline page gives
+    # this visitor half an hour for it, and its downloads say who they are.
+    if request.headers.get("X-CS-Pack") == "1" and session.get("pack_until", 0) > time.time():
+        return None
+    if too_fast():
+        resp = app.response_class("Too many pages too quickly. Please wait a minute and try again.\n", status=429, mimetype="text/plain")
+        resp.headers["Retry-After"] = "60"
+        return resp
+    return None
+
+
+ROBOTS_TXT = """# Clearspring Church app
+# The Bible library here has tens of thousands of generated pages (commentaries,
+# dictionaries, every verse). Please don't crawl them: the same texts are freely
+# available from their original sources.
+User-agent: *
+Disallow: /bible/commentary/
+Disallow: /bible/reference/
+Disallow: /bible/v/
+Disallow: /bible/dictionary/
+Disallow: /bible/offline
+Disallow: /bible/search
+Disallow: /bible/passage
+Disallow: /bible/fathers/
+Disallow: /bible/compare
+Disallow: /bible/interlinear
+Disallow: /bible/words
+Disallow: /library/
+Disallow: /api/
+Disallow: /audio/
+Disallow: /media/
+Disallow: /admin
+Disallow: /account
+Disallow: /*?translation=
+Crawl-delay: 10
+"""
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    resp = app.response_class(ROBOTS_TXT, mimetype="text/plain")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
 
 
 @app.before_request
@@ -2230,6 +2308,7 @@ def _passage_label(found):
 def offline_packs():
     """Save whole books for reading and study without a connection."""
     books = [{"slug": b["slug"], "name": b["name"], "chapters": b["chapters"], "nt": b in NEW_TESTAMENT} for b in ALL_BOOKS]
+    session["pack_until"] = time.time() + 1800
     return render_template("offline_packs.html", books=books, start=request.args.get("book") or "")
 
 
@@ -8989,6 +9068,22 @@ def delete_devotional(devotional_id):
 
 
 if __name__ == "__main__":
+    # On Render, `python app.py` hands over to gunicorn, the production server.
+    # Flask's own server (app.run) is only for testing on your computer: under
+    # real traffic it hangs and falls over. One worker with several threads
+    # suits SQLite; recycling the worker now and then keeps memory in check.
+    if os.environ.get("RENDER") and not os.environ.get("CS_DEV_SERVER"):
+        try:
+            import gunicorn  # noqa: F401
+            print("Starting the production server (gunicorn)", flush=True)
+            os.execv(sys.executable, [sys.executable, "-m", "gunicorn", "app:app",
+                                      "--bind", f"0.0.0.0:{os.environ.get('PORT', '10000')}",
+                                      "--workers", "1", "--threads", "8", "--timeout", "120",
+                                      "--graceful-timeout", "30", "--max-requests", "2000",
+                                      "--max-requests-jitter", "200", "--forwarded-allow-ips", "*",
+                                      "--access-logfile", "-"])
+        except ImportError:
+            pass
     init_db()
     # Debug mode exposes an interactive console to anyone who can trigger an
     # error, so it is only ever enabled explicitly for local development.

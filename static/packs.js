@@ -67,7 +67,7 @@
       function worker() {
         if (i >= urls.length) return Promise.resolve();
         var u = urls[i++];
-        return fetch(u, { credentials: "same-origin" }).then(function (r) {
+        return fetch(u, { credentials: "same-origin", headers: { "X-CS-Pack": "1" } }).then(function (r) {
           if (!r.ok) { failed++; return; }
           if (/no-store/.test(r.headers.get("Cache-Control") || "")) return;   // licensed text is never stored
           return r.clone().text().then(function (html) {
