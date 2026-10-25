@@ -1,4 +1,4 @@
-const CACHE_NAME = "clearspring-v49";
+const CACHE_NAME = "clearspring-v50";
 const PAGE_CACHE = "cs-pages-v1";
 const OFFLINE_URLS = ["/offline", "/static/style.css", "/static/loading-screen.mp4"];
 

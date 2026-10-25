@@ -8820,3 +8820,4 @@ html[data-native] body { overscroll-behavior-y: none; }
 .hw-pic { position: relative; min-height: 100%; }
 .hw-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hw-has-pic .hw-main { padding: .95rem 1rem; }
+#hsBible.hs-photo .hs-img { top: -24%; height: 124%; }

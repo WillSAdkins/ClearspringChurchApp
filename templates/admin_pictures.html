@@ -7,7 +7,7 @@
     <div><p class="eyebrow">Staff area</p><h1>Page pictures</h1></div>
     <div class="admin-actions"><a href="{{ url_for('admin') }}" class="btn-ghost">← Board</a></div>
   </div>
-  <p class="pc-lead">Each main page has an illustrated banner that moves as people scroll. Upload a photo of the church for any page and it's used instead, with the same movement. The home screen's tiles and cards take a photo each too (square-ish photos suit the tiles); until then they show an icon. Wide, landscape photos work best; they're resized on your device before uploading. Only use photos you have permission to use, and ask before showing children's faces.</p>
+  <p class="pc-lead">Each main page has an illustrated banner that moves as people scroll. Upload a photo of the church for any page and it's used instead, with the same movement. The home screen's tiles and cards have a photo each too (square-ish photos suit the tiles). Built-in photos are used until you upload your own. Wide, landscape photos work best; they're resized on your device before uploading. Only use photos you have permission to use, and ask before showing children's faces.</p>
 
   <div class="pc-grid">
     {% for p in pages %}
@@ -18,19 +18,19 @@
       </div>
       <div class="pc-body">
         <b>{{ p.title }}</b>
-        <small>{{ 'Your photo' if p.photo else ('The original worship photo' if p.key == 'home' else ('Icon' if p.key.startswith(('tile-', 'card-')) else 'Illustration')) }}</small>
+        <small>{{ 'Your photo' if p.uploaded else ('Built-in photo' if p.built_in else 'Illustration') }}</small>
         <form method="post" enctype="multipart/form-data" class="pc-upload" data-key="{{ p.key }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="key" value="{{ p.key }}">
-          <label class="btn-ghost small pc-pick">{{ 'Change photo' if p.photo else 'Upload a photo' }}
+          <label class="btn-ghost small pc-pick">{{ 'Change photo' if p.uploaded or p.built_in else 'Upload a photo' }}
             <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" hidden>
           </label>
         </form>
-        {% if p.photo %}
+        {% if p.uploaded %}
         <form method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="key" value="{{ p.key }}"><input type="hidden" name="action" value="remove">
-          <button type="submit" class="btn-ghost small">{{ 'Use the original' if p.key == 'home' else 'Use the illustration' }}</button>
+          <button type="submit" class="btn-ghost small">{{ 'Use the built-in photo' if p.built_in else 'Use the illustration' }}</button>
         </form>
         {% endif %}
       </div>

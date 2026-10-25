@@ -3012,9 +3012,20 @@ def _photo_versions():
     return g.photo_versions
 
 
+# Photos that come with the app (static/photos/), used until staff upload
+# their own: the church's own photos for the big banners, and Fin's
+# pictures for the home tiles and cards.
+DEFAULT_PHOTOS = {"home": "home.jpg", "watch": "watch.jpg", "community": "community.jpg",
+                  **{k: k + ".jpg" for k, _ in HOME_PHOTOS}}
+
+
 def page_photo(key):
     v = _photo_versions().get(key)
-    return url_for("page_photo_file", key=key, v=v.replace(":", "").replace("-", "")[:15]) if v else None
+    if v:
+        return url_for("page_photo_file", key=key, v=v.replace(":", "").replace("-", "")[:15])
+    if key in DEFAULT_PHOTOS:
+        return url_for("static", filename="photos/" + DEFAULT_PHOTOS[key], v="1")
+    return None
 
 
 @app.context_processor
@@ -3055,8 +3066,7 @@ def admin_pictures():
         if request.form.get("action") == "remove":
             db.execute("DELETE FROM page_photos WHERE key=?", (key,))
             db.commit()
-            flash("Photo removed. The home page shows the original picture again." if key == "home" else
-                  "Photo removed. The tile shows its icon again." if key in HOME_PHOTO_TITLES else "Photo removed. The page shows its illustration again.")
+            flash("Photo removed. The built-in photo is back." if key in DEFAULT_PHOTOS else "Photo removed. The page shows its illustration again.")
             return redirect(url_for("admin_pictures") + f"#p-{key}")
         f = request.files.get("photo")
         data = f.read(PHOTO_MAX + 1) if f else b""
@@ -3077,7 +3087,7 @@ def admin_pictures():
             flash("Photo saved.")
         return redirect(url_for("admin_pictures") + f"#p-{key}")
     pages = [{"key": k, "title": "Home page" if k == "home" else HOME_PHOTO_TITLES.get(k) or scenes.TITLES.get(k, k.title()),
-              "photo": page_photo(k), "scene": scenes.render(scenes.PAGES[k][0]) if k in scenes.PAGES else None,
+              "photo": page_photo(k), "uploaded": k in _photo_versions(), "built_in": k in DEFAULT_PHOTOS, "scene": scenes.render(scenes.PAGES[k][0]) if k in scenes.PAGES else None,
               "line": scenes.PAGES.get(k, ("", ""))[1]} for k in PHOTO_KEYS]
     return render_template("admin_pictures.html", pages=pages)
 
