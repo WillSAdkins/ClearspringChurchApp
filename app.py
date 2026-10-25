@@ -3094,7 +3094,8 @@ def popup_settings():
     except ValueError:
         v = {}
     return {"tips_on": bool(v.get("tips_on", True)), "tips_every": str(v.get("tips_every", "3")) if str(v.get("tips_every", "3")) in app_features.OFTEN else "3",
-            "tips_off": [x for x in v.get("tips_off", []) if x in app_features.BY_ID], "sponsors_on": bool(v.get("sponsors_on", False))}
+            "tips_off": [x for x in v.get("tips_off", []) if x in app_features.BY_ID], "sponsors_on": bool(v.get("sponsors_on", False)),
+            "tips_home": bool(v.get("tips_home", True))}
 
 
 def feature_tips():
@@ -3250,6 +3251,7 @@ def admin_popups():
         st = popup_settings()
         if request.form.get("action") == "tips":
             st["tips_on"] = bool(request.form.get("tips_on"))
+            st["tips_home"] = bool(request.form.get("tips_home"))
             st["tips_every"] = request.form.get("tips_every") if request.form.get("tips_every") in app_features.OFTEN else "3"
             st["tips_off"] = [f["id"] for f in app_features.FEATURES if not request.form.get("tip_" + f["id"])]
             flash("Feature tips saved.")

@@ -16,29 +16,29 @@ function icon(dark, size=1024, withText=true, transparent=false) {
       <linearGradient id="fade${dark}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
       </linearGradient>
-      <mask id="water${dark}"><rect x="0" y="560" width="1024" height="300" fill="url(#fade${dark})"/></mask>
+      <mask id="water${dark}"><rect x="0" y="400" width="1024" height="280" fill="url(#fade${dark})"/></mask>
       <pattern id="lines${dark}" width="1024" height="14" patternUnits="userSpaceOnUse"><rect width="1024" height="8" fill="#fff"/></pattern>
-      <mask id="stripes${dark}"><rect x="0" y="560" width="1024" height="300" fill="url(#lines${dark})"/></mask>
+      <mask id="stripes${dark}"><rect x="0" y="400" width="1024" height="280" fill="url(#lines${dark})"/></mask>
     </defs>
     <!-- the name -->
-    <text x="512" y="520" text-anchor="middle" font-family="H" font-weight="700" font-size="300" fill="${fg}">יהוה</text>
+    <text x="512" y="362" text-anchor="middle" font-family="H" font-weight="700" font-size="300" fill="${fg}">יהוה</text>
     <!-- the shoreline -->
-    <line x1="140" y1="560" x2="884" y2="560" stroke="${fg}" stroke-width="5" stroke-linecap="round"/>
+    <line x1="140" y1="400" x2="884" y2="400" stroke="${fg}" stroke-width="5" stroke-linecap="round"/>
     <!-- its reflection in the water -->
     <g mask="url(#water${dark})"><g mask="url(#stripes${dark})"><g filter="url(#ripple${dark})">
-      <text x="512" y="520" text-anchor="middle" font-family="H" font-weight="700" font-size="300" fill="${fg}" transform="translate(0 1120) scale(1 -1)">יהוה</text>
+      <text x="512" y="362" text-anchor="middle" font-family="H" font-weight="700" font-size="300" fill="${fg}" transform="translate(0 800) scale(1 -1)">יהוה</text>
     </g></g></g>
     <!-- spring ripples -->
     <g fill="none" stroke="${fg}" stroke-width="3" opacity=".3">
-      <ellipse cx="512" cy="812" rx="230" ry="16"/><ellipse cx="512" cy="812" rx="140" ry="9"/><ellipse cx="512" cy="812" rx="56" ry="4"/>
+      <ellipse cx="512" cy="640" rx="230" ry="16"/><ellipse cx="512" cy="640" rx="140" ry="9"/><ellipse cx="512" cy="640" rx="56" ry="4"/>
     </g>
-    ${withText ? `<text x="512" y="902" text-anchor="middle" font-family="F" font-weight="700" font-size="58" letter-spacing="15" fill="${fg}">CLEARSPRING</text>
-    <text x="512" y="958" text-anchor="middle" font-family="F" font-weight="600" font-size="30" letter-spacing="22" fill="${fg}" opacity=".7">APP</text>` : ''}
+    ${withText ? `<text x="512" y="808" text-anchor="middle" font-family="F" font-weight="800" font-size="104" letter-spacing="8" fill="${fg}">CLEARSPRING</text>
+    <text x="512" y="900" text-anchor="middle" font-family="F" font-weight="700" font-size="56" letter-spacing="28" fill="${fg}" opacity=".7">APP</text>` : ''}
     <text x="512" y="170" text-anchor="middle" font-family="F" font-weight="600" font-size="0" fill="${fg}"> </text>
   </svg></div>`;
 }
-/* Clearspring app icon: the divine name, יהוה, above a still lake with its
-   reflection, and "CLEARSPRING APP" beneath. Black and white.
+/* Clearspring app icon: the divine name, יהוה, at the top above a still lake with its
+   reflection, and "CLEARSPRING APP" large beneath. Black and white.
      node tools/app_icon/make_app_icon.js
    writes static/icons/icon-1024.png (the master), icon-1024-light.png (white
    version) and icon-1024-mark.png (the name and lake only, on transparency,

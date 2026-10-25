@@ -28,12 +28,13 @@
 
   <section class="pu-admin-sec" aria-labelledby="tipsH">
     <h2 class="section-label" id="tipsH">Feature tips: the app advertising itself</h2>
-    <p class="pu-admin-lead">When there's no church notice to show, the app can point people to a part of it they haven't tried. It only shows a tip on the main tabs, never on someone's first day, at most one pop-up per visit, and never for something they already use. Each tip shows at most twice, and anyone can tap “Don’t show tips”.</p>
+    <p class="pu-admin-lead">When there's no church notice to show, the app can point people to a part of it they haven't tried. On the home page it can show a tip straight away on every visit (the first box below). On the other main tabs it never shows on someone's first day, at most one pop-up per visit, and never for something they already use. Each tip shows at most twice, and anyone can tap “Don’t show tips”.</p>
     <form method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="tips">
       <label class="admin-check"><input type="checkbox" name="tips_on" value="1" {{ 'checked' if settings.tips_on }}><span>Show feature tips</span></label>
-      <label for="tipsEvery" style="display:block;margin:.75rem 0 .3rem;font-weight:600">How often</label>
+      <label class="admin-check"><input type="checkbox" name="tips_home" value="1" {{ 'checked' if settings.tips_home }}><span>Show one straight away every time someone opens the home page</span></label>
+      <label for="tipsEvery" style="display:block;margin:.75rem 0 .3rem;font-weight:600">How often on the other tabs</label>
       <select id="tipsEvery" name="tips_every">{% for k, v in often.items() %}<option value="{{ k }}" {{ 'selected' if settings.tips_every == k }}>{{ v }}</option>{% endfor %}</select>
       <ul class="pu-admin-tips">
         {% for f in features %}{% set tt = totals.get('f-' ~ f.id) %}

@@ -5,9 +5,17 @@
 #   Android: makes a signed .aab to upload to Play Console, and a test .apk
 #   iPhone:  builds, signs and uploads straight to App Store Connect
 #            (it then appears in TestFlight after Apple processes it)
+#
+# Before you have any developer accounts, push to a branch whose name starts
+# with "app-build" (e.g. app-build-test). It runs a check build of both apps
+# with no secrets: a test .apk you can install on any Android phone, and an
+# iPhone build for Apple's simulator. That proves everything compiles before
+# you pay for anything.
 name: App builds
 
 on:
+  push:
+    branches: ["app-build*"]
   workflow_dispatch:
     inputs:
       version:
@@ -25,7 +33,7 @@ permissions:
 
 jobs:
   android:
-    if: inputs.platforms != 'iphone'
+    if: github.event_name == 'push' || inputs.platforms != 'iphone'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     defaults:
@@ -51,7 +59,7 @@ jobs:
       - run: npx cap sync android
       - name: App settings and version
         env:
-          APP_VERSION: ${{ inputs.version }}
+          APP_VERSION: ${{ inputs.version || '1.0.0' }}
           APP_BUILD: ${{ github.run_number }}
         run: node prepare-android.js
       - name: Build
@@ -77,14 +85,14 @@ jobs:
           fi
       - uses: actions/upload-artifact@v4
         with:
-          name: clearspring-android-${{ inputs.version }}-${{ github.run_number }}
+          name: clearspring-android-${{ inputs.version || 'check' }}-${{ github.run_number }}
           path: |
             native/android/app/build/outputs/bundle/release/*.aab
             native/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
 
   iphone:
-    if: inputs.platforms != 'android'
+    if: github.event_name == 'push' || inputs.platforms != 'android'
     runs-on: macos-latest
     timeout-minutes: 60
     defaults:
@@ -111,11 +119,19 @@ jobs:
       - run: npx cap sync ios
       - name: App settings and version
         env:
-          APP_VERSION: ${{ inputs.version }}
+          APP_VERSION: ${{ inputs.version || '1.0.0' }}
           APP_BUILD: ${{ github.run_number }}
           DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
         run: node prepare-ios.js
+      - name: Check build (no Apple account needed)
+        if: github.event_name == 'push'
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd" CODE_SIGNING_ALLOWED=NO build
+          echo "::notice::The iPhone app builds. Signing and uploading need the Apple secrets (docs/APP_STORE_LAUNCH.md)."
       - name: Build, sign and upload to App Store Connect
+        if: github.event_name != 'push'
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}

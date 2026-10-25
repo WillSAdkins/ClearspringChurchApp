@@ -3,7 +3,8 @@
    A scheduled notice shows once per person. Otherwise a feature tip may show:
    never on someone's first day with the app, never more than one pop-up per
    visit, one tip every few days (staff choose), never for something the
-   person already uses, and each tip at most twice. "Don't show tips" turns
+   person already uses, and each tip at most twice. On the home page (unless
+   staff turn it off) a tip shows straight away once per visit, every visit. "Don't show tips" turns
    them off on this phone. Only anonymous totals are sent (shown / tapped). */
 (function () {
   "use strict";
@@ -47,10 +48,10 @@
     var tipEl = document.getElementById("popupTip"), node = document.getElementById("puTips"), tipsData = null;
     try { tipsData = node ? JSON.parse(node.textContent) : null; } catch (e) { tipsData = null; }
     if (!tipEl || !tipsData || !tipsData.tips || !tipsData.tips.length) return;
-    var t = jget(TIPS, {}), now = Date.now();
-    if (!t.first) { t.first = now; jset(TIPS, t); return; }        // first day: let them explore
-    if (t.off || now - t.first < DAY) return;
-    if (t.last && now - t.last < (tipsData.every || 3) * DAY) return;
+    var t = jget(TIPS, {}), now = Date.now(), home = !!tipsData.home;
+    if (!t.first) { t.first = now; jset(TIPS, t); if (!home) return; }   // first day: let them explore
+    if (t.off) return;
+    if (!home && (now - t.first < DAY || (t.last && now - t.last < (tipsData.every || 3) * DAY))) return;
     t.seen = t.seen || {};
     var choice = null;
     // Unseen tips first, in the church's order; then ones seen once.
@@ -62,6 +63,13 @@
         try { used = !!(tip.used && USED[tip.used] && USED[tip.used]()); } catch (e) {}
         if (!used) { choice = tip; break; }
       }
+    }
+    if (!choice && home) {
+      // The home page always has one: the tip they've seen least, skipping
+      // things they already use where possible.
+      var pool = tipsData.tips.filter(function (x) { try { return !(x.used && USED[x.used] && USED[x.used]()); } catch (e) { return true; } });
+      if (!pool.length) pool = tipsData.tips;
+      choice = pool.slice().sort(function (a, b) { return (t.seen[a.id] || 0) - (t.seen[b.id] || 0); })[0];
     }
     if (!choice) return;
     el = tipEl; key = "f-" + choice.id;
@@ -113,5 +121,5 @@
     }
   });
   // Let the page settle (and the splash finish) before asking for attention.
-  setTimeout(show, key.charAt(0) === "p" ? 1800 : 2600);
+  setTimeout(show, key.charAt(0) === "p" ? 1800 : (tipsData && tipsData.home ? 700 : 2600));
 })();

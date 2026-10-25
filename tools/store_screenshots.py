@@ -11,6 +11,8 @@ stores accept:
   ipad-13      2064 × 2752   (App Store: only if the app is built for iPad)
   android      1080 × 1920   (Google Play phone screenshots)
 
+Run it against a copy with real, friendly content (not a test database): the
+screenshots show whatever is on the prayer wall and the Watch page.
 Pick the 4–6 that tell the story best. Apple shows the first three in search.
 """
 import asyncio
@@ -33,8 +35,8 @@ PAGES = [
     ("bible", "/bible/read/john/1"),
     ("listen", "/bible/listen"),
     ("prayer", "/prayer"),
+    ("library", "/library/classics"),
     ("watch", "/watch"),
-    ("study", "/bible/study"),
     ("game", "/games/rock-slinger"),
 ]
 

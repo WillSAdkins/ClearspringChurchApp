@@ -38,6 +38,6 @@
   </section>
 </div>
 {% endif %}
-{% if tips %}<script id="puTips" type="application/json">{{ {'tips': tips, 'every': popup_settings()['tips_every']|int}|tojson }}</script>{% endif %}
-<script src="{{ url_for('static', filename='popups.js') }}"></script>
+{% if tips %}<script id="puTips" type="application/json">{{ {'tips': tips, 'every': popup_settings()['tips_every']|int, 'home': request.endpoint == 'index' and popup_settings()['tips_home']}|tojson }}</script>{% endif %}
+<script src="{{ url_for('static', filename='popups.js', v='45') }}"></script>
 {% endif %}

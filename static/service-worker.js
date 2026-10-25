@@ -1,4 +1,4 @@
-const CACHE_NAME = "clearspring-v43";
+const CACHE_NAME = "clearspring-v45";
 const PAGE_CACHE = "cs-pages-v1";
 const OFFLINE_URLS = ["/offline", "/static/style.css", "/static/loading-screen.mp4"];
 
@@ -190,8 +190,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Clearspring";
   const options = {
     body: data.body || "",
-    icon: "/static/icons/icon-192.png?v=2",
-    badge: "/static/icons/icon-192.png?v=2",
+    icon: "/static/icons/icon-192.png?v=3",
+    badge: "/static/icons/icon-192.png?v=3",
     tag: (data.tag || "clearspring") + "-" + Date.now(),
     data: { url: data.url || "/" },
     renotify: true, requireInteraction: false, vibrate: [100, 50, 100],

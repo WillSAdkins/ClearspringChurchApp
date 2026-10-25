@@ -71,8 +71,8 @@
           title: chapLabel(st.slug, st.ch),
           artist: READERS[stand || st.reader] + " · Berean Standard Bible",
           album: "Clearspring · Audio Bible",
-          artwork: [{ src: "/static/icons/icon-192.png?v=2", sizes: "192x192", type: "image/png" },
-                    { src: "/static/icons/icon-512.png?v=2", sizes: "512x512", type: "image/png" }]
+          artwork: [{ src: "/static/icons/icon-192.png?v=3", sizes: "192x192", type: "image/png" },
+                    { src: "/static/icons/icon-512.png?v=3", sizes: "512x512", type: "image/png" }]
         });
       } catch (e) {}
     }

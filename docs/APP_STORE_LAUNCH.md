@@ -8,6 +8,28 @@ marked ⚠ against the store's own page on the day.
 
 ---
 
+## Start here: from no accounts to both stores
+
+Expect about 3–5 weeks to the first submission, mostly waiting on
+Dun & Bradstreet, Apple and Google. The app, the build workflow, icons,
+store screenshots (`docs/store/screenshots/`), listing text and privacy
+answers are ready.
+
+1. **Week 1:** confirm the church's legal name, charity number and address;
+   make a shared apps@ email; request the D-U-N-S number (free, about 5 + 2
+   working days); set up Firebase; check the KJV with Cambridge University
+   Press. Push this code to a branch named `app-build-test` (any name
+   starting `app-build`): GitHub then runs a **check build** of both apps
+   with no accounts or secrets, and the test `.apk` can be installed on any
+   Android phone from the run's Artifacts.
+2. **Weeks 2–3 (D-U-N-S arrived):** Apple fee waiver request, then Apple
+   enrolment ($99 a year unless waived); Play Console ($25 once); Android
+   upload key and GitHub secrets; reviewer account.
+3. **Weeks 3–5:** run *App builds* with version 1.0.0; Play internal test,
+   then production; TestFlight, then submit to Apple.
+
+---
+
 ## 0. The decisions to make first
 
 **Whose name goes on the app.** Publish as **Clearspring Church (the
