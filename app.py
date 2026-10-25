@@ -6186,6 +6186,7 @@ MODELS_3D = [
     {"slug": "nativity", "kind": "scenes", "inside": "open", "title": "The first Christmas", "sub": "A manger in a Bethlehem house, and shepherds", "ref": "Luke 2:1–20", "emoji": "⭐"},
     {"slug": "last-supper", "kind": "scenes", "title": "The Last Supper", "sub": "Reclining round the table in the upper room", "ref": "Luke 22:7–20; John 13", "emoji": "🍷"},
     {"slug": "empty-tomb", "kind": "scenes", "title": "The empty tomb", "sub": "The stone rolled away, in a garden", "ref": "Mark 16; John 20", "emoji": "🌅"},
+    {"slug": "daniel-statue", "kind": "size", "title": "The statue in Daniel's vision", "sub": "Gold, silver, bronze, iron and clay, and the stone cut without hands", "ref": "Daniel 2:31–45", "emoji": "🗿"},
     {"slug": "ark", "kind": "size", "title": "Noah's ark", "sub": "300 cubits long: see how big it really was", "ref": "Genesis 6", "emoji": "🛶"},
     {"slug": "nebuchadnezzar-statue", "kind": "size", "title": "Nebuchadnezzar's statue", "sub": "60 cubits of gold, and the fiery furnace", "ref": "Daniel 3", "emoji": "🗿"},
 ]

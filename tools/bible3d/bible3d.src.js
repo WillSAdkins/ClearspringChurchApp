@@ -11,6 +11,8 @@
    (about 45 cm). Where the text doesn't give a size, the info panel says so. */
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 
 function start(root) {
@@ -31,17 +33,24 @@ function start(root) {
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  // Film-like tone mapping, soft shadows and reflections: metals look like metal.
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   stage.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   const sky = dark() ? 0x0c2226 : 0xdcebe7;
   scene.background = new THREE.Color(sky);
   scene.fog = new THREE.Fog(sky, 400, 1400);
-  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 5000);
-  scene.add(new THREE.HemisphereLight(0xffffff, dark() ? 0x203030 : 0x8a7a60, 1.35));
-  const sun = new THREE.DirectionalLight(0xfff2dc, 1.6);
-  sun.position.set(-120, 200, 140);
-  scene.add(sun);
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 5000);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.55;
+  scene.add(new THREE.HemisphereLight(0xfff8ee, dark() ? 0x1d2a2c : 0x8a7a60, 0.9));
+  const sun = new THREE.DirectionalLight(0xfff0d6, 2.4);
+  scene.add(sun); scene.add(sun.target);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -53,6 +62,16 @@ function start(root) {
   const labels = [];
   const build = MODELS[kind] || MODELS.tabernacle;
   const model = build({ scene, labels, root });
+  // Sun and shadows sized to the model.
+  const size = model.size || Math.max(8, (model.maxDist || 100) * 0.45);
+  sun.position.copy(model.target).add(new THREE.Vector3(-0.55, 1, 0.65).multiplyScalar(size * 1.4));
+  sun.target.position.copy(model.target);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -size, right: size, top: size, bottom: -size, near: size * 0.1, far: size * 5 });
+  sun.shadow.bias = -0.0004; sun.shadow.normalBias = size * 0.0015;
+  sun.shadow.camera.updateProjectionMatrix();
+  scene.traverse((o) => { if (o.isMesh) { o.castShadow = !o.userData.noShadow; o.receiveShadow = true; } });
   camera.position.copy(model.camera);
   controls.target.copy(model.target);
   controls.minDistance = model.minDist || 5;
@@ -134,92 +153,221 @@ function start(root) {
 // ------------------------------------------------------------ helpers
 
 const C = {
-  linen: 0xf2ede0, gold: 0xd4ae45, bronze: 0xa86b3c, acacia: 0x8a5a33, hair: 0x4a423c, ram: 0x8d3b2b,
+  linen: 0xf2ede0, gold: 0xe0b44c, bronze: 0xb07040, acacia: 0x8a5a33, hair: 0x4a423c, ram: 0x8d3b2b,
   blue: 0x2d4f8c, sand: 0xd9c9a3, stone: 0xd8cfbd, cedar: 0x9a6a3f, pitch: 0x3b2a1e, ground: 0xcdbb92,
 };
-const mat = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: opts.rough ?? 0.75, metalness: opts.metal ?? 0, transparent: opts.opacity != null, opacity: opts.opacity ?? 1, side: opts.side ?? THREE.FrontSide });
-const GOLD = mat(C.gold, { rough: 0.35, metal: 0.7 });
-const BRONZE = mat(C.bronze, { rough: 0.45, metal: 0.6 });
 
+// Textures drawn in code (no image files): sand, stone blocks, wood grain, linen, plaster.
+const TEX = {};
+function noiseCanvas(size, draw) {
+  const c = document.createElement("canvas"); c.width = c.height = size;
+  const g = c.getContext("2d"); draw(g, size);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+function rnd(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+function speckle(g, n, r, cols, R) { for (let i = 0; i < n; i++) { g.fillStyle = cols[i % cols.length]; g.globalAlpha = 0.08 + R() * 0.18; g.beginPath(); g.arc(R() * 512, R() * 512, r * (0.4 + R()), 0, 7); g.fill(); } g.globalAlpha = 1; }
+function texture(kind) {
+  if (TEX[kind]) return TEX[kind];
+  const R = rnd(kind.length * 977 + 13);
+  const t = noiseCanvas(512, (g, S) => {
+    if (kind === "sand") { g.fillStyle = "#cdb98f"; g.fillRect(0, 0, S, S); speckle(g, 5000, 2.2, ["#e6d4ab", "#a8936a", "#bba57a", "#f0e2bf"], R); }
+    else if (kind === "grass") { g.fillStyle = "#8d9a5c"; g.fillRect(0, 0, S, S); speckle(g, 6000, 2.5, ["#a7b06a", "#6f7d44", "#b9a96d", "#7d8a4c"], R); }
+    else if (kind === "stone") {
+      g.fillStyle = "#d3c8b2"; g.fillRect(0, 0, S, S); speckle(g, 2500, 3, ["#e4dac6", "#b9ad95", "#c9bea7"], R);
+      g.strokeStyle = "rgba(90,78,60,.45)"; g.lineWidth = 3;
+      for (let row = 0; row < 8; row++) { const y = row * 64; g.beginPath(); g.moveTo(0, y); g.lineTo(S, y); g.stroke(); for (let x = (row % 2) * 64; x < S; x += 128) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 64); g.stroke(); } }
+    }
+    else if (kind === "rock") { g.fillStyle = "#bdb19a"; g.fillRect(0, 0, S, S); speckle(g, 3500, 5, ["#d4c9b3", "#9d917a", "#aa9e86", "#cfc2a8"], R); }
+    else if (kind === "wood") {
+      g.fillStyle = "#8a5a33"; g.fillRect(0, 0, S, S);
+      for (let i = 0; i < 140; i++) { g.strokeStyle = R() > 0.5 ? "rgba(60,35,18,.35)" : "rgba(170,120,75,.25)"; g.lineWidth = 1 + R() * 3; const y = R() * S; g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= S; x += 32) g.lineTo(x, y + Math.sin(x / 60 + i) * 4); g.stroke(); }
+      g.strokeStyle = "rgba(40,22,10,.5)"; g.lineWidth = 2; for (let y = 0; y < S; y += 64) { g.beginPath(); g.moveTo(0, y); g.lineTo(S, y); g.stroke(); }
+    }
+    else if (kind === "linen") {
+      g.fillStyle = "#efe8d8"; g.fillRect(0, 0, S, S);
+      for (let i = 0; i < S; i += 4) { g.fillStyle = `rgba(150,135,105,${0.06 + R() * 0.08})`; g.fillRect(i, 0, 1, S); g.fillRect(0, i, S, 1); }
+    }
+    else if (kind === "plaster") { g.fillStyle = "#e4dac8"; g.fillRect(0, 0, S, S); speckle(g, 2000, 6, ["#efe6d6", "#d2c6b1"], R); }
+    else if (kind === "clay") { g.fillStyle = "#3d3d40"; g.fillRect(0, 0, S, S); for (let i = 0; i < 90; i++) { g.fillStyle = R() > 0.45 ? "#a8643f" : "#57575c"; g.globalAlpha = 0.7; g.beginPath(); g.ellipse(R() * S, R() * S, 10 + R() * 40, 6 + R() * 22, R() * 3, 0, 7); g.fill(); } g.globalAlpha = 1; }
+    else if (kind === "water") { g.fillStyle = "#3f7f96"; g.fillRect(0, 0, S, S); for (let i = 0; i < 400; i++) { g.strokeStyle = `rgba(200,235,240,${0.05 + R() * 0.15})`; g.lineWidth = 1.5; const x = R() * S, y = R() * S, w = 10 + R() * 30; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + w / 2, y - 3, x + w, y); g.stroke(); } }
+  });
+  TEX[kind] = t; return t;
+}
+const mat = (color, opts = {}) => {
+  const m = new THREE.MeshStandardMaterial({ color, roughness: opts.rough ?? 0.75, metalness: opts.metal ?? 0, transparent: opts.opacity != null, opacity: opts.opacity ?? 1, side: opts.side ?? THREE.FrontSide });
+  if (opts.tex) { const t = texture(opts.tex).clone(); t.needsUpdate = true; t.repeat.set(opts.rep || 1, opts.rep2 || opts.rep || 1); m.map = t; }
+  return m;
+};
+const GOLD = mat(C.gold, { rough: 0.22, metal: 1 });
+const BRONZE = mat(C.bronze, { rough: 0.35, metal: 0.9 });
+const SILVER = mat(0xd8dde2, { rough: 0.2, metal: 1 });
+const IRON = mat(0x55575c, { rough: 0.45, metal: 0.85 });
+const WOOD = (rep = 1) => mat(0xffffff, { tex: "wood", rough: 0.8, rep });
+
+// Boxes have softly rounded edges; nothing in the ancient world was perfectly sharp.
 function box(scene, w, h, d, x, y, z, m) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+  const r = Math.min(w, h, d) * 0.12, geo = r > 0.004 ? new RoundedBoxGeometry(w, h, d, 3, Math.min(r, 0.6)) : new THREE.BoxGeometry(w, h, d);
+  const mesh = new THREE.Mesh(geo, m);
   mesh.position.set(x, y + h / 2, z);
   scene.add(mesh);
   return mesh;
 }
-function cyl(scene, r, h, x, y, z, m, seg = 24) {
-  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), m);
+function cyl(scene, r, h, x, y, z, m, seg = 32) {
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, Math.max(seg, 16)), m);
   mesh.position.set(x, y + h / 2, z);
   scene.add(mesh);
   return mesh;
 }
-function ground(scene, size, color = C.ground, grid = true) {
-  const g = new THREE.Mesh(new THREE.CircleGeometry(size, 64), mat(color, { rough: 1 }));
-  g.rotation.x = -Math.PI / 2;
+// A turned shape (pillar, vessel, lamp) from a list of [radius, height] points.
+function lathe(scene, pts, x, y, z, m, seg = 40) {
+  const mesh = new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r, h]) => new THREE.Vector2(r, h)), seg), m);
+  mesh.position.set(x, y, z); scene.add(mesh); return mesh;
+}
+function ground(scene, size, color = C.ground, grid = true, tex) {
+  const KIND = { [C.stone]: "stone", 0x9fae74: "grass", 0xb8ad7c: "grass", 0xb8a888: "plaster", 0xe9e2d0: "linen" };
+  const kind = tex || KIND[color] || "sand";
+  const g = new THREE.Mesh(new THREE.CircleGeometry(size, 96), mat(0xffffff, { tex: kind, rough: 1, rep: Math.max(1, size / (kind === "stone" ? 6 : 12)) }));
+  g.rotation.x = -Math.PI / 2; g.userData.noShadow = true;
   scene.add(g);
   if (grid) {
     const gh = new THREE.GridHelper(size * 1.6, Math.round(size * 1.6 / 10), 0x000000, 0x000000);
-    gh.material.opacity = 0.08; gh.material.transparent = true; gh.position.y = 0.02;
+    gh.material.opacity = 0.05; gh.material.transparent = true; gh.position.y = 0.02;
     scene.add(gh);
   }
 }
-// A person, 4 cubits (about 1.8 m) tall, for scale.
-function person(scene, labels, x, z) {
-  const m = mat(0x2f6f68);
-  cyl(scene, 0.45, 2.6, x, 0, z, m, 12);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 12), m);
-  head.position.set(x, 3.4, z);
-  scene.add(head);
-  labels.push({ pos: new THREE.Vector3(x, 4.4, z), text: "A person, for scale", minor: true,
-    detail: "About 4 cubits (1.8 m) tall. A cubit was the length from elbow to fingertip, roughly 45 cm." });
-}
 
-// A simple figure for scenes: robe, head and headcloth. h = height in cubits.
+// People: a robe turned on a lathe (hem, waist, shoulders), sleeves and hands,
+// a belt, a head and a headcloth falling to the shoulders. h = height in cubits.
 const SKIN = [0xc68a5e, 0xa8714a, 0x8d5a3b, 0xd29c74];
 function figure(scene, x, z, o = {}) {
   const h = o.h || 4, k = h / 4, g = new THREE.Group();
-  const robe = mat(o.robe ?? 0x8b6f4e);
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32 * k, 0.62 * k, 2.85 * k, 14), robe); body.position.y = 1.43 * k; g.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.36 * k, 16, 12), mat(SKIN[o.skin ?? 0])); head.position.y = 3.25 * k; g.add(head);
-  if (o.cloth !== false) { const c = new THREE.Mesh(new THREE.SphereGeometry(0.4 * k, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(o.cloth ?? 0xe8e0cc)); c.position.y = 3.3 * k; g.add(c); }
-  if (o.sit) { body.scale.y = 0.62; body.position.y = 0.9 * k; head.position.y -= 1.05 * k; g.children[2] && (g.children[2].position.y -= 1.05 * k); }
+  const robeM = mat(o.robe ?? 0x8b6f4e, { rough: 0.95, tex: "linen", rep: 2 });
+  robeM.color.multiplyScalar(1);
+  const skinM = mat(SKIN[o.skin ?? 0], { rough: 0.7 });
+  const sit = o.sit ? 0.62 : 1;
+  const prof = [[0, 0], [0.66, 0], [0.7, 0.08], [0.6, 0.6], [0.5, 1.3], [0.4, 1.85], [0.44, 2.2], [0.5, 2.55], [0.46, 2.75], [0.26, 2.88], [0.14, 2.95], [0, 2.95]];
+  const body = new THREE.Mesh(new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r * k, y * k * sit)), 28), robeM); g.add(body);
+  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.43 * k, 0.05 * k, 8, 28), mat(o.belt ?? 0x6b4a2b)); belt.rotation.x = Math.PI / 2; belt.position.y = 1.9 * k * sit; g.add(belt);
+  const top = 2.95 * k * sit;
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.13 * k, 0.15 * k, 0.25 * k, 12), skinM); neck.position.y = top + 0.08 * k; g.add(neck);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.3 * k, 20, 16), skinM); head.scale.set(0.92, 1.1, 0.95); head.position.y = top + 0.45 * k; g.add(head);
+  if (o.beard) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.22 * k, 14, 10, 0, Math.PI * 2, Math.PI * 0.45, Math.PI * 0.55), mat(0x3a2a20, { rough: 1 })); b.position.set(0.1 * k, top + 0.33 * k, 0); b.scale.set(0.9, 1.1, 1); g.add(b); }
+  if (o.cloth !== false) {
+    const cm = mat(o.cloth ?? 0xe8e0cc, { rough: 1, tex: "linen", rep: 1, side: THREE.DoubleSide });
+    const cp = [[0.0, 0.42], [0.25, 0.38], [0.33, 0.2], [0.34, 0], [0.36, -0.25], [0.42, -0.5]].map(([r, y]) => new THREE.Vector2(r * k, y * k));
+    const cloth = new THREE.Mesh(new THREE.LatheGeometry(cp, 24, -Math.PI * 0.8, Math.PI * 1.6), cm); cloth.position.y = top + 0.45 * k; cloth.rotation.y = Math.PI; g.add(cloth);
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.31 * k, 0.035 * k, 6, 24), mat(o.band ?? 0x3d2c22)); band.rotation.x = Math.PI / 2; band.position.y = top + 0.62 * k; g.add(band);
+  }
+  // Arms: sleeves hang by the sides (or reach forward, o.reach).
+  [-1, 1].forEach((sd) => {
+    const arm = new THREE.Group();
+    const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * k, 0.2 * k, 1.25 * k, 14), robeM); sleeve.position.y = -0.62 * k; arm.add(sleeve);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.1 * k, 12, 10), skinM); hand.position.y = -1.32 * k; arm.add(hand);
+    arm.position.set(0, top - 0.25 * k, sd * 0.48 * k);
+    arm.rotation.x = sd * 0.12; if (o.reach) arm.rotation.z = 0.9; if (o.raise && sd === 1) arm.rotation.x = Math.PI * 0.85;
+    g.add(arm);
+  });
   g.position.set(x, o.y || 0, z); g.rotation.y = o.face || 0; scene.add(g);
   return g;
 }
-// Lying or reclining on one elbow (for a meal).
+// A person, 4 cubits (about 1.8 m) tall, for scale.
+function person(scene, labels, x, z) {
+  figure(scene, x, z, { robe: 0x2f6f68, cloth: 0xe9e1cf, skin: 1, face: -Math.PI * 0.75 });
+  labels.push({ pos: new THREE.Vector3(x, 4.6, z), text: "A person, for scale", minor: true,
+    detail: "About 4 cubits (1.8 m) tall. A cubit was the length from elbow to fingertip, roughly 45 cm." });
+}
+// Lying on one elbow at a meal.
 function recliner(scene, x, z, rot, robe, skin = 0) {
-  const g = new THREE.Group();
-  const b = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 2.4, 6, 12), mat(robe)); b.rotation.z = Math.PI / 2 - 0.25; b.position.set(0, 0.75, 0); g.add(b);
-  const hd = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 10), mat(SKIN[skin])); hd.position.set(-1.45, 1.35, 0); g.add(hd);
+  const g = new THREE.Group(), rm = mat(robe, { rough: 0.95, tex: "linen", rep: 2 }), sm = mat(SKIN[skin], { rough: 0.7 });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.45, 2.2, 8, 16), rm); body.rotation.z = Math.PI / 2 - 0.12; body.position.set(0.2, 0.62, 0); g.add(body);
+  const chest = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 0.6, 8, 16), rm); chest.rotation.z = 0.9; chest.position.set(-1.25, 1.05, 0); g.add(chest);
+  const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.7, 6, 10), rm); arm.position.set(-1.35, 0.55, -0.35); g.add(arm);
+  const hd = new THREE.Mesh(new THREE.SphereGeometry(0.3, 18, 14), sm); hd.position.set(-1.7, 1.6, 0); g.add(hd);
+  const cl = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(0xe8e0cc, { rough: 1 })); cl.position.set(-1.7, 1.66, 0); g.add(cl);
   g.position.set(x, 0, z); g.rotation.y = rot; scene.add(g); return g;
 }
-// A four-legged animal from simple shapes (ox, donkey, sheep, lion).
+// Animals: rounded body, neck, tapering legs, tail.
 function beast(scene, x, z, o = {}) {
-  const s = o.s || 1, m = mat(o.color ?? 0x7a5c44), g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.55 * s, 1.5 * s, 6, 12), m); body.rotation.z = Math.PI / 2; body.position.y = 1.35 * s; g.add(body);
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.8 * s, 0.6 * s, 0.55 * s), m); head.position.set(1.45 * s, 1.75 * s, 0); g.add(head);
-  [[-0.7, -0.3], [-0.7, 0.3], [0.7, -0.3], [0.7, 0.3]].forEach(([a, b]) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * s, 0.1 * s, 1.0 * s, 8), m); l.position.set(a * s, 0.5 * s, b * s); g.add(l); });
-  if (o.ears) [-0.15, 0.15].forEach((b) => { const e = new THREE.Mesh(new THREE.ConeGeometry(0.08 * s, 0.55 * s, 6), m); e.position.set(1.4 * s, 2.25 * s, b * s); g.add(e); });
-  if (o.horns) [-0.32, 0.32].forEach((b) => { const e = new THREE.Mesh(new THREE.ConeGeometry(0.07 * s, 0.5 * s, 6), mat(0xe9dfc8)); e.position.set(1.4 * s, 2.15 * s, b * s); e.rotation.x = b > 0 ? -0.9 : 0.9; g.add(e); });
-  if (o.mane) { const mn = new THREE.Mesh(new THREE.SphereGeometry(0.62 * s, 14, 10), mat(o.mane)); mn.position.set(1.25 * s, 1.85 * s, 0); g.add(mn); head.position.x = 1.7 * s; }
-  if (o.wool) { body.scale.set(1.25, 1.1, 1.25); }
+  const s = o.s || 1, m = mat(o.color ?? 0x7a5c44, { rough: o.metal ? 0.3 : 0.9, metal: o.metal ? 1 : 0 }), g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.55 * s, 1.4 * s, 10, 18), m); body.rotation.z = Math.PI / 2; body.position.y = 1.4 * s; g.add(body);
+  if (o.wool) body.scale.set(1.2, 1.15, 1.25);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.26 * s, 0.38 * s, 0.9 * s, 14), m); neck.position.set(1.05 * s, 1.85 * s, 0); neck.rotation.z = -0.8; g.add(neck);
+  const head = new THREE.Mesh(new THREE.CapsuleGeometry(0.24 * s, 0.45 * s, 8, 14), m); head.rotation.z = Math.PI / 2 + 0.35; head.position.set(1.55 * s, 2.15 * s, 0); g.add(head);
+  [[-0.65, -0.3], [-0.65, 0.3], [0.6, -0.3], [0.6, 0.3]].forEach(([a, b]) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * s, 0.08 * s, 1.05 * s, 10), m); l.position.set(a * s, 0.53 * s, b * s); g.add(l); });
+  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * s, 0.06 * s, 0.9 * s, 8), m); tail.position.set(-1.25 * s, 1.15 * s, 0); tail.rotation.z = -0.35; g.add(tail);
+  if (o.ears) [-0.12, 0.12].forEach((b) => { const e = new THREE.Mesh(new THREE.ConeGeometry(0.07 * s, 0.6 * s, 8), m); e.position.set(1.45 * s, 2.65 * s, b * s); e.rotation.z = 0.25; g.add(e); });
+  if (o.horns) [-0.28, 0.28].forEach((b) => { const e = new THREE.Mesh(new THREE.TorusGeometry(0.22 * s, 0.05 * s, 6, 12, Math.PI * 0.7), mat(0xe9dfc8)); e.position.set(1.45 * s, 2.45 * s, b * s); e.rotation.set(0, b > 0 ? 0 : Math.PI, 0.6); g.add(e); });
+  if (o.mane) { const mn = new THREE.Mesh(new THREE.SphereGeometry(0.58 * s, 20, 14), o.metal ? m : mat(o.mane, { rough: 1 })); mn.scale.set(0.8, 1, 1.05); mn.position.set(1.2 * s, 1.95 * s, 0); g.add(mn);
+    const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.1 * s, 8, 6), m); tuft.position.set(-1.6 * s, 0.75 * s, 0); g.add(tuft); }
   g.position.set(x, o.y || 0, z); g.rotation.y = o.face || 0; scene.add(g); return g;
 }
 function flame(scene, x, y, z, s = 1) {
-  const f = new THREE.Mesh(new THREE.ConeGeometry(0.09 * s, 0.32 * s, 10), new THREE.MeshBasicMaterial({ color: 0xffb33b }));
-  f.position.set(x, y + 0.16 * s, z); scene.add(f); return f;
+  const f = new THREE.Mesh(new THREE.SphereGeometry(0.09 * s, 12, 10), new THREE.MeshBasicMaterial({ color: 0xffc04a }));
+  f.scale.y = 2.1; f.position.set(x, y + 0.17 * s, z); f.userData.noShadow = true; scene.add(f);
+  const glow = new THREE.PointLight(0xffa040, 0.6 * s, 4 * s, 2); glow.position.set(x, y + 0.4 * s, z); scene.add(glow);
+  return f;
 }
 function rock(scene, r, x, y, z, color = 0xb9ad96, sx = 1, sy = 1, sz = 1) {
-  const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), mat(color, { rough: 1 })); m.scale.set(sx, sy, sz); m.position.set(x, y, z); scene.add(m); return m;
+  // Roughen the surface by position (not by vertex), so shared corners move together and it stays solid.
+  const geo = new THREE.IcosahedronGeometry(r, 4), p = geo.attributes.position, ph = x * 1.7 + z * 2.3;
+  for (let i = 0; i < p.count; i++) {
+    const px = p.getX(i) / r, py = p.getY(i) / r, pz = p.getZ(i) / r;
+    const f = 1 + 0.08 * Math.sin(px * 5.1 + ph) * Math.cos(py * 4.3 - ph) + 0.05 * Math.sin(pz * 9.7 + px * 3.1);
+    p.setXYZ(i, p.getX(i) * f, p.getY(i) * f, p.getZ(i) * f);
+  }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, mat(color, { rough: 1, tex: "rock", rep: 1 })); m.scale.set(sx, sy, sz); m.position.set(x, y, z); scene.add(m); return m;
 }
 function hill(scene, r, x, z, h, color = 0x9aa36b) {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat(color, { rough: 1 })); m.scale.y = h / r; m.position.set(x, 0, z); scene.add(m); return m;
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 20, 0, Math.PI * 2, 0, Math.PI / 2), mat(color, { rough: 1, tex: "grass", rep: 4 })); m.scale.y = h / r; m.position.set(x, 0, z); scene.add(m); return m;
 }
 function tree(scene, x, z, h = 8) {
-  cyl(scene, 0.35, h * 0.55, x, 0, z, mat(0x6b5136), 8);
-  const c = new THREE.Mesh(new THREE.SphereGeometry(h * 0.32, 14, 10), mat(0x6f8a4f, { rough: 1 })); c.scale.y = 0.75; c.position.set(x, h * 0.72, z); scene.add(c);
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.45, h * 0.55, 10), mat(0x6b5136, { rough: 1 })); trunk.position.set(x, h * 0.275, z); trunk.rotation.z = 0.08; scene.add(trunk);
+  const leaf = mat(0x6f8a4f, { rough: 1 });
+  [[0, 0.75, 0, 0.3], [0.25, 0.68, 0.15, 0.22], [-0.2, 0.7, -0.15, 0.24], [0.05, 0.86, -0.1, 0.2]].forEach(([dx, dy, dz, r]) => { const c = new THREE.Mesh(new THREE.IcosahedronGeometry(h * r, 2), leaf); c.scale.y = 0.7; c.position.set(x + dx * h, h * dy, z + dz * h); scene.add(c); });
 }
-function horn(scene, x, y, z, s, m) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.12 * s, 0.32 * s, 10), m); c.position.set(x, y + 0.16 * s, z); scene.add(c); }
+function horn(scene, x, y, z, s, m) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.12 * s, 0.32 * s, 16), m); c.position.set(x, y + 0.16 * s, z); scene.add(c); }
+/* A great statue of a man, built to height h with a material for each part:
+   head, chest and arms, belly and thighs, legs, feet. */
+function colossus(scene, x, z, h, M, face = 0) {
+  const g = new THREE.Group(), u = h / 12;
+  const add = (geo, m, px, py, pz, rx = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(px, py, pz); o.rotation.x = rx; o.rotation.z = rz; g.add(o); return o; };
+  const tube = (r1, r2, len, m, px, py, pz, rz = 0) => add(new THREE.CylinderGeometry(r1, r2, len, 28), m, px, py, pz, 0, rz);
+  // Feet and toes.
+  [-1, 1].forEach((sd) => {
+    add(new RoundedBoxGeometry(1.5 * u, 0.5 * u, 0.75 * u, 3, 0.2 * u), M.feet, 0.35 * u, 0.25 * u, sd * 0.6 * u);
+    for (let t = -2; t <= 2; t++) add(new THREE.SphereGeometry(0.12 * u, 10, 8), M.feet, 1.1 * u, 0.12 * u, sd * 0.6 * u + t * 0.14 * u);
+    // Shins (iron) and knees, thighs (bronze).
+    tube(0.5 * u, 0.32 * u, 3.0 * u, M.legs, 0, 2.0 * u, sd * 0.62 * u);
+    add(new THREE.SphereGeometry(0.52 * u, 20, 16), M.legs, 0, 3.55 * u, sd * 0.62 * u);
+    tube(0.78 * u, 0.55 * u, 2.6 * u, M.thighs, 0, 4.9 * u, sd * 0.6 * u);
+  });
+  // Hips and belly (bronze), chest (silver): one turned shape each.
+  const prof = (pts) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r * u, y * u)), 40);
+  const hips = add(prof([[0, 0], [1.25, 0.05], [1.4, 0.6], [1.3, 1.3], [1.15, 1.9], [0, 1.95]]), M.thighs, 0, 6.0 * u, 0); hips.scale.z = 0.78;
+  // A short kilt, flaring from the waist over the thighs.
+  const kilt = add(new THREE.LatheGeometry([[1.75, 0], [1.7, 0.15], [1.45, 1.2], [1.2, 2.3], [1.16, 2.5]].map(([r, y]) => new THREE.Vector2(r * u, y * u)), 40), M.thighs, 0, 5.4 * u, 0); kilt.scale.z = 0.8; kilt.material = M.thighs;
+  for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; const pl = add(new THREE.BoxGeometry(0.06 * u, 1.9 * u, 0.12 * u), M.thighs, Math.cos(a) * 1.55 * u, 6.4 * u, Math.sin(a) * 1.55 * u * 0.8); pl.rotation.y = -a; pl.rotation.z = Math.cos(a) * 0.12; }
+  const chest = add(prof([[0, 0], [1.15, 0], [1.35, 0.6], [1.55, 1.4], [1.7, 2.0], [1.45, 2.35], [0.5, 2.55], [0, 2.6]]), M.chest, 0, 7.9 * u, 0); chest.scale.z = 0.7;
+  const belt = add(new THREE.TorusGeometry(1.08 * u, 0.1 * u, 10, 40), M.thighs, 0, 7.9 * u, 0, Math.PI / 2); belt.scale.y = 0.75;
+  // Arms (silver).
+  [-1, 1].forEach((sd) => {
+    add(new THREE.SphereGeometry(0.62 * u, 20, 16), M.chest, 0, 9.95 * u, sd * 1.6 * u);
+    tube(0.48 * u, 0.38 * u, 2.0 * u, M.chest, 0.05 * u, 8.9 * u, sd * 1.72 * u);
+    tube(0.38 * u, 0.28 * u, 1.9 * u, M.chest, 0.35 * u, 7.1 * u, sd * 1.76 * u, 0.25);
+    add(new THREE.SphereGeometry(0.33 * u, 16, 12), M.chest, 0.6 * u, 6.0 * u, sd * 1.76 * u);
+  });
+  // Neck and head (gold), with a beard and a crown.
+  tube(0.42 * u, 0.5 * u, 0.5 * u, M.head, 0, 10.65 * u, 0);
+  const head = add(new THREE.SphereGeometry(0.8 * u, 32, 24), M.head, 0, 11.35 * u, 0); head.scale.set(0.95, 1.12, 0.88);
+  const beard = add(prof([[0, -0.7], [0.45, -0.5], [0.6, -0.15], [0.62, 0.15], [0, 0.2]]), M.head, 0.25 * u, 11.0 * u, 0); beard.scale.z = 0.8;
+  add(new THREE.SphereGeometry(0.16 * u, 12, 10), M.head, 0.66 * u, 11.35 * u, 0);
+  const crown = add(new THREE.CylinderGeometry(0.62 * u, 0.7 * u, 0.45 * u, 32, 1, true), M.head, 0, 12.05 * u, 0); crown.material = M.head;
+  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; add(new THREE.ConeGeometry(0.1 * u, 0.35 * u, 8), M.head, Math.cos(a) * 0.62 * u, 12.42 * u, Math.sin(a) * 0.62 * u); }
+  g.position.set(x, 0, z); g.rotation.y = face; scene.add(g); return g;
+}
+function water(scene, size, y = 0) { const w = new THREE.Mesh(new THREE.CircleGeometry(size, 96), mat(0xffffff, { tex: "water", rough: 0.12, metal: 0.1, rep: size / 10 })); w.rotation.x = -Math.PI / 2; w.position.y = y; w.userData.noShadow = true; scene.add(w); return w; }
 const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const ref = (r) => "/bible/search?q=" + encodeURIComponent(r);
 
@@ -230,7 +378,7 @@ const MODELS = {
     ground(scene, 160, C.sand);
     // Courtyard: 100 x 50 cubits, linen hangings 5 cubits high on posts (Exodus 27:9-18).
     const L = 50, W = 25, H = 5;
-    const linen = mat(C.linen, { side: THREE.DoubleSide });
+    const linen = mat(0xffffff, { side: THREE.DoubleSide, tex: "linen", rep: 6, rep2: 1 });
     const wall = (len, x, z, rot) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(len, H), linen); p.position.set(x, H / 2, z); p.rotation.y = rot; scene.add(p); };
     wall(100, 0, -W, 0); wall(100, 0, W, 0); wall(50, -L, 0, Math.PI / 2);
     wall(15, L, -17.5, Math.PI / 2); wall(15, L, 17.5, Math.PI / 2);
@@ -238,6 +386,9 @@ const MODELS = {
     gate.position.set(L, H / 2, 0); gate.rotation.y = Math.PI / 2; scene.add(gate);
     for (let x = -L; x <= L; x += 5) { cyl(scene, 0.25, H, x, 0, -W, BRONZE, 8); cyl(scene, 0.25, H, x, 0, W, BRONZE, 8); }
     for (let z = -W; z <= W; z += 5) { cyl(scene, 0.25, H, -L, 0, z, BRONZE, 8); cyl(scene, 0.25, H, L, 0, z, BRONZE, 8); }
+    // Silver hooks and bands on every post (Exodus 27:10).
+    for (let x = -L; x <= L; x += 5) [-W, W].forEach((z) => cyl(scene, 0.3, 0.25, x, H - 0.3, z, SILVER, 12));
+    for (let z = -W; z <= W; z += 5) [-L, L].forEach((x) => cyl(scene, 0.3, 0.25, x, H - 0.3, z, SILVER, 12));
     // Bronze altar 5 x 5 x 3 (Exodus 27:1) and the laver (Exodus 30:18; no size given).
     box(scene, 5, 3, 5, 25, 0, 0, BRONZE);
     cyl(scene, 1.6, 1.4, 8, 0, 0, BRONZE);
@@ -248,10 +399,10 @@ const MODELS = {
     [[-5], [5]].forEach(([z]) => { const b = new THREE.Mesh(new THREE.BoxGeometry(30, 10, 0.4), boards); b.position.set(-25, 5, z); tent.add(b); });
     const back = new THREE.Mesh(new THREE.BoxGeometry(0.4, 10, 10), boards); back.position.set(tx0, 5, 0); tent.add(back);
     // Coverings: linen, goat hair, rams' skins dyed red, and a durable outer layer (Exodus 26:1-14).
-    const cover = new THREE.Mesh(new THREE.BoxGeometry(31, 0.6, 12), mat(C.hair)); cover.position.set(-25.5, 10.3, 0); tent.add(cover);
-    const sideL = new THREE.Mesh(new THREE.BoxGeometry(31, 10, 0.3), mat(C.ram)); sideL.position.set(-25.5, 5.2, -6.05);
+    const cover = new THREE.Mesh(new RoundedBoxGeometry(31, 0.6, 12, 2, 0.25), mat(C.hair, { tex: "linen", rep: 4, rough: 1 })); cover.position.set(-25.5, 10.3, 0); tent.add(cover);
+    const sideL = new THREE.Mesh(new THREE.BoxGeometry(31, 10, 0.3), mat(C.ram, { tex: "linen", rep: 4, rough: 1 })); sideL.position.set(-25.5, 5.2, -6.05);
     const sideR = sideL.clone(); sideR.position.z = 6.05;
-    const backC = new THREE.Mesh(new THREE.BoxGeometry(0.3, 10, 12), mat(C.ram)); backC.position.set(tx0 - 1, 5.2, 0);
+    const backC = new THREE.Mesh(new THREE.BoxGeometry(0.3, 10, 12), mat(C.ram, { tex: "linen", rep: 2, rough: 1 })); backC.position.set(tx0 - 1, 5.2, 0);
     const roof = new THREE.Group(); roof.add(cover, sideL, sideR, backC); scene.add(roof);
     // Entrance screen and the veil before the Most Holy Place.
     const screen = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), mat(C.blue, { side: THREE.DoubleSide, opacity: 0.9 }));
@@ -261,8 +412,9 @@ const MODELS = {
     // Furniture.
     box(scene, 2.5, 1.5, 1.5, -35, 0, 0, GOLD);                    // ark
     box(scene, 2, 1.5, 1, -20, 0, -3, GOLD);                        // table
-    cyl(scene, 0.12, 2.6, -20, 0, 3, GOLD, 8);                       // lampstand
-    for (let i = -3; i <= 3; i++) cyl(scene, 0.08, 0.6, -20, 2.3, 3 + i * 0.28, GOLD, 6);
+    cyl(scene, 0.08, 2.4, -20, 0, 3, GOLD, 12);                      // lampstand
+    lathe(scene, [[0, 0], [0.45, 0], [0.4, 0.1], [0.15, 0.3], [0.08, 0.4]], -20, 0, 3, GOLD);
+    for (let i = -3; i <= 3; i++) { cyl(scene, 0.04, 0.3, -20, 2.3 - Math.abs(i) * 0.06, 3 + i * 0.28, GOLD, 8); flame(scene, -20, 2.62, 3 + i * 0.28, 0.6); }
     box(scene, 1, 2, 1, -28, 0, 0, GOLD);                            // incense altar
     labels.push(
       { pos: v3(50, 7, 0), text: "Gate", detail: "The one way in: a 20-cubit screen of blue, purple and scarlet yarn and fine linen, facing east.", href: ref("Exodus 27:16"), hrefText: "Exodus 27:16" },
@@ -283,8 +435,8 @@ const MODELS = {
 
   temple({ scene, labels }) {
     ground(scene, 180, C.stone);
-    const stone = mat(C.stone, { rough: 0.85 });
-    const cedar = mat(C.cedar);
+    const stone = mat(0xf0e6d2, { rough: 0.9, tex: "stone", rep: 14 });
+    const cedar = WOOD(6);
     // The house: 60 long, 20 wide, 30 high (1 Kings 6:2). Most Holy Place a 20-cubit cube (6:20).
     const house = new THREE.Group(); scene.add(house);
     const add = (g, w, h, d, x, y, z, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y + h / 2, z); g.add(b); return b; };
@@ -305,12 +457,17 @@ const MODELS = {
     add(inner, 1, 0.4, 20, -32, 8, 0, GOLD);
     add(inner, 2.5, 1.5, 1.5, -30, 0, 0, GOLD);
     // Jachin and Boaz: 18 cubits high, 12 round, with 5-cubit capitals (7:15-22).
-    [[-6, "Boaz"], [6, "Jachin"]].forEach(([z]) => { cyl(scene, 12 / (2 * Math.PI), 18, 32, 0, z, BRONZE); cyl(scene, 2.4, 5, 32, 18, z, BRONZE, 20); });
+    [[-6, "Boaz"], [6, "Jachin"]].forEach(([z]) => {
+      lathe(scene, [[0, 0], [2.4, 0], [2.4, 0.6], [1.95, 0.9], [1.9, 18], [2.1, 18.3], [2.6, 19.2], [2.7, 20.5], [2.3, 22], [1.4, 22.8], [0, 23]], 32, 0, z, BRONZE, 48);
+      // Network and two rows of pomegranates round each capital (1 Kings 7:17-20).
+      for (let row = 0; row < 2; row++) for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2 + row * 0.13; const pm = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), BRONZE); pm.position.set(32 + Math.cos(a) * 2.68, 19.6 + row * 0.6, z + Math.sin(a) * 2.68); scene.add(pm); }
+      const net = new THREE.Mesh(new THREE.CylinderGeometry(2.66, 2.66, 1.3, 40, 4, true), new THREE.MeshStandardMaterial({ color: C.bronze, metalness: 0.9, roughness: 0.4, wireframe: true })); net.position.set(32, 21.1, z); scene.add(net);
+    });
     // The Sea: 10 across, 5 high, on twelve oxen (7:23-26). Bronze altar 20 x 20 x 10 (2 Chronicles 4:1).
     const seaZ = 28, seaX = 40;
-    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; box(scene, 1.6, 3, 1.2, seaX + Math.cos(a) * 3.5, 0, seaZ + Math.sin(a) * 3.5, BRONZE); }
-    const sea = new THREE.Mesh(new THREE.CylinderGeometry(5, 4.2, 5, 32, 1, true), mat(C.bronze, { rough: 0.45, metal: 0.6, side: THREE.DoubleSide })); sea.position.set(seaX, 5.5, seaZ); scene.add(sea);
-    const water = new THREE.Mesh(new THREE.CircleGeometry(4.8, 32), mat(0x5aa7b5, { rough: 0.2 })); water.rotation.x = -Math.PI / 2; water.position.set(seaX, 7.6, seaZ); scene.add(water);
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; beast(scene, seaX + Math.cos(a) * 3.2, seaZ + Math.sin(a) * 3.2, { color: C.bronze, metal: true, horns: true, s: 1.3, face: -a }); }
+    const sea = lathe(scene, [[0, 0], [3.2, 0.2], [4.4, 1.6], [4.9, 3.6], [5.15, 4.9], [5.4, 5.05], [5.0, 5.0], [4.7, 3.6], [0, 0.4]], seaX, 3.0, seaZ, mat(C.bronze, { rough: 0.35, metal: 0.9, side: THREE.DoubleSide }), 56);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(4.75, 48), mat(0xffffff, { tex: "water", rough: 0.1 })); water.rotation.x = -Math.PI / 2; water.position.set(seaX, 7.6, seaZ); scene.add(water);
     box(scene, 20, 10, 20, 62, 0, 0, BRONZE);
     for (let i = 0; i < 5; i++) { box(scene, 4, 3, 4, 0 - i * 10, 0, -30, BRONZE); box(scene, 4, 3, 4, 0 - i * 10, 0, 30, BRONZE); }
     labels.push(
@@ -331,8 +488,8 @@ const MODELS = {
   },
 
   ark({ scene, labels }) {
-    ground(scene, 320, 0x9fb7ad, false);
-    const wood = mat(C.pitch, { rough: 0.9 });
+    water(scene, 600, 0.5); ground(scene, 320, C.sand, false, "grass");
+    const wood = mat(0x8f6a4a, { rough: 0.9, tex: "wood", rep: 30, rep2: 3 });
     // 300 long, 50 wide, 30 high, three decks, a window a cubit below the roof, a door in the side (Genesis 6:15-16).
     const hull = new THREE.Mesh(new THREE.BoxGeometry(300, 30, 50), wood); hull.position.set(0, 15, 0); scene.add(hull);
     const roof = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 300, 3, 1), wood); // ridge
@@ -355,17 +512,25 @@ const MODELS = {
     // 2.5 x 1.5 x 1.5 cubits, overlaid with gold, carried on poles through four rings (Exodus 25:10-22).
     box(scene, 2.5, 1.5, 1.5, 0, 0.1, 0, GOLD);
     box(scene, 2.56, 0.12, 1.56, 0, 1.6, 0, GOLD);                   // mercy seat
+    // The gold moulding round the top (Exodus 25:11).
+    [[0, 0.78], [0, -0.78]].forEach(([x, z]) => { const r = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 2.5, 4, 8), GOLD); r.rotation.z = Math.PI / 2; r.position.set(x, 1.5, z); scene.add(r); });
+    [[1.28, 0], [-1.28, 0]].forEach(([x, z]) => { const r = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 1.5, 4, 8), GOLD); r.rotation.x = Math.PI / 2; r.position.set(x, 1.5, z); scene.add(r); });
     const pole = mat(C.acacia);
     [-0.55, 0.55].forEach((z) => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 6.5, 10), pole); p.rotation.z = Math.PI / 2; p.position.set(0, 0.55, z * 1.45); scene.add(p); });
     [-1.05, 1.05].forEach((x) => [-0.8, 0.8].forEach((z) => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 8, 16), GOLD); r.position.set(x, 0.55, z); scene.add(r); }));
-    // Two cherubim facing each other, wings spread over the cover. Their form is not described; these are simple shapes.
-    [-1, 1].forEach((s) => {
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 0.8, 12), GOLD); body.position.set(s * 0.95, 2.1, 0); scene.add(body);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 10), GOLD); head.position.set(s * 0.88, 2.6, 0); scene.add(head);
-      [-1, 1].forEach((w) => {
-        const wing = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.42), GOLD);
-        wing.position.set(s * 0.55, 2.55, w * 0.32); wing.rotation.z = s * -0.55; wing.rotation.x = w * 0.25; scene.add(wing);
-      });
+    // Two cherubim of hammered gold facing each other, faces down towards the cover, wings
+    // spread over it (Exodus 25:18-20). Their form isn't described; these are kneeling winged figures.
+    const wingShape = new THREE.Shape(); wingShape.moveTo(0, 0);
+    wingShape.bezierCurveTo(0.5, 0.05, 1.0, 0.3, 1.38, 0.78);
+    [[1.1, 0.6], [1.12, 0.48], [0.86, 0.42], [0.88, 0.3], [0.62, 0.27], [0.62, 0.16], [0.35, 0.16]].forEach(([x, y], i) => i % 2 ? wingShape.lineTo(x, y) : wingShape.quadraticCurveTo(x + 0.08, y + 0.06, x, y));
+    wingShape.quadraticCurveTo(0.15, 0.12, 0, 0);
+    const wingGeo = new THREE.ExtrudeGeometry(wingShape, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 2, curveSegments: 16 });
+    [-1, 1].forEach((sd) => {
+      const c = new THREE.Group();
+      c.add(Object.assign(new THREE.Mesh(new THREE.LatheGeometry([[0, 0], [0.22, 0], [0.2, 0.2], [0.14, 0.45], [0.16, 0.6], [0.1, 0.7], [0, 0.72]].map(([r, y]) => new THREE.Vector2(r, y)), 24), GOLD)));
+      const hd = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 12), GOLD); hd.position.set(-0.08, 0.8, 0); c.add(hd);
+      [-1, 1].forEach((w) => { const wing = new THREE.Mesh(wingGeo, GOLD); wing.position.set(0.02, 0.55, w * 0.1); wing.rotation.set(0, w > 0 ? 0.25 : -0.25 + Math.PI, 0); wing.scale.set(-0.8, 0.8, 1); if (w < 0) wing.scale.z = -1; c.add(wing); });
+      c.position.set(sd * 0.95, 1.72, 0); c.rotation.y = sd > 0 ? 0 : Math.PI; c.rotation.z = 0; scene.add(c);
     });
     labels.push(
       { pos: v3(0, 1.4, 0.9), text: "The ark", detail: "A chest of acacia wood 2.5 cubits long, 1.5 wide and 1.5 high (about 1.1 × 0.7 × 0.7 m), covered inside and out with gold. It held the tablets of the covenant.", href: ref("Exodus 25:10"), hrefText: "Exodus 25:10–16" },
@@ -381,17 +546,20 @@ const MODELS = {
     // Hammered from one talent of pure gold, with six branches and seven lamps (Exodus 25:31-40).
     // No size is given; this is about 3 cubits high, as later tradition describes.
     const top = 3.1, cy = 3.1;
-    cyl(scene, 0.55, 0.12, 0, 0, 0, GOLD, 32); cyl(scene, 0.3, 0.25, 0, 0.12, 0, GOLD, 24);
+    lathe(scene, [[0, 0], [0.62, 0], [0.62, 0.06], [0.45, 0.14], [0.3, 0.3], [0.16, 0.38], [0.1, 0.5], [0, 0.5]], 0, 0, 0, GOLD, 48);
     cyl(scene, 0.07, top - 0.3, 0, 0.3, 0, GOLD, 12);
     [0.9, 1.6, 2.3, 2.9].forEach((y) => { const k = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), GOLD); k.position.set(0, y, 0); scene.add(k); });
     [0.45, 0.9, 1.35].forEach((r) => {
       const pts = []; for (let i = 0; i <= 24; i++) { const a = Math.PI + (i / 24) * Math.PI; pts.push(v3(r * Math.cos(a), cy + r * Math.sin(a), 0)); }
       scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.045, 8), GOLD));
-      [Math.PI * 1.25, Math.PI * 1.75].forEach((a) => { const k = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), GOLD); k.position.set(r * Math.cos(a), cy + r * Math.sin(a), 0); scene.add(k); });
+      // Three cups shaped like almond flowers on each branch (Exodus 25:33).
+      [Math.PI * 1.2, Math.PI * 1.5, Math.PI * 1.8].forEach((a) => [-1, 1].forEach((sd) => { if (a === Math.PI * 1.5 && sd > 0) return;
+        const cx = (a === Math.PI * 1.5 ? 0 : sd * r * Math.abs(Math.cos(a))), cyy = cy + r * Math.sin(a);
+        if (a !== Math.PI * 1.5) lathe(scene, [[0, -0.05], [0.07, 0], [0.09, 0.07], [0.06, 0.1]], cx, cyy, 0, GOLD, 20); }));
     });
     [-1.35, -0.9, -0.45, 0, 0.45, 0.9, 1.35].forEach((x) => {
-      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 8), GOLD); lamp.scale.y = 0.55; lamp.position.set(x, top + 0.04, 0); scene.add(lamp);
-      flame(scene, x, top + 0.1, 0, 1);
+      lathe(scene, [[0, -0.06], [0.12, -0.03], [0.15, 0.04], [0.11, 0.08], [0.05, 0.06]], x, top + 0.02, 0, GOLD, 24);
+      flame(scene, x, top + 0.06, 0, 0.55);
     });
     labels.push(
       { pos: v3(0, 3.7, 0), text: "Seven lamps", detail: "Filled with pure olive oil and kept burning from evening till morning, the only light in the Holy Place.", href: ref("Exodus 27:20"), hrefText: "Exodus 27:20–21" },
@@ -505,8 +673,8 @@ const MODELS = {
     box(scene, 2.6, 1.2, 2.2, 0, y0, 1.2, ivory);
     box(scene, 2.6, 3.4, 0.4, 0, y0, 0.15, GOLD);
     const arch = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.4, 32, 1, false, -Math.PI / 2, Math.PI), GOLD); arch.rotation.x = Math.PI / 2; arch.rotation.z = Math.PI / 2; arch.position.set(0, y0 + 3.4, 0.15); scene.add(arch);
-    [-1.45, 1.45].forEach((x) => { box(scene, 0.3, 1.0, 2.2, x, y0 + 1.2, 1.2, GOLD); beast(scene, x * 1.45, 2.4, { color: 0xc9a13b, mane: 0xb8862b, s: 0.55, y: y0, face: -Math.PI / 2 }); });
-    for (let i = 0; i < 6; i++) [-1, 1].forEach((sd) => beast(scene, sd * (3.2 - i * 0.3), 3.3 - i * 0.3 + 0.3, { color: 0xc9a13b, mane: 0xb8862b, s: 0.38, y: i * 0.5 + 0.5, face: -Math.PI / 2 }));
+    [-1.45, 1.45].forEach((x) => { box(scene, 0.3, 1.0, 2.2, x, y0 + 1.2, 1.2, GOLD); beast(scene, x * 1.45, 2.4, { color: C.gold, metal: true, mane: 1, s: 0.55, y: y0, face: -Math.PI / 2 }); });
+    for (let i = 0; i < 6; i++) [-1, 1].forEach((sd) => beast(scene, sd * (3.2 - i * 0.3), 3.3 - i * 0.3 + 0.3, { color: C.gold, metal: true, mane: 1, s: 0.38, y: i * 0.5 + 0.5, face: -Math.PI / 2 }));
     labels.push(
       { pos: v3(0, 8.1, 0.2), text: "Ivory and gold", detail: "“Nothing like it had ever been made for any kingdom.” Built of ivory and overlaid with fine gold.", href: ref("1 Kings 10:18"), hrefText: "1 Kings 10:18–20" },
       { pos: v3(3.3, 1.6, 3.4), text: "Six steps, twelve lions", detail: "A lion stood at each end of every step: twelve in all, perhaps one for each tribe.", href: ref("1 Kings 10:20"), hrefText: "1 Kings 10:19–20" },
@@ -520,18 +688,21 @@ const MODELS = {
     ground(scene, 140, 0xb8ad7c, false);
     // The Valley of Elah: two armies on the hillsides, a brook between (1 Samuel 17:1-3).
     hill(scene, 60, -15, -85, 18, 0x9aa36b); hill(scene, 60, 15, 85, 18, 0xa39f6b);
-    const brook = new THREE.Mesh(new THREE.PlaneGeometry(200, 3.5), mat(0x5d9cb0, { rough: 0.2 })); brook.rotation.x = -Math.PI / 2; brook.rotation.z = 0.08; brook.position.set(0, 0.04, 6); scene.add(brook);
+    const brook = new THREE.Mesh(new THREE.PlaneGeometry(200, 3.5), mat(0xffffff, { tex: "water", rough: 0.15, rep: 20, rep2: 1 })); brook.userData.noShadow = true; brook.rotation.x = -Math.PI / 2; brook.rotation.z = 0.08; brook.position.set(0, 0.04, 6); scene.add(brook);
     for (let i = 0; i < 5; i++) rock(scene, 0.22, -3 + i * 0.5, 0.12, 4.2 + (i % 2) * 0.4, 0x9c9488);
     for (let i = 0; i < 40; i++) { figure(scene, -45 + (i % 20) * 4.5, -52 - Math.floor(i / 20) * 4, { robe: 0x6b7a4f, h: 3.8, skin: i % 4, face: Math.PI / 2 }); figure(scene, -45 + (i % 20) * 4.5, 52 + Math.floor(i / 20) * 4, { robe: 0x8a5a3c, h: 3.8, skin: (i + 2) % 4, face: -Math.PI / 2, cloth: 0xa88a52 }); }
     // Goliath: six cubits and a span (about 2.9 m) in the Hebrew text.
-    const G = figure(scene, 0, 14, { h: 6.5, robe: 0x8f6a3c, skin: 2, cloth: 0xa86b3c, face: -Math.PI / 2 });
+    const G = figure(scene, 0, 14, { h: 6.5, robe: 0x8f6a3c, skin: 2, cloth: false, beard: true, face: -Math.PI / 2 });
+    // Scale armour of bronze over his body (1 Samuel 17:5).
+    const mail = lathe(scene, [[0.95, 0], [1.0, 0.3], [0.9, 1.0], [0.82, 1.5], [0.9, 1.9], [0.62, 2.1], [0, 2.15]].map(([r, y]) => [r * 1.0, y * 1.35]), 0, 2.4, 14, BRONZE, 32); mail.scale.set(0.95, 1, 0.95);
+    [-1, 1].forEach((sd) => cyl(scene, 0.22, 2.0, 0, 0, 14 + sd * 0.45, BRONZE, 16));
     const helm = new THREE.Mesh(new THREE.SphereGeometry(0.66, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), BRONZE); helm.position.set(0, 5.6, 14); scene.add(helm);
     const spear = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 9, 8), mat(0x6b4a2b)); spear.position.set(1.3, 4.2, 14); spear.rotation.x = 0.15; scene.add(spear);
     const head = new THREE.Mesh(new THREE.ConeGeometry(0.2, 1, 8), mat(0x6f6f6f, { metal: 0.6, rough: 0.4 })); head.position.set(1.3, 8.9, 14.7); head.rotation.x = 0.15; scene.add(head);
     figure(scene, -0.5, 10.5, { h: 3.8, robe: 0x7c5a38, skin: 1, face: -Math.PI / 2 });
     box(scene, 2.4, 3.6, 0.2, -0.5, 0.3, 9.6, mat(0x8a6a40));
     // David: a youth with a staff, a sling and five smooth stones.
-    figure(scene, 0, -2, { h: 3.7, robe: 0xb58a55, skin: 3, cloth: false, face: Math.PI / 2 });
+    figure(scene, 0, -2, { h: 3.7, robe: 0xb58a55, skin: 3, cloth: false, face: Math.PI / 2, raise: true });
     const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 4.5, 8), mat(0x6b5136)); staff.position.set(-0.8, 2.2, -2); scene.add(staff);
     labels.push(
       { pos: v3(0, 7.6, 14), text: "Goliath", detail: "“Six cubits and a span” (about 2.9 m) in the Hebrew text; the Greek Septuagint and the Dead Sea Scrolls say four cubits and a span (about 2 m). His bronze armour weighed 5,000 shekels (about 57 kg).", href: ref("1 Samuel 17:4"), hrefText: "1 Samuel 17:4–7" },
@@ -546,11 +717,11 @@ const MODELS = {
   },
 
   "galilee-boat"({ scene, labels }) {
-    const water = new THREE.Mesh(new THREE.CircleGeometry(160, 64), mat(0x4f8fa6, { rough: 0.25 })); water.rotation.x = -Math.PI / 2; scene.add(water);
+    water(scene, 160);
     hill(scene, 70, -90, -110, 22, 0x8fa36e); hill(scene, 80, 70, -130, 28, 0x9da874);
     // A first-century fishing boat like the one found by the Sea of Galilee in 1986:
     // about 8.3 m long, 2.3 m wide and 1.3 m deep (about 18 × 5 × 3 cubits).
-    const wood = mat(0x7a5232, { side: THREE.DoubleSide });
+    const wood = mat(0xb08a68, { side: THREE.DoubleSide, tex: "wood", rep: 3, rep2: 1, rough: 0.85 });
     const hull = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 20, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), wood);
     hull.scale.set(9.2, 3, 2.6); hull.position.y = 1.8; scene.add(hull);
     const rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.03, 8, 48), mat(0x5a3b22)); rim.rotation.x = Math.PI / 2; rim.scale.set(9.2, 2.6, 1); rim.position.y = 1.8; scene.add(rim);
@@ -574,7 +745,7 @@ const MODELS = {
 
   nativity({ scene, labels }) {
     ground(scene, 60, 0xc9b98f);
-    const stone = mat(0xd8cbb0, { rough: 0.95 });
+    const stone = mat(0xffffff, { rough: 0.95, tex: "plaster", rep: 3 });
     // A village house: a lower room where the animals came in at night and a raised family
     // room. Luke says there was no room in the kataluma (guest room), so the baby was laid in a manger.
     box(scene, 14, 6, 0.6, 0, 0, -5, stone); box(scene, 0.6, 6, 10, -7, 0, 0, stone); box(scene, 0.6, 6, 10, 7, 0, 0, stone);
@@ -605,10 +776,10 @@ const MODELS = {
 
   "last-supper"({ scene, labels }) {
     ground(scene, 30, 0xb8a888);
-    const plaster = mat(0xe6dccb, { rough: 0.95 });
+    const plaster = mat(0xffffff, { rough: 0.95, tex: "plaster", rep: 3 });
     box(scene, 22, 9, 0.5, 0, 0, -10, plaster); box(scene, 0.5, 9, 20, -11, 0, 0, plaster); box(scene, 0.5, 9, 20, 11, 0, 0, plaster);
     // A triclinium: three low tables in a U, the guests reclining on their left side.
-    const table = mat(0x7a5a3a);
+    const table = WOOD(2);
     box(scene, 12, 1, 2.4, 0, 0, -3, table); box(scene, 2.4, 1, 8, -6, 0, 2.2, table); box(scene, 2.4, 1, 8, 6, 0, 2.2, table);
     const cushions = mat(0x8c3b2e);
     box(scene, 13, 0.4, 2, 0, 0, -5.6, cushions); box(scene, 2, 0.4, 9, -8.6, 0, 2.4, cushions); box(scene, 2, 0.4, 9, 8.6, 0, 2.4, cushions);
@@ -631,11 +802,11 @@ const MODELS = {
     ground(scene, 60, 0x9fae74);
     const stone = 0xc4b89f;
     // A rock-cut tomb in a garden, sealed with a large rolling stone (John 19:41, Mark 16:3-4).
-    box(scene, 26, 11, 9, 0, 0, -6, mat(stone, { rough: 1 }));
+    box(scene, 26, 11, 9, 0, 0, -6, mat(0xffffff, { rough: 1, tex: "rock", rep: 3 }));
     rock(scene, 6, -11, 6, -5, stone, 1.2, 1.1, 1); rock(scene, 5, 12, 5, -4, stone, 1.3, 1.1, 1); rock(scene, 4, 2, 11, -6, stone, 2.5, 0.6, 1.2);
     const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 0.3), mat(0x1c1915)); door.position.set(0, 1.6, -1.4); scene.add(door);
     box(scene, 9, 0.4, 1.2, 3.5, 0, -0.9, mat(0xab9f86, { rough: 1 }));
-    const disc = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.8, 32), mat(0xb5a88d, { rough: 0.95 })); disc.rotation.x = Math.PI / 2; disc.position.set(4.6, 2.6, -0.9); scene.add(disc);
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.8, 48), mat(0xffffff, { rough: 1, tex: "rock" })); disc.rotation.x = Math.PI / 2; disc.position.set(4.6, 2.6, -0.9); scene.add(disc);
     const cloth = mat(0xf2ede0);
     box(scene, 1.6, 0.25, 0.7, 0.8, 0, -3.6, cloth); box(scene, 0.6, 0.18, 0.5, -0.8, 0, -3.6, cloth);
     figure(scene, 1.6, 0.8, { robe: 0xffffff, cloth: 0xffffff, skin: 0, sit: true, y: 0.3, face: -Math.PI / 2 });
@@ -652,14 +823,38 @@ const MODELS = {
     return { camera: v3(16, 8, 20), target: v3(0, 2.5, -2), maxDist: 90, minDist: 4, minorDist: 36 };
   },
 
+  "daniel-statue"({ scene, labels }) {
+    ground(scene, 140, C.sand);
+    // The statue in Nebuchadnezzar's dream (Daniel 2:31-45): head of gold, chest and arms of
+    // silver, belly and thighs of bronze, legs of iron, feet partly iron and partly clay.
+    // Daniel gives no height; "huge and dazzling", so here it stands 24 cubits (about 11 m).
+    const FEET = mat(0xffffff, { tex: "clay", rough: 0.6, metal: 0.4, rep: 1 });
+    colossus(scene, 0, 0, 24, { head: GOLD, chest: SILVER, thighs: BRONZE, legs: IRON, feet: FEET }, 0);
+    // The stone cut out without hands, flying at its feet, and the mountain it became.
+    rock(scene, 1.6, 9, 1.8, 0, 0x8f877a, 1.1, 1, 1);
+    const trail = mat(0xffffff, { opacity: 0.25, rough: 1 });
+    [[12, 2.6, 0, 0.9], [15, 3.4, 0, 0.7], [18, 4.3, 0, 0.5]].forEach(([x, y, z, r]) => { const p = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), trail); p.position.set(x, y, z); p.userData.noShadow = true; scene.add(p); });
+    const mountain = new THREE.Mesh(new THREE.ConeGeometry(60, 42, 64, 8), mat(0xffffff, { tex: "grass", rough: 1, rep: 6 })); mountain.position.set(-40, 21, -120); scene.add(mountain);
+    for (let i = 0; i < 8; i++) rock(scene, 0.4 + (i % 3) * 0.25, 2 + (i % 4) * 0.9, 0.25, -2.4 + i * 0.6, 0x5e5e62);
+    labels.push(
+      { pos: v3(0, 25.6, 0), text: "Head of gold", detail: "“You, O king, are the head of gold”: Nebuchadnezzar and his kingdom of Babylon.", href: ref("Daniel 2:37"), hrefText: "Daniel 2:36–38" },
+      { pos: v3(0, 19.5, 3.4), text: "Chest and arms of silver", detail: "“After you, another kingdom will rise, inferior to yours.” Many readers see Media-Persia here.", href: ref("Daniel 2:39"), hrefText: "Daniel 2:39" },
+      { pos: v3(0, 14, 2.6), text: "Belly and thighs of bronze", detail: "“A third kingdom, one of bronze, will rule the whole earth”, often taken to be Greece under Alexander.", href: ref("Daniel 2:39"), hrefText: "Daniel 2:39" },
+      { pos: v3(0, 7, 2.2), text: "Legs of iron", detail: "“A fourth kingdom, strong as iron”, crushing and breaking everything; many see Rome.", href: ref("Daniel 2:40"), hrefText: "Daniel 2:40" },
+      { pos: v3(1.5, 1.8, 2.4), text: "Feet of iron and clay", detail: "A divided kingdom, partly strong and partly brittle, whose parts would not hold together, “just as iron does not mix with clay”.", href: ref("Daniel 2:41"), hrefText: "Daniel 2:41–43" },
+      { pos: v3(9, 4.6, 0), text: "The stone cut without hands", detail: "It struck the statue on its feet and smashed them, and the whole statue was blown away like chaff. “The God of heaven will set up a kingdom that will never be destroyed.”", href: ref("Daniel 2:44"), hrefText: "Daniel 2:34–35, 44–45" },
+      { pos: v3(-40, 45, -120), text: "A great mountain", minor: true, detail: "“The stone that struck the statue became a great mountain and filled the whole earth.”", href: ref("Daniel 2:35"), hrefText: "Daniel 2:35" },
+    );
+    person(scene, labels, 6, 6);
+    return { camera: v3(30, 17, 36), target: v3(0, 12.5, 0), maxDist: 260, minDist: 4, minorDist: 90, size: 30 };
+  },
+
   "nebuchadnezzar-statue"({ scene, labels }) {
     ground(scene, 220, 0xd8c79c);
     // On the plain of Dura: an image of gold 60 cubits high and 6 wide (Daniel 3:1). Its form isn't described.
-    box(scene, 12, 3, 12, 0, 0, 0, mat(0xb9a57e));
-    box(scene, 6, 42, 4, 0, 3, 0, GOLD);
-    box(scene, 9, 3, 4.4, 0, 45, 0, GOLD);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(3, 20, 14), GOLD); head.scale.y = 1.3; head.position.set(0, 52, 0); scene.add(head);
-    box(scene, 4, 5, 3, 0, 56, 0, GOLD);
+    box(scene, 12, 3, 12, 0, 0, 0, mat(0xffffff, { tex: "stone", rep: 2 }));
+    lathe(scene, [[0, 0], [3.4, 0], [3.4, 1.2], [3.0, 1.6], [2.8, 40], [3.2, 40.6], [3.4, 41.4], [0, 41.4]], 0, 3, 0, GOLD, 48);
+    colossus(scene, 0, 0, 16, { head: GOLD, chest: GOLD, thighs: GOLD, legs: GOLD, feet: GOLD }, Math.PI / 2).position.y = 44.4;
     // The furnace, heated seven times hotter (Daniel 3:19).
     box(scene, 12, 10, 10, 40, 0, 20, mat(0x9b6a4a, { rough: 1 }));
     const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 4), new THREE.MeshBasicMaterial({ color: 0xff7a1a })); mouth.position.set(33.95, 2.5, 20); scene.add(mouth);
