@@ -4,7 +4,7 @@
 {% from "_w6.html" import head %}
 {% block title %}Privacy notice · Clearspring{% endblock %}
 {% block content %}
-{{ head('Privacy notice', url_for('more_hub')) }}
+{{ head('Privacy notice', url_for('community_hub')) }}
 <main class="board pv">
   <p class="pv-lead">This explains what the Clearspring app keeps about you, why, how long for, and what you can do about it. We've tried to write it plainly. If anything isn't clear, <a href="{{ url_for('contact_page') }}">ask us</a>.</p>
   <p class="pv-meta">Last updated {{ updated }}</p>
@@ -61,7 +61,7 @@
   <h2 id="delete-account">Deleting your account</h2>
   <p>You can delete your account yourself, in the website or in the iPhone or Android app:</p>
   <ol>
-    <li>Sign in and open <a href="{{ url_for('account') }}">your account</a> (More → Account).</li>
+    <li>Sign in and open <a href="{{ url_for('account') }}">your account</a> (Church → Your account).</li>
     <li>Scroll to the bottom and choose <b>Delete my account</b>, then confirm.</li>
   </ol>
   <p>This removes your account, your saved verses, notes, plans and progress, your group posts and your game scores straight away. Prayer requests you shared without an account aren't linked to you; to have one removed, <a href="{{ url_for('contact_page') }}">contact us</a>{% if info.visit_contact_email %} or email <a href="mailto:{{ info.visit_contact_email }}">{{ info.visit_contact_email }}</a>{% endif %} and we'll delete it. Backups of the database are overwritten within 30 days.</p>

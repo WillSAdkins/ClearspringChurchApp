@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 {% from "_scene.html" import banner with context %}
 {% from "icons.html" import icon %}
-{% block title %}Community · Clearspring{% endblock %}
+{% block title %}Church · Clearspring{% endblock %}
 {% block content %}
 
 <main class="bible">
 
   <header class="bible-head">
-    <h1 class="bible-title">Community</h1>
+    <h1 class="bible-title">Church</h1>
     <span style="width:2.4rem"></span>
   </header>
   {{ banner('community') }}
 
+  <p class="bible-lede">Everything we do together, and everything else in the app.</p>
 
-  <p class="bible-lede">Everything we do together: services, prayer, and getting connected.</p>
-
-  <nav class="bible-list">
+  <h2 class="st-group">Together</h2>
+  <nav class="bible-list" aria-label="Together">
     <a href="{{ url_for('calendar_page') }}" class="bible-row">
       <span class="bible-row-icon">{{ icon('calendar', 20) }}</span>
       <span class="bible-row-body">
@@ -25,29 +25,11 @@
       {{ icon('chevron-right', 18) }}
     </a>
 
-    <a href="{{ url_for('prayer_wall') }}" class="bible-row">
-      <span class="bible-row-icon">{{ icon('hands', 20) }}</span>
-      <span class="bible-row-body">
-        <span class="bible-row-title">Prayer</span>
-        <span class="bible-row-sub">Requests, your prayer list &amp; ways to pray</span>
-      </span>
-      {{ icon('chevron-right', 18) }}
-    </a>
-
     <a href="{{ url_for('groups_index') }}" class="bible-row">
       <span class="bible-row-icon">{{ icon('users', 20) }}</span>
       <span class="bible-row-body">
         <span class="bible-row-title">Groups</span>
         <span class="bible-row-sub">Read, pray and talk together with your small group or friends</span>
-      </span>
-      {{ icon('chevron-right', 18) }}
-    </a>
-
-    <a href="{{ url_for('grow_hub') }}" class="bible-row">
-      <span class="bible-row-icon">{{ icon('target', 20) }}</span>
-      <span class="bible-row-body">
-        <span class="bible-row-title">Grow</span>
-        <span class="bible-row-sub">First steps, Foundations, your gifts, your story &amp; next steps</span>
       </span>
       {{ icon('chevron-right', 18) }}
     </a>
@@ -63,15 +45,6 @@
     </a>
     {% endif %}
 
-    <a href="{{ url_for('grow_stories') }}" class="bible-row">
-      <span class="bible-row-icon">{{ icon('message', 20) }}</span>
-      <span class="bible-row-body">
-        <span class="bible-row-title">Stories</span>
-        <span class="bible-row-sub">What God has been doing among us</span>
-      </span>
-      {{ icon('chevron-right', 18) }}
-    </a>
-
     {% if section_on('questions') %}
     <a href="{{ url_for('questions') }}" class="bible-row">
       <span class="bible-row-icon">{{ icon('message', 20) }}</span>
@@ -82,7 +55,151 @@
       {{ icon('chevron-right', 18) }}
     </a>
     {% endif %}
+
+    <a href="{{ url_for('grow_stories') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('message', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Stories</span>
+        <span class="bible-row-sub">What God has been doing among us</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
   </nav>
+
+  <h2 class="st-group">Grow and get involved</h2>
+  <nav class="bible-list" aria-label="Grow and get involved">
+    <a href="{{ url_for('grow_hub') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('target', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Grow</span>
+        <span class="bible-row-sub">First steps, Foundations, your gifts, your story &amp; next steps</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('ministries') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('users', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Ministries</span>
+        <span class="bible-row-sub">Kids, youth, men, women, seniors &amp; missions</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('giving') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('heart', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Giving</span>
+        <span class="bible-row-sub">Support the church &amp; current appeals</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    {% if section_on('store') %}
+    <a href="{{ url_for('store') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('bookmark', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Store</span>
+        <span class="bible-row-sub">Books, resources &amp; merchandise</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+    {% endif %}
+
+    <a href="{{ url_for('resources') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('book', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Resources</span>
+        <span class="bible-row-sub">Guides, handbook &amp; recommendations</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+  </nav>
+
+  <h2 class="st-group">Faith and family</h2>
+  <nav class="bible-list" aria-label="Faith and family">
+    <a href="{{ url_for('faith_hub') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('dove', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Exploring faith</span>
+        <span class="bible-row-sub">Big questions, the big story and church words explained</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('family_hub') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('baby', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Family devotions</span>
+        <span class="bible-row-sub">Bible stories, questions and prayers for the dinner table</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('games_hub') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('gamepad', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Kids games</span>
+        <span class="bible-row-sub">Bible games to play together</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+  </nav>
+
+  <h2 class="st-group">You and the app</h2>
+  <nav class="bible-list" aria-label="You and the app">
+    {% if member %}
+      <a href="{{ url_for('account') }}" class="bible-row">
+        <span class="bible-row-icon">{{ icon('users', 20) }}</span>
+        <span class="bible-row-body">
+          <span class="bible-row-title">Your account</span>
+          <span class="bible-row-sub">{{ member['email'] }}</span>
+        </span>
+        {{ icon('chevron-right', 18) }}
+      </a>
+    {% else %}
+      <a href="{{ url_for('signin') }}" class="bible-row">
+        <span class="bible-row-icon">{{ icon('users', 20) }}</span>
+        <span class="bible-row-body">
+          <span class="bible-row-title">Sign in</span>
+          <span class="bible-row-sub">Keep your notes and verses across devices</span>
+        </span>
+        {{ icon('chevron-right', 18) }}
+      </a>
+    {% endif %}
+
+    <a href="{{ url_for('settings') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('settings', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Settings</span>
+        <span class="bible-row-sub">Appearance, text size &amp; notifications</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('notification_settings') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('settings', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Notifications</span>
+        <span class="bible-row-sub">Choose what you hear about</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+
+    <a href="{{ url_for('contact_page') }}" class="bible-row">
+      <span class="bible-row-icon">{{ icon('mail', 20) }}</span>
+      <span class="bible-row-body">
+        <span class="bible-row-title">Contact us</span>
+        <span class="bible-row-sub">Email, phone, a message to the pastors, safeguarding</span>
+      </span>
+      {{ icon('chevron-right', 18) }}
+    </a>
+  </nav>
+
+  <p class="staff-link">
+    <a href="{{ url_for('privacy_page') }}">Privacy notice</a> ·
+    <a href="{{ url_for('login') }}">Church staff sign in</a>
+  </p>
 
 </main>
 

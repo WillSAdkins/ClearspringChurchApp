@@ -7046,7 +7046,8 @@ def admin_visit():
 
 @app.route("/more")
 def more_hub():
-    return render_template("more.html", church_name=CHURCH_NAME)
+    """More is now part of the Church tab."""
+    return redirect(url_for("community_hub"), 301)
 
 
 @app.route("/community/calendar")
