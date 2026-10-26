@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ a.name }} · The Early Church Fathers{% endblock %}
+{% block content %}
+<main class="bible lib cf">
+  {{ head(a.name, url_for('fathers_hub') ~ '#era-' ~ ('councils' if a.council else a.era), "The Early Church Fathers", a.when) }}
+  {% if a.about %}<p class="bible-lede">{{ a.about }}</p>{% endif %}
+  <p class="cl-facts">{{ works|length }} work{{ 's' if works|length != 1 }} · {{ "{:,}".format(a.words) }} words · {{ a.time }} to read</p>
+  {% set own = works|rejectattr('attributed')|list %}{% set later = works|selectattr('attributed')|list %}
+  <ol class="cf-works">
+    {% for w in own %}
+    <li><a href="{{ url_for('fathers_work', author_slug=a.slug, work_slug=w.slug) }}"><b>{{ w.title }}</b><small>{{ w.sections }} page{{ 's' if w.sections != 1 }} · {{ w.time }}</small></a></li>
+    {% endfor %}
+  </ol>
+  {% if later %}
+  <h2 class="bible-h2 lib-sub">Attributed to {{ a.name }}</h2>
+  <p class="cf-note">Writings that came down under {{ a.name }}’s name but were probably written by someone later.</p>
+  <ol class="cf-works">
+    {% for w in later %}
+    <li><a href="{{ url_for('fathers_work', author_slug=a.slug, work_slug=w.slug) }}"><b>{{ w.title }}</b><small>{{ w.sections }} page{{ 's' if w.sections != 1 }} · {{ w.time }}</small></a></li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+  <p class="lib-source">Public-domain translations. <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+{% endblock %}

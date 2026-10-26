@@ -66,6 +66,7 @@ import audio_bible
 import threading as _threading
 import reference
 import classics
+import church_fathers
 import study_assistant
 import grammar
 import grammar_guide
@@ -2458,6 +2459,16 @@ def offline_packs():
     return render_template("offline_packs.html", books=books, start=request.args.get("book") or "")
 
 
+@app.route("/library/offline-pass", methods=["POST"])
+def offline_pass():
+    """Saving a whole book (a classic, one of the fathers) for offline reading
+    fetches every page at once: give this visitor half an hour to do it."""
+    if rate_limited("offline_pass", client_ip(), limit=12, window_seconds=3600):
+        return {"ok": False}, 429
+    session["pack_until"] = time.time() + 1800
+    return {"ok": True}
+
+
 @app.route("/bible/passage")
 def passage_study_page():
     """Study one passage: translations side by side, notes, key words, cross
@@ -2743,6 +2754,55 @@ def classics_chapter(slug, n):
         abort(404)
     toc = classics.contents(slug)
     return render_template("library/classics_chapter.html", b=b, ch=ch, total=len(toc),
+                           prev=toc[n - 2] if n > 1 else None, nxt=toc[n] if n < len(toc) else None)
+
+
+# ------------------------------------------------------------ the early church fathers
+
+@app.route("/library/fathers")
+def fathers_hub():
+    if not church_fathers.available():
+        abort(404)
+    return render_template("fathers/hub.html", eras=church_fathers.eras(), councils=church_fathers.councils(),
+                           start=church_fathers.start_here(), t=church_fathers.totals())
+
+
+@app.route("/library/fathers/search")
+def fathers_search():
+    if not church_fathers.available():
+        abort(404)
+    q = (request.args.get("q") or "").strip()[:120]
+    hits = church_fathers.search(q, 40) if q else []
+    books = church_fathers.search_works(q) if q else []
+    return render_template("fathers/search.html", q=q, hits=hits, books=books, t=church_fathers.totals())
+
+
+@app.route("/library/fathers/<author_slug>")
+def fathers_author(author_slug):
+    a = church_fathers.author(author_slug) if church_fathers.available() else None
+    if not a:
+        abort(404)
+    return render_template("fathers/author.html", a=a, works=church_fathers.works(author_slug))
+
+
+@app.route("/library/fathers/<author_slug>/<work_slug>")
+def fathers_work(author_slug, work_slug):
+    a = church_fathers.author(author_slug) if church_fathers.available() else None
+    w = church_fathers.work(author_slug, work_slug) if a else None
+    if not w:
+        abort(404)
+    return render_template("fathers/work.html", a=a, w=w, contents=church_fathers.contents(w["id"]))
+
+
+@app.route("/library/fathers/<author_slug>/<work_slug>/<int:n>")
+def fathers_section(author_slug, work_slug, n):
+    a = church_fathers.author(author_slug) if church_fathers.available() else None
+    w = church_fathers.work(author_slug, work_slug) if a else None
+    s = church_fathers.section(w["id"], n) if w else None
+    if not s:
+        abort(404)
+    toc = church_fathers.contents(w["id"])
+    return render_template("fathers/section.html", a=a, w=w, s=s,
                            prev=toc[n - 2] if n > 1 else None, nxt=toc[n] if n < len(toc) else None)
 
 
@@ -4288,7 +4348,7 @@ def send_magic_link(to, name, link):
 
 SYNC_MAX_ITEMS = 30000            # far more than anyone saves by hand
 SYNC_MAX_BYTES = 40 * 1024 * 1024
-SYNC_KINDS = {"verse", "note", "plan", "journal", "pcards", "learn", "highlight", "vnote", "soap", "talk", "cplan", "readlog", "memory", "prayerlog", "grow", "prefs", "college", "books"}
+SYNC_KINDS = {"verse", "note", "plan", "journal", "pcards", "learn", "highlight", "vnote", "soap", "talk", "cplan", "readlog", "memory", "prayerlog", "grow", "prefs", "college", "books", "fathers"}
 
 
 @app.route("/api/sync/<kind>", methods=["GET"])

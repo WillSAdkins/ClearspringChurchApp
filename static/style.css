@@ -8857,3 +8857,40 @@ body.has-tabbar .mp { bottom: calc(5.75rem + env(safe-area-inset-bottom)); }
 /* Room for it: the Ask button and the end of the page move up. */
 body.has-mp .gd-fab { bottom: calc(10.25rem + env(safe-area-inset-bottom)); }
 body.has-mp.has-tabbar { padding-bottom: 10.5rem; }
+
+/* ---------- The Early Church Fathers library ---------- */
+.cf-start { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .6rem; margin: 0 0 1.4rem; }
+.cf-start-card { display: grid; gap: .2rem; padding: .8rem .9rem; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.cf-start-card b { font: 600 var(--fs-base) var(--display); }
+.cf-start-card span { font-size: var(--fs-xs); color: var(--muted); }
+.cf-start-card:hover, .cf-person:hover { border-color: var(--accent); }
+.cf-era-blurb { color: var(--muted); font-size: var(--fs-sm); margin: -.4rem 0 .8rem; }
+.cf-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: .6rem; }
+.cf-person { display: grid; gap: .15rem; align-content: start; padding: .75rem .9rem; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.cf-person b { font: 600 var(--fs-base) var(--display); }
+.cf-major { grid-row: span 2; }
+.cf-when { font-size: var(--fs-xs); color: var(--accent); font-weight: 600; }
+.cf-about { font-size: var(--fs-sm); color: var(--muted); }
+.cf-meta { font-size: var(--fs-2xs); color: var(--muted); }
+.cf-councils .cf-person { padding: .6rem .8rem; }
+.cf-works, .cf-hits { list-style: none; padding: 0; margin: 0 0 1.2rem; }
+.cf-works li, .cf-hits li { border-bottom: 1px solid var(--line); }
+.cf-works a { display: flex; justify-content: space-between; align-items: baseline; gap: .8rem; padding: .75rem .1rem; color: var(--ink); text-decoration: none; }
+.cf-works b { font-weight: 600; }
+.cf-works small { color: var(--muted); font-size: var(--fs-xs); white-space: nowrap; }
+.cf-hits a { display: grid; gap: .15rem; padding: .75rem .1rem; color: var(--ink); text-decoration: none; }
+.cf-hits small { color: var(--accent); font-size: var(--fs-xs); font-weight: 600; }
+.cf-hits span { color: var(--muted); font-size: var(--fs-sm); }
+.cf-note { color: var(--muted); font-size: var(--fs-sm); }
+.cf-src { color: var(--muted); font-size: var(--fs-sm); font-style: italic; margin: -.4rem 0 1rem; }
+.cf-text h2, .cf-text h3, .cf-text h4 { font-family: var(--display); line-height: 1.25; margin: 1.6em 0 .5em; }
+.cf-text h2 { font-size: 1.25rem; } .cf-text h3 { font-size: 1.1rem; } .cf-text h4 { font-size: 1rem; }
+.cf-text sup a { text-decoration: none; font-weight: 600; color: var(--accent); padding: 0 .1em; }
+.cf-text blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid var(--tone-line, var(--line)); }
+.cf-text table { border-collapse: collapse; max-width: 100%; display: block; overflow-x: auto; }
+.cf-text td, .cf-text th { border: 1px solid var(--line); padding: .3rem .5rem; vertical-align: top; }
+.fn-notes { margin-top: 2.2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--muted); }
+.fn-notes h4 { margin: 0 0 .5rem; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: .06em; }
+.fn-notes ol { padding-left: 1.4rem; margin: 0; display: grid; gap: .4rem; }
+.fn-notes li:target { color: var(--ink); background: var(--wash); border-radius: 6px; }
+.fn-notes a { text-decoration: none; }

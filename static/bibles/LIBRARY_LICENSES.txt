@@ -40,6 +40,19 @@ PUBLIC DOMAIN
                                                    Excerpts from modern, copyrighted translations in that database
                                                    are deliberately left out.
 
+church_fathers.sqlite — built by tools/build_church_fathers.py
+PUBLIC DOMAIN
+  The Early Church Fathers, complete works         HistoricalChristianFaith Writings-Database
+                                                   (github.com/HistoricalChristianFaith/Writings-Database),
+                                                   "All works in this repo are in the public domain". Mostly the
+                                                   Ante-Nicene Fathers and Nicene and Post-Nicene Fathers (ed.
+                                                   Roberts, Donaldson, Schaff and Wace, 1867-1900), with other
+                                                   translations of that age. Left out on purpose: machine
+                                                   (ChatGPT) translations, works whose translation dates from
+                                                   1900-1989 unless the translator died before 1956 (listed in
+                                                   the build script), and unattributed recent translations.
+                                                   tools/church_fathers_report.json lists every work left out.
+
 static/vendor/bible3d.min.js — 3D models and relief map
 MIT
   three.js (c) 2010-2026 three.js authors          static/vendor/THREE_LICENSE.txt

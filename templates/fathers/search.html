@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}Search the fathers · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib cf">
+  {{ head("Search the fathers", url_for('fathers_hub'), "The Early Church Fathers", "The Early Church Fathers") }}
+  <form class="lib-search" action="{{ url_for('fathers_search') }}" method="get" role="search">
+    {{ icon('search', 18) }}
+    <input type="search" name="q" value="{{ q }}" placeholder="A word, a name, a phrase…" autocomplete="off" aria-label="Search the writings of the church fathers" autofocus>
+  </form>
+  {% if q %}
+    {% if books %}
+    <h2 class="bible-h2 lib-sub">Books</h2>
+    <ol class="cf-works">{% for b in books %}<li><a href="{{ url_for('fathers_work', author_slug=b.author.slug, work_slug=b.work.slug) }}"><b>{{ b.work.title }}</b><small>{{ b.author.name }} · {{ b.work.time }}</small></a></li>{% endfor %}</ol>
+    {% endif %}
+    {% if hits %}
+    <h2 class="bible-h2 lib-sub">Pages that mention “{{ q }}”</h2>
+    <ol class="cf-hits">
+      {% for h in hits %}
+      <li><a href="{{ url_for('fathers_section', author_slug=h.author.slug, work_slug=h.work.slug, n=h.n) }}">
+        <b>{{ h.work.title }}{% if h.work.sections > 1 %} · {{ h.title|truncate(60) }}{% endif %}</b>
+        <small>{{ h.author.name }}</small>
+        <span>{{ h.snippet }}</span>
+      </a></li>
+      {% endfor %}
+    </ol>
+    {% elif not books %}
+    <p class="cf-note">Nothing found for “{{ q }}”. Try fewer words, or another spelling (these translations write “Saviour”, “honour” and “Augustin”).</p>
+    {% endif %}
+  {% else %}
+  <p class="cf-note">Search all {{ "{:,}".format(t.pages) }} pages: try “resurrection”, “Lord’s Prayer”, “Mary” or “baptism”.</p>
+  {% endif %}
+</main>
+{% endblock %}

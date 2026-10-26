@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ w.title }} · {{ a.name }}{% endblock %}
+{% block content %}
+<main class="bible lib cf" id="cfWork" data-key="{{ a.slug }}/{{ w.slug }}" data-total="{{ w.sections }}" data-title="{{ w.title }}" data-author="{{ a.name }}">
+  {{ head(w.title, url_for('fathers_author', author_slug=a.slug), a.name, a.name ~ (" (attributed)" if w.attributed else "")) }}
+  <p class="cl-facts">{{ w.sections }} page{{ 's' if w.sections != 1 }} · {{ "{:,}".format(w.words) }} words · {{ w.time }} to read</p>
+  {% if w.source %}<p class="cf-src">{{ w.source }}</p>{% endif %}
+  <div class="cl-actions">
+    <a class="ps-go" id="cfGo" href="{{ url_for('fathers_section', author_slug=a.slug, work_slug=w.slug, n=1) }}">Start reading</a>
+    <button class="ps-link cl-save" type="button" id="cfSave" hidden>Save for offline reading</button>
+  </div>
+  <div class="cl-progress" id="cfProgress" hidden><i></i><small></small></div>
+  <p class="cl-status" id="cfStatus" role="status"></p>
+  {% if contents|length > 1 %}
+  <h2 class="bible-h2 lib-sub">Contents</h2>
+  {% set ns = namespace(group=None) %}
+  <ol class="cl-toc">
+    {% for c in contents %}
+    {% set parts = c.title.rsplit(' · ', 1) %}
+    {% if parts|length == 2 and parts[0] != ns.group %}{% set ns.group = parts[0] %}<li class="cl-toc-group"><h3>{{ parts[0].replace(' · ', ', ') }}</h3></li>{% endif %}
+    <li data-n="{{ c.n }}"><a href="{{ url_for('fathers_section', author_slug=a.slug, work_slug=w.slug, n=c.n) }}"><span>{{ parts[-1] }}</span><small>{{ c.mins }} min</small></a></li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+  <p class="lib-source">Public-domain translation. <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+<script src="{{ url_for('static', filename='fathers-reader.js', v='1') }}"></script>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}The Early Church Fathers · Clearspring{% endblock %}
+{% block content %}
+<main class="bible lib cf" id="cfHub">
+  {{ head("The Early Church Fathers", url_for('library_hub'), "Library", "Library") }}
+  <p class="bible-lede">What the first Christians wrote, from the generation after the apostles to John of Damascus: {{ "{:,}".format(t.works) }} works by {{ t.authors }} writers and councils, complete, about {{ (t.words / 1000000)|round(1) }} million words. Read a page at a time; the app remembers where you are.</p>
+
+  <form class="lib-search" action="{{ url_for('fathers_search') }}" method="get" role="search">
+    {{ icon('search', 18) }}
+    <input type="search" name="q" placeholder="Search every word of the fathers…" autocomplete="off" aria-label="Search the writings of the church fathers">
+  </form>
+
+  <div class="cl-continue" id="cfContinue" hidden>
+    <p class="cl-k">Carry on reading</p>
+    <div id="cfContinueList"></div>
+  </div>
+
+  <h2 class="bible-h2 lib-sub">Where to begin</h2>
+  <div class="cf-start">
+    {% for s in start %}
+    <a class="cf-start-card" href="{{ url_for('fathers_work', author_slug=s.author.slug, work_slug=s.work.slug) }}">
+      <b>{{ s.work.title }}</b><span>{{ s.author.name }} · {{ s.work.time }}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <nav class="cl-jump" aria-label="Centuries">
+    {% for e in eras %}<a href="#era-{{ e.key }}">{{ e.name.replace('The ', '') }}</a>{% endfor %}
+    <a href="#era-councils">Councils</a>
+  </nav>
+
+  {% for e in eras %}
+  <section class="cl-section" id="era-{{ e.key }}" aria-labelledby="era-{{ e.key }}-h">
+    <h2 class="cl-shelf-h" id="era-{{ e.key }}-h">{{ e.name }} <span>{{ e.authors|length }}</span></h2>
+    <p class="cf-era-blurb">{{ e.blurb }}</p>
+    <div class="cf-people">
+      {% for a in e.authors %}
+      <a class="cf-person{{ ' cf-major' if a.about }}" href="{{ url_for('fathers_author', author_slug=a.slug) }}">
+        <b>{{ a.name }}</b>
+        <span class="cf-when">{{ a.when }}</span>
+        {% if a.about %}<span class="cf-about">{{ a.about }}</span>{% endif %}
+        <span class="cf-meta">{{ a.works }} work{{ 's' if a.works != 1 }} · {{ a.time }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <section class="cl-section" id="era-councils" aria-labelledby="era-councils-h">
+    <h2 class="cl-shelf-h" id="era-councils-h">The councils <span>{{ councils|length }}</span></h2>
+    <p class="cf-era-blurb">The creeds, canons and letters of the church’s great gatherings, from Nicaea in 325.</p>
+    <div class="cf-people cf-councils">
+      {% for a in councils %}
+      <a class="cf-person" href="{{ url_for('fathers_author', author_slug=a.slug) }}"><b>{{ a.name }}</b><span class="cf-meta">{{ a.works }} document{{ 's' if a.works != 1 }}</span></a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <nav class="lib-grid">
+    <a href="{{ url_for('fathers_index') }}" class="lib-tile"><b>The fathers verse by verse</b><span>What they said about each passage of the Bible</span></a>
+    <a href="{{ url_for('creeds_index') }}" class="lib-tile"><b>Creeds &amp; confessions</b><span>The Apostles’ Creed, the Nicene Creed and more</span></a>
+  </nav>
+
+  <p class="lib-source">All public domain. Most come from the <i>Ante-Nicene Fathers</i> and <i>Nicene and Post-Nicene Fathers</i> (Schaff, Roberts and Donaldson, 1867–1900), with other translations of that age, through the <a href="https://github.com/HistoricalChristianFaith/Writings-Database" rel="noopener" target="_blank">Historical Christian Faith</a> collection. Machine translations and recent translations still in copyright are left out. <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
+</main>
+<script src="{{ url_for('static', filename='fathers-reader.js', v='1') }}"></script>
+{% endblock %}

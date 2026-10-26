@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% from "icons.html" import icon %}
+{% from "library/_ui.html" import head %}
+{% block title %}{{ s.title }} · {{ w.title }}{% endblock %}
+{% block content %}
+<main class="bible lib cl-read cf" id="cfSection" data-key="{{ a.slug }}/{{ w.slug }}" data-n="{{ s.n }}" data-total="{{ w.sections }}" data-title="{{ w.title }}" data-author="{{ a.name }}">
+  {{ head(w.title, url_for('fathers_work', author_slug=a.slug, work_slug=w.slug), "Contents", a.name) }}
+  {% if w.sections > 1 %}<p class="cl-where">Page {{ s.n }} of {{ w.sections }} · {{ s.mins }} min read</p>{% else %}<p class="cl-where">{{ s.mins }} min read</p>{% endif %}
+  {% set parts = s.title.rsplit(' · ', 1) %}
+  {% if parts|length == 2 %}<p class="cl-ch-part">{{ parts[0].replace(' · ', ', ') }}</p>{% endif %}
+  {% if w.sections > 1 or parts[-1] != w.title %}<h2 class="cl-ch-title">{{ parts[-1] }}</h2>{% endif %}
+  <article class="lib-article cl-text cf-text">{{ s.html }}</article>
+  <nav class="vp-paging lib-paging cl-paging">
+    {% if prev %}<a class="vp-page" href="{{ url_for('fathers_section', author_slug=a.slug, work_slug=w.slug, n=prev.n) }}">{{ icon('chevron-left', 16) }}<span>{{ prev.title|truncate(40) }}</span></a>{% else %}<span></span>{% endif %}
+    {% if nxt %}<a class="vp-page" href="{{ url_for('fathers_section', author_slug=a.slug, work_slug=w.slug, n=nxt.n) }}"><span>{{ nxt.title|truncate(40) }}</span>{{ icon('chevron-right', 16) }}</a>
+    {% else %}<a class="vp-page" href="{{ url_for('fathers_author', author_slug=a.slug) }}"><span>The end. More by {{ a.name }}</span>{{ icon('chevron-right', 16) }}</a>{% endif %}
+  </nav>
+  <div class="cl-bar" aria-hidden="true"><i id="cfBar"></i></div>
+</main>
+<script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
+<script src="{{ url_for('static', filename='fathers-reader.js', v='1') }}"></script>
+{% endblock %}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "clearspring-v55";
+const CACHE_NAME = "clearspring-v56";
 const PAGE_CACHE = "cs-pages-v1";
 const OFFLINE_URLS = ["/offline", "/static/style.css", "/static/loading-screen.mp4"];
 
@@ -78,7 +78,7 @@ function isSafePage(pathname) {
   // Reading and learning pages that hold nothing personal
   if (/^\/(grow|faith|family|college)(\/|$)/.test(pathname)) return true;
   if (/^\/bible\/(feelings|library|dictionary|topics|people|places|creeds|timeline|today|words|word|v|journeys|harmony|ot-in-nt|map|3d|interlinear|grammar|notes|intro|themes|profiles|terms|passage|commentary|reference|morning-evening|videos|compare|listen)(\/|$)/.test(pathname)) return true;
-  if (/^\/library\/classics(\/|$)/.test(pathname)) return true;
+  if (/^\/library\/(classics|fathers)(\/|$)/.test(pathname) && !/^\/library\/fathers\/search/.test(pathname)) return true;
   if (pathname === "/sunday") return true;
   return false;
 }

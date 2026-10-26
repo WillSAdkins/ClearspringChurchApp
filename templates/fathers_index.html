@@ -5,6 +5,7 @@
 <main class="bible">
   {{ head('The early church', url_for('library_hub'), 'Back to the Library') }}
   <p class="bible-lede">What Christians of the first thousand years said about the Bible, verse by verse: John Chrysostom, Augustine, Jerome, Ambrose, Bede and many more. Most of it comes from the <i>Catena Aurea</i>, the “golden chain” of comments on the four Gospels that Thomas Aquinas gathered in the 1260s.</p>
+  <p><a class="ps-link" href="{{ url_for('fathers_hub') }}">Read the fathers’ complete works →</a></p>
   {% if not available %}
     <p class="placeholder-card">This part of the Library isn't on the server at the moment. A church admin can see how to fix it in Admin → Status.</p>
   {% else %}

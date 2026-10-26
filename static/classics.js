@@ -103,12 +103,13 @@
       }
       btn.disabled = true;
       var done = 0;
-      caches.open(CACHE).then(function (c) {
+      var pass = fetch("/library/offline-pass", { method: "POST", credentials: "same-origin", headers: { "Accept": "application/json" } }).catch(function () {});
+      pass.then(function () { return caches.open(CACHE); }).then(function (c) {
         // a few at a time, so a long book doesn't flood the connection
         var queue = urls.slice(), workers = [];
         function next() {
           var u = queue.shift(); if (!u) return Promise.resolve();
-          return fetch(u, { credentials: "same-origin" }).then(function (r) {
+          return fetch(u, { credentials: "same-origin", headers: { "X-CS-Pack": "1" } }).then(function (r) {
             if (!r.ok) throw new Error("HTTP " + r.status);
             return c.put(u, r);
           }).then(function () { done++; status.textContent = "Saving… " + done + " of " + urls.length; return next(); });
