@@ -47,11 +47,11 @@
   } catch (e) {}
 })();
 </script>
-<script src="{{ url_for('static', filename='palette.js', v='57') }}"></script>
+<script src="{{ url_for('static', filename='palette.js', v='58') }}"></script>
 <script src="{{ url_for('static', filename='safe-actions.js', v='1') }}" defer></script>
 <script nonce="{{ csp_nonce() }}">window.CS_AUDIO_BOOKS = {{ audio_bible_js.books|tojson }}; window.CS_AUDIO_READERS = {{ audio_bible_js.readers|tojson }}; window.CS_AUDIO_DEFAULT_READER = {{ audio_bible_js.default|tojson }};</script>
-<script src="{{ url_for('static', filename='audio-bible.js', v='57') }}"></script>
-<script src="{{ url_for('static', filename='mini-player.js', v='57') }}" defer></script>
+<script src="{{ url_for('static', filename='audio-bible.js', v='58') }}"></script>
+<script src="{{ url_for('static', filename='mini-player.js', v='58') }}" defer></script>
 <title>{% block title %}Clearspring Church, Cheltenham{% endblock %}</title>
 
 <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -61,7 +61,7 @@
 <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ url_for('static', filename='fonts/literata.woff2') }}" as="font" type="font/woff2" crossorigin>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='57') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='58') }}">
 <script nonce="{{ csp_nonce() }}">
 // Attach the CSRF token to every same-origin state-changing fetch, so
 // individual scripts don't each have to remember to do it.
@@ -156,10 +156,10 @@
 <nav class="site-nav">
   <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">{{ icon('home', 22) }}<span>Home</span></a>
   <a href="{{ url_for('watch_hub') }}" class="{{ 'active' if request.endpoint in ['watch_hub','sermon_detail','sunday_page','sermon_group'] }}">{{ icon('play', 22) }}<span>Watch</span></a>
-  <a href="{{ url_for('community_hub') }}" class="{{ 'active' if request.endpoint in ['community_hub','calendar_page','questions','ask_question','groups_index','group_join','group_page','grow_hub','grow_first_steps','grow_step','grow_course','grow_session','grow_checkin','grow_gifts','grow_story','grow_stories','grow_rhythm','grow_next_steps','family_hub','family_page','faith_hub','faith_gospel','faith_story','faith_questions','faith_question','faith_words','faith_share', 'more_hub', 'plan_visit', 'giving', 'campaign_detail', 'store', 'product_detail', 'gift_aid_info', 'ministries', 'ministry_detail', 'resources', 'resource_detail', 'notification_settings', 'settings', 'account', 'signin', 'signup', 'magic_link_request', 'magic_link_sent','games_hub','memory_game','trivia_challenge','trivia_football','manna_maze', 'giant_slayer', 'chess_game', 'game_leaderboard'] }}">{{ icon('users', 22) }}<span>Church</span></a>
   <a href="{{ url_for('prayer_journal') }}" class="{{ 'active' if request.endpoint in ['prayer_wall','prayer_new','prayer_journal','prayer_practices','prayer_fasting','prayer_world'] }}">{{ icon('hands', 22) }}<span>Prayer</span></a>
   <a href="{{ url_for('bible_tab') }}" id="bibleTab" class="{{ 'active' if request.endpoint in ['bible_read_chapter', 'bible_books', 'bible_chapters'] }}">{{ icon('bible-tab', 22) }}<span>Bible</span></a>
   <a href="{{ url_for('bible_hub') }}" class="{{ 'active' if request.endpoint in ['bible_hub', 'verse_page', 'word_page', 'memorise_hub', 'memorise_lesson', 'bible_search', 'saved_verses', 'my_study', 'soap_editor', 'talk_editor', 'reading_plans', 'reading_plan_detail', 'plan_builder', 'custom_plan', 'bible_today', 'reading_stats', 'devotionals', 'devotional_detail', 'feelings_index', 'feeling_page', 'library_hub', 'library_search', 'dictionary_index', 'dictionary_page', 'topics_index', 'topic_page', 'people_index', 'person_page', 'places_index', 'place_page', 'bible_map', 'journeys', 'journey_page', 'timeline_page', 'harmony_page', 'compare_passages', 'ot_in_nt_page', 'creeds_index', 'creed_page', 'commentary_page', 'library_licenses'] }}">{{ icon('notebook', 22) }}<span>Study</span></a>
+  <a href="{{ url_for('community_hub') }}" class="{{ 'active' if request.endpoint in ['community_hub','calendar_page','questions','ask_question','groups_index','group_join','group_page','grow_hub','grow_first_steps','grow_step','grow_course','grow_session','grow_checkin','grow_gifts','grow_story','grow_stories','grow_rhythm','grow_next_steps','family_hub','family_page','faith_hub','faith_gospel','faith_story','faith_questions','faith_question','faith_words','faith_share', 'more_hub', 'plan_visit', 'giving', 'campaign_detail', 'store', 'product_detail', 'gift_aid_info', 'ministries', 'ministry_detail', 'resources', 'resource_detail', 'notification_settings', 'settings', 'account', 'signin', 'signup', 'magic_link_request', 'magic_link_sent','games_hub','memory_game','trivia_challenge','trivia_football','manna_maze', 'giant_slayer', 'chess_game', 'game_leaderboard'] }}">{{ icon('users', 22) }}<span class="tab-long">Community<br>and More</span></a>
 </nav>
 {% endif %}
 

@@ -152,7 +152,7 @@ update gets reviewed.
 > church. Sign in with the account above to see groups and saved notes.
 > Giving opens in Safari; nothing is sold in the app. People can report and
 > hide posts in groups and on the prayer wall, and delete their account from
-> Church → Your account.
+> Community and More → Your account.
 
 ---
 

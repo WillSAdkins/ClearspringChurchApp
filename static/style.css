@@ -8894,3 +8894,10 @@ body.has-mp.has-tabbar { padding-bottom: 10.5rem; }
 .fn-notes ol { padding-left: 1.4rem; margin: 0; display: grid; gap: .4rem; }
 .fn-notes li:target { color: var(--ink); background: var(--wash); border-radius: 6px; }
 .fn-notes a { text-decoration: none; }
+
+/* The last tab's label is two lines ("Community / and More"): a little
+   smaller, and the tab a little wider so it reads cleanly. */
+.site-nav a { flex: 1 1 0; min-width: 0; }
+.site-nav a:has(.tab-long) { flex: 1.4 1 0; }
+.site-nav .tab-long { font-size: 9.5px; line-height: 1.05; text-align: center; white-space: nowrap; max-width: 100%; letter-spacing: -.01em; }
+.site-nav a:has(.tab-long) .icn, .site-nav a:has(.tab-long) svg { margin-bottom: -1px; }
