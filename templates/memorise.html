@@ -109,7 +109,7 @@
 </main>
 
 <script src="{{ url_for('static', filename='memorise.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   "use strict";
   var M = window.Memory, s = M.load();

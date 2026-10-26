@@ -67,7 +67,7 @@
       <nav class="bible-list">
         {% for r in resources %}
           {% if r.url %}
-            <a href="{{ r.url }}" target="_blank" rel="noopener" class="bible-row">
+            <a href="{{ r.url|web_link }}" target="_blank" rel="noopener" class="bible-row">
               <span class="bible-row-icon">{{ icon('book', 20) }}</span>
               <span class="bible-row-body"><span class="bible-row-title">{{ r.label }}</span></span>
               {{ icon('chevron-right', 18) }}

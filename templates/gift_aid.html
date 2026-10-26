@@ -55,7 +55,7 @@
   </p>
 
   {% if give_url %}
-    <a href="{{ give_url }}" target="_blank" rel="noopener" class="give-primary" style="margin-top:1.5rem;">
+    <a href="{{ give_url|web_link }}" target="_blank" rel="noopener" class="give-primary" style="margin-top:1.5rem;">
       {{ icon('heart', 20) }}
       <span><strong>Give with Gift Aid</strong><small>Opens {{ provider }} securely</small></span>
       {{ icon('chevron-right', 18) }}

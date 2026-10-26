@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>
+<script nonce="{{ csp_nonce() }}">
   // Fade-in animations: hide sections only while the animation script is
   // running. If it hasn't started within 2.5s, show everything as normal.
   (function () {
@@ -13,7 +13,7 @@
     } catch (e) {}
   })();
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Applied before anything renders, so switching theme never flashes.
 (function () {
   try {
@@ -33,7 +33,7 @@
 <meta name="member-signed-in" content="{{ 'true' if member else 'false' }}">
 <meta name="theme-color" content="#F2F3F5" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)">
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Match the phone's status bar to the theme the person picked in Settings,
 // not just the phone's own setting.
 (function () {
@@ -47,10 +47,11 @@
   } catch (e) {}
 })();
 </script>
-<script src="{{ url_for('static', filename='palette.js', v='53') }}"></script>
-<script>window.CS_AUDIO_BOOKS = {{ audio_bible_js.books|tojson }}; window.CS_AUDIO_READERS = {{ audio_bible_js.readers|tojson }}; window.CS_AUDIO_DEFAULT_READER = {{ audio_bible_js.default|tojson }};</script>
-<script src="{{ url_for('static', filename='audio-bible.js', v='53') }}"></script>
-<script src="{{ url_for('static', filename='mini-player.js', v='53') }}" defer></script>
+<script src="{{ url_for('static', filename='palette.js', v='54') }}"></script>
+<script src="{{ url_for('static', filename='safe-actions.js', v='1') }}" defer></script>
+<script nonce="{{ csp_nonce() }}">window.CS_AUDIO_BOOKS = {{ audio_bible_js.books|tojson }}; window.CS_AUDIO_READERS = {{ audio_bible_js.readers|tojson }}; window.CS_AUDIO_DEFAULT_READER = {{ audio_bible_js.default|tojson }};</script>
+<script src="{{ url_for('static', filename='audio-bible.js', v='54') }}"></script>
+<script src="{{ url_for('static', filename='mini-player.js', v='54') }}" defer></script>
 <title>{% block title %}Clearspring Church, Cheltenham{% endblock %}</title>
 
 <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -60,8 +61,8 @@
 <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ url_for('static', filename='fonts/literata.woff2') }}" as="font" type="font/woff2" crossorigin>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='53') }}">
-<script>
+<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='54') }}">
+<script nonce="{{ csp_nonce() }}">
 // Attach the CSRF token to every same-origin state-changing fetch, so
 // individual scripts don't each have to remember to do it.
 (function () {
@@ -70,8 +71,10 @@
   window.fetch = function (input, init) {
     init = init || {};
     const method = (init.method || "GET").toUpperCase();
-    const url = typeof input === "string" ? input : (input && input.url) || "";
-    const sameOrigin = url.startsWith("/") || url.startsWith(window.location.origin);
+    const url = typeof input === "string" ? input : (input && input.url) || String(input || "");
+    // Compare real origins: "//elsewhere.com/x" starts with "/" but is another site.
+    let sameOrigin = false;
+    try { sameOrigin = new URL(url, window.location.href).origin === window.location.origin; } catch (e) {}
 
     if (sameOrigin && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
       const headers = new Headers(init.headers || {});
@@ -94,7 +97,7 @@
     <source src="{{ url_for('static', filename='loading-screen.mp4') }}" type="video/mp4">
   </video>
 </div>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var splash = document.getElementById("app-splash");
   if (sessionStorage.getItem("cs_splash_shown")) {
@@ -174,7 +177,7 @@
 
 {% block content %}{% endblock %}
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register("/service-worker.js", { scope: "/" });

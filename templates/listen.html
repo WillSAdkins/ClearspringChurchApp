@@ -63,7 +63,7 @@
 
   <p class="lib-source">{{ credit }} Played from OpenBible.com, or from this phone once saved. <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
 </main>
-<script>
+<script nonce="{{ csp_nonce() }}">
   window.CS_AUDIO_BOOKS = {{ books|tojson }};
   window.CS_AUDIO_READERS = {{ readers_js|tojson }};
   window.CS_AUDIO_DEFAULT_READER = {{ default_reader|tojson }};

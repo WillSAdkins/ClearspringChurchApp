@@ -23,7 +23,7 @@
         <p class="prayer-sent-sub">Our church family will be praying. You can add news, or say when it’s been answered, from the prayer wall on this device.</p>
       {% endif %}
       {% if new_prayer %}
-      <script>
+      <script nonce="{{ csp_nonce() }}">
         try {
           var mine = JSON.parse(localStorage.getItem("cs_my_requests") || "{}");
           mine[{{ new_prayer.id }}] = {{ new_prayer.token|tojson }};

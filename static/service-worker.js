@@ -1,4 +1,4 @@
-const CACHE_NAME = "clearspring-v53";
+const CACHE_NAME = "clearspring-v54";
 const PAGE_CACHE = "cs-pages-v1";
 const OFFLINE_URLS = ["/offline", "/static/style.css", "/static/loading-screen.mp4"];
 
@@ -201,7 +201,9 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || "/";
+  let target = (event.notification.data && event.notification.data.url) || "/";
+  // Only ever open a page on this site.
+  if (typeof target !== "string" || !/^\/(?![\/\\])/.test(target)) target = "/";
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const client of list) {

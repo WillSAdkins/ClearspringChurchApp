@@ -70,7 +70,7 @@
   .fb-scoreboard strong { color: var(--accent); }
 </style>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const QUESTIONS = {{ questions | tojson }};
   const YARDS_PER_CORRECT = 20;

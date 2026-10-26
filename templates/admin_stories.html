@@ -29,7 +29,7 @@
         <button type="submit" class="btn-primary small" style="width:auto;">Publish</button>
       </div>
     </form>
-    <form method="post" action="{{ url_for('admin_story_action', story_id=st['id'], action='delete') }}" onsubmit="return confirm('Delete this story?');" style="margin-top:.5rem">
+    <form method="post" action="{{ url_for('admin_story_action', story_id=st['id'], action='delete') }}" data-confirm="Delete this story?" style="margin-top:.5rem">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn-ghost small">Delete</button>
     </form>
@@ -42,7 +42,7 @@
     <p class="qa-question">{{ st['title'] or 'Untitled' }}</p>
     <p class="qa-meta">{{ st['author_name'] or 'Anonymous' }} · published {{ st['published_at']|pretty_datetime }}</p>
     <div class="qa-answer">{{ st['body']|truncate(300) }}</div>
-    <form method="post" action="{{ url_for('admin_story_action', story_id=st['id'], action='hide') }}" onsubmit="return confirm('Take this story down?');">
+    <form method="post" action="{{ url_for('admin_story_action', story_id=st['id'], action='hide') }}" data-confirm="Take this story down?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn-danger small">Take down</button>
     </form>

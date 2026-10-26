@@ -218,7 +218,7 @@
 
 <script src="{{ url_for('static', filename='verse-share.js') }}"></script>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.querySelectorAll(".vp-cm-body").forEach(function (b) {
   if (b.scrollHeight <= b.clientHeight + 12) { b.classList.add("open"); return; }
   var btn = document.createElement("button");
@@ -227,7 +227,7 @@ document.querySelectorAll(".vp-cm-body").forEach(function (b) {
   b.parentNode.insertBefore(btn, b.nextSibling);
 });
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var all = document.getElementById("vpShowAll");
   if (all) all.addEventListener("click", function () {
@@ -244,7 +244,7 @@ document.querySelectorAll(".vp-cm-body").forEach(function (b) {
 <script src="{{ url_for('static', filename='bible-refs.js') }}"></script>
 <script src="{{ url_for('static', filename='study-store.js') }}"></script>
 <script src="{{ url_for('static', filename='note-editor.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var box = document.getElementById("vpMine");
   if (!box || !window.Study) return;

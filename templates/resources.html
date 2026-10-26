@@ -44,7 +44,7 @@
               {{ icon('chevron-right', 18) }}
             </a>
           {% else %}
-            <a href="{{ r['url'] or r['file_path'] }}" target="_blank" rel="noopener" class="bible-row">
+            <a href="{{ (r['url'] or r['file_path'])|web_link }}" target="_blank" rel="noopener" class="bible-row">
               <span class="bible-row-icon">{{ icon('bookmark', 20) }}</span>
               <span class="bible-row-body">
                 <span class="bible-row-title">{{ r['title'] }}</span>

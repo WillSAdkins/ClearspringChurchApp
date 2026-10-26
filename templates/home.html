@@ -89,7 +89,7 @@
   <script src="{{ url_for('static', filename='memorise.js') }}" defer></script>
   <script src="{{ url_for('static', filename='grow.js') }}" defer></script>
   <script src="{{ url_for('static', filename='discipleship.js') }}" defer></script>
-  <script>
+  <script nonce="{{ csp_nonce() }}">
   document.addEventListener("DOMContentLoaded", function () {
     try {
       var X = window.Discipleship; if (!X) return;
@@ -105,7 +105,7 @@
     } catch (e) {}
   });
   </script>
-  <script>
+  <script nonce="{{ csp_nonce() }}">
   (function () {
     try {
       var p = JSON.parse(localStorage.getItem("cs_bible_place") || "null");
@@ -258,7 +258,7 @@
 </main>
 
 <script src="{{ url_for('static', filename='reading-position.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const card = document.getElementById("continueCard");
   if (!card || !window.ReadingPosition) return;
@@ -296,7 +296,7 @@
 })();
 </script>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 /* ---------- Add to home screen + Share the app ---------- */
 (function () {
   var addBtn = document.getElementById("addToHomeBtn");

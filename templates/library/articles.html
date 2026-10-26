@@ -18,7 +18,7 @@
   <p class="lib-note" id="artNone" hidden>Nothing matches. Try the <a href="{{ url_for('library_search') }}">Library search</a>.</p>
   <p class="lib-source">{{ source.credit }}</p>
 </main>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var f = document.getElementById("artFilter"), items = document.querySelectorAll("#artList li"), none = document.getElementById("artNone");
   f.addEventListener("input", function () {

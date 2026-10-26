@@ -36,7 +36,7 @@
   </section>
 </main>
 <script src="{{ url_for('static', filename='grow.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   "use strict";
   var G = window.Grow, $ = function (id) { return document.getElementById(id); };

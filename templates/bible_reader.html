@@ -177,7 +177,7 @@
       <div class="lib-chips ch-cm-chips" id="chCm">
         {% for s in chapter_lib.commentaries %}<a class="lib-chip" data-src="{{ s }}" href="{{ url_for('commentary_page', source=s, book_slug=book.slug, chapter=chapter) }}" title="{{ commentaries[s].full }}">{{ commentaries[s].name }}</a>{% endfor %}
       </div>
-      <script>
+      <script nonce="{{ csp_nonce() }}">
         /* Put the commentary this person last chose first. */
         try { var f = localStorage.getItem("cs_commentary"), box = document.getElementById("chCm"), el = f && box.querySelector('[data-src="' + f.replace(/[^a-z]/g, "") + '"]');
               if (el) { box.insertBefore(el, box.firstChild); el.classList.add("on"); } } catch (e) {}
@@ -353,17 +353,17 @@
 <script src="{{ url_for('static', filename='note-editor.js') }}"></script>
 <script src="{{ url_for('static', filename='verse-share.js') }}"></script>
 <script src="{{ url_for('static', filename='reader-controls.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
   window.CS_AUDIO_BOOKS = {{ audio_books|tojson }};
   window.CS_AUDIO_READERS = {{ audio_readers|tojson }};
   window.CS_AUDIO_DEFAULT_READER = "souer";
 </script>
 <script src="{{ url_for('static', filename='audio-bible.js') }}"></script>
 <script src="{{ url_for('static', filename='reader-audio.js') }}"></script>
-<script>window.BIBLE_BOOK_NAMES = {{ BOOK_NAMES|tojson }};</script>
+<script nonce="{{ csp_nonce() }}">window.BIBLE_BOOK_NAMES = {{ BOOK_NAMES|tojson }};</script>
 <script src="{{ url_for('static', filename='plans.js') }}"></script>
 <script src="{{ url_for('static', filename='plans-reader.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var el = document.getElementById("chMap");
   if (!el || !("IntersectionObserver" in window)) return;
@@ -381,7 +381,7 @@
   io.observe(el);
 })();
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const sheet = document.getElementById("vsheet");
   if (!sheet) return;
@@ -834,7 +834,7 @@
 </script>
 
 {% if study_enabled %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const panel = document.getElementById("studyPanel");
   const openBtn = document.getElementById("studyOpen");
@@ -1118,7 +1118,7 @@
 </script>
 {% endif %}
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var m = document.getElementById("transMenu");
   if (!m) return;

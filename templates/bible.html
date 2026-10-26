@@ -55,7 +55,7 @@
     </span>
     <span class="mz-promo-streak" id="mzPromoStreak" hidden></span>
   </a>
-  <script>
+  <script nonce="{{ csp_nonce() }}">
   (function () {
     try {
       var s = JSON.parse(localStorage.getItem("cs_memory") || "null");
@@ -231,7 +231,7 @@
     </nav>
   </section>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   // Point "continue" and "commentary" at the chapter you were last reading.
   try {

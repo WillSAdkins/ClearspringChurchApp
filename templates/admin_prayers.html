@@ -41,7 +41,7 @@
           <button type="submit" class="btn-ghost small">Keep private</button>
         </form>
         <form method="post" action="{{ url_for('admin_prayer_action', prayer_id=p['id'], action='delete') }}" style="display:inline;"
-              onsubmit="return confirm('Delete this request permanently?');">
+              data-confirm="Delete this request permanently?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn-danger small">Delete</button>
         </form>
@@ -62,7 +62,7 @@
           <button type="submit" class="btn-ghost small">Mark answered</button>
         </form>
         <form method="post" action="{{ url_for('admin_prayer_action', prayer_id=p['id'], action='delete') }}" style="display:inline;"
-              onsubmit="return confirm('Delete this request permanently?');">
+              data-confirm="Delete this request permanently?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn-danger small">Delete</button>
         </form>
@@ -87,7 +87,7 @@
           <button type="submit" class="btn-ghost small">Hide</button>
         </form>
         <form method="post" action="{{ url_for('admin_prayer_action', prayer_id=p['id'], action='delete') }}" style="display:inline;"
-              onsubmit="return confirm('Delete permanently?');">
+              data-confirm="Delete permanently?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn-danger small">Delete</button>
         </form>
@@ -107,7 +107,7 @@
             <button type="submit" class="btn-ghost small">Restore</button>
           </form>
           <form method="post" action="{{ url_for('admin_prayer_action', prayer_id=p['id'], action='delete') }}" style="display:inline;"
-                onsubmit="return confirm('Delete permanently?');">
+                data-confirm="Delete permanently?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-danger small">Delete</button>
           </form>

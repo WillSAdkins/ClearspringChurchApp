@@ -59,7 +59,7 @@
 </main>
 <script id="stData" type="application/json">{{ parts|tojson }}</script>
 <script src="{{ url_for('static', filename='grow.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   "use strict";
   var P = JSON.parse(document.getElementById("stData").textContent), G = window.Grow;

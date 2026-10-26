@@ -23,7 +23,7 @@
   <p class="gw-note" style="margin-top:1rem"><button type="button" class="gw-btn" id="fqShare">{{ icon('message', 16) }} Share this answer</button></p>
 </main>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var b = document.getElementById("fqShare");
   b.addEventListener("click", function () {

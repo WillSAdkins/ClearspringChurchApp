@@ -17,7 +17,7 @@
     {% if p.choose_passage %}
     <form class="pp-choose" method="get">
       <label for="ppPassage">Passage</label>
-      <select id="ppPassage" name="passage" onchange="this.form.submit()">
+      <select id="ppPassage" name="passage" data-autosubmit>
         {% for r in p.choose_passage %}<option value="{{ r }}" {{ 'selected' if passage and passage.ref == r.replace('-', '–') }}>{{ r.replace('-', '–') }}</option>{% endfor %}
       </select>
     </form>

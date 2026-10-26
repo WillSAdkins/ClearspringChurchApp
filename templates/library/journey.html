@@ -15,7 +15,7 @@
   {{ source("Route: UBS Project MARBLE, drawn by Dr Leen Ritmeyer, © United Bible Societies 2023, CC BY-SA 4.0. Map: Natural Earth.") }}
 </main>
 <script src="{{ url_for('static', filename='bible-map.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var lines = {{ r.lines|tojson }};
   var first = lines[0][0], lastLine = lines[lines.length - 1], last = lastLine[lastLine.length - 1];

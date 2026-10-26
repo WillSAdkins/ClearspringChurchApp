@@ -29,7 +29,7 @@
   </details>
 </main>
 <script src="{{ url_for('static', filename='prayers.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById("wdDone").addEventListener("click", function () {
   if (window.Prayers) window.Prayers.logDay(3);
   this.textContent = "Amen"; this.disabled = true;

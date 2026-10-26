@@ -10,11 +10,11 @@
       <summary aria-label="More">⋯</summary>
       <div class="gp-menu-list">
         {% if p.member_id == me['id'] or is_leader %}
-        <form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='delete') }}" onsubmit="return confirm('Delete this?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Delete</button></form>
+        <form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='delete') }}" data-confirm="Delete this?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Delete</button></form>
         {% endif %}
         {% if p.member_id != me['id'] %}
-        <form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='report') }}" onsubmit="var r=prompt('What’s wrong with this post? (Church staff will see it.)'); if(r===null) return false; this.reason.value=r; return true;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="reason"><button type="submit">Report to church staff</button></form>
-        {% if p.member_id %}<form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='block') }}" onsubmit="return confirm('Hide everything {{ (p.name or 'this person')|e }} posts? They won’t be told.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Hide their posts</button></form>{% endif %}
+        <form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='report') }}" data-prompt="What’s wrong with this post? (Church staff will see it.)" data-prompt-field="reason"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="reason"><button type="submit">Report to church staff</button></form>
+        {% if p.member_id %}<form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=p.id, action='block') }}" data-confirm="Hide everything {{ (p.name or 'this person')|e }} posts? They won’t be told."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Hide their posts</button></form>{% endif %}
         {% endif %}
       </div>
     </details>
@@ -50,7 +50,7 @@
     <li id="p{{ r.id }}" class="{{ 'new' if r.id > unread_from and r.member_id != me['id'] }}">
       <b>{{ r.name or 'A member' }}</b> <small>{{ r.created_at|ago }}</small>
       <div class="gp-body">{{ r.body|paras }}</div>
-      {% if r.member_id == me['id'] or is_leader %}<form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=r.id, action='delete') }}" class="gp-rdel" onsubmit="return confirm('Delete this reply?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Delete</button></form>{% endif %}
+      {% if r.member_id == me['id'] or is_leader %}<form method="post" action="{{ url_for('group_post_action', gid=grp['id'], pid=r.id, action='delete') }}" class="gp-rdel" data-confirm="Delete this reply?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Delete</button></form>{% endif %}
     </li>
     {% endfor %}
   </ul>

@@ -86,7 +86,7 @@
   .lb-view-link { display: inline-block; margin-top: .5rem; font-size: var(--fs-sm); color: var(--accent); }
 </style>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   // Maze layout: # = wall, . = open path with manna, ' ' = open path (no manna), P = player start
   const LAYOUT = [

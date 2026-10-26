@@ -118,7 +118,7 @@
   .lb-view-link { display: inline-block; margin-top: .5rem; font-size: var(--fs-sm); color: var(--accent); }
 </style>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const field = document.getElementById("gs-field");
   const playerEl = document.getElementById("gs-player");

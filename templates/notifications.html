@@ -97,7 +97,7 @@
 </main>
 
 {% if push_configured or native_push_configured %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Runs after the page has loaded, so the app bridge (loaded last) is ready.
 document.addEventListener("DOMContentLoaded", function () {
   const VAPID_PUBLIC_KEY = "{{ vapid_public_key }}";

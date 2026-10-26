@@ -48,7 +48,7 @@
 </main>
 <script src="{{ url_for('static', filename='grow.js') }}"></script>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var slug = document.getElementById("gwSession").dataset.slug, G = window.Grow;
   function fill() {

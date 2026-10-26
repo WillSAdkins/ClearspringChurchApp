@@ -23,7 +23,7 @@
   <section class="wc-head">
     <p class="wc-kicker"><span class="wl-badge lv-{{ c['level'] }}">{{ c['level_name'] }}</span> {{ c['subject_name'] }}</p>
     <h2 class="wc-title">{{ c['title'] }}</h2>
-    <p class="wc-by">{% if c['teacher'] %}{{ c['teacher'] }}{% endif %}{% if c['provider'] %}{% if c['teacher'] %} · {% endif %}{% if c['provider_url'] %}<a href="{{ c['provider_url'] }}" target="_blank" rel="noopener" data-external>{{ c['provider'] }}</a>{% else %}{{ c['provider'] }}{% endif %}{% endif %}</p>
+    <p class="wc-by">{% if c['teacher'] %}{{ c['teacher'] }}{% endif %}{% if c['provider'] %}{% if c['teacher'] %} · {% endif %}{% if c['provider_url'] %}<a href="{{ c['provider_url']|web_link }}" target="_blank" rel="noopener" data-external>{{ c['provider'] }}</a>{% else %}{{ c['provider'] }}{% endif %}{% endif %}</p>
     <div class="wc-progress" aria-live="polite">
       <span class="wc-bar"><i id="wcBar"></i></span>
       <span id="wcProgT">{% if c['lessons'] %}{{ c['lessons'] }} lesson{{ 's' if c['lessons'] != 1 }}{% endif %}{% if c['seconds'] %} · {{ fmt_length(c['seconds']) }}{% endif %}</span>

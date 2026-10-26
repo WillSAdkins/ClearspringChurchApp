@@ -49,7 +49,7 @@
   </nav>
 </main>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var id = {{ d['id'] }}, KEY = "cs_devos_read", btn = document.getElementById("devoRead");
   function get() { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } }

@@ -45,11 +45,11 @@
     {% endif %}
 
     <div class="vs-maps">
-      <a href="{{ info.maps_google }}" class="vs-map-btn" data-external
+      <a href="{{ info.maps_google|web_link }}" class="vs-map-btn" data-external
          target="_blank" rel="noopener">Google Maps</a>
-      <a href="{{ info.maps_apple }}" class="vs-map-btn" data-external
+      <a href="{{ info.maps_apple|web_link }}" class="vs-map-btn" data-external
          target="_blank" rel="noopener">Apple Maps</a>
-      <a href="{{ info.maps_citymapper }}" class="vs-map-btn" data-external
+      <a href="{{ info.maps_citymapper|web_link }}" class="vs-map-btn" data-external
          target="_blank" rel="noopener">Citymapper</a>
     </div>
     <p class="vs-note">These open directions in your own maps app.</p>

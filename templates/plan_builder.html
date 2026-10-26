@@ -55,7 +55,7 @@
   </form>
 </main>
 <script src="{{ url_for('static', filename='plans.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var f = document.getElementById("pbForm"), books = document.getElementById("pbBooks");
   var est = document.getElementById("pbEstimate"), err = document.getElementById("pbError"), days = document.getElementById("pbDays");

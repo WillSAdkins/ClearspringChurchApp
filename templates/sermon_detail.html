@@ -20,11 +20,11 @@
     </div>
     {% if s['video_url'] %}
       <p class="video-fallback">
-        Trouble playing? <a href="{{ s['video_url'] }}" target="_blank" rel="noopener">Watch on YouTube</a>
+        Trouble playing? <a href="{{ s['video_url']|web_link }}" target="_blank" rel="noopener">Watch on YouTube</a>
       </p>
     {% endif %}
   {% elif s['video_url'] %}
-    <a href="{{ s['video_url'] }}" target="_blank" rel="noopener" class="sermon-external">
+    <a href="{{ s['video_url']|web_link }}" target="_blank" rel="noopener" class="sermon-external">
       {{ icon('play', 20) }}<span>Watch this message</span>{{ icon('chevron-right', 16) }}
     </a>
   {% endif %}
@@ -62,7 +62,7 @@
   {% if s['audio_url'] %}
     <section class="audio-block">
       <h3 class="sermon-h3">Listen</h3>
-      <audio controls preload="none" src="{{ s['audio_url'] }}" class="audio-player"></audio>
+      <audio controls preload="none" src="{{ s['audio_url']|web_link }}" class="audio-player"></audio>
       <div class="audio-actions">
         <button type="button" id="dlBtn" class="audio-action" data-url="{{ s['audio_url'] }}" data-id="{{ s['id'] }}">
           {{ icon('check', 16) }}<span id="dlLabel">Save for offline</span>
@@ -93,7 +93,7 @@
 </main>
 
 <script src="{{ url_for('static', filename='sync.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   /* ---- Notes: autosave to this device ---- */
   const ta = document.getElementById("sermonNotes");

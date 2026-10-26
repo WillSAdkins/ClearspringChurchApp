@@ -5,7 +5,7 @@
 {% block content %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='arcade.css', v='41') }}">
-<script>document.body.classList.add("arcade");</script>
+<script nonce="{{ csp_nonce() }}">document.body.classList.add("arcade");</script>
 <header class="gh">
   <a href="{{ url_for('more_hub') }}" class="gh-back" aria-label="Back to More">{{ icon('chevron-left', 20) }}</a>
   <div class="gh-text">

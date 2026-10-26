@@ -52,7 +52,7 @@
         <input type="hidden" name="action" value="{{ 'off' if st['active'] else 'on' }}">
         <button type="submit" class="btn-ghost small">{{ 'Switch off' if st['active'] else 'Switch on' }}</button>
       </form>
-      <form method="post" action="{{ url_for('admin_staff_action', staff_id=st['id']) }}" onsubmit="return confirm('Remove {{ st['name']|e }}\'s staff account?');">
+      <form method="post" action="{{ url_for('admin_staff_action', staff_id=st['id']) }}" data-confirm="Remove {{ st['name']|e }}'s staff account?">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="delete">
         <button type="submit" class="btn-danger small">Remove</button>

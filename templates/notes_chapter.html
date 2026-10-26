@@ -38,7 +38,7 @@
   </nav>
   <p class="lib-source">Verse notes: {{ sources.tyndale.credit }} Section notes: {{ sources.biblica.credit }} <a href="{{ url_for('library_licenses') }}">About the sources</a></p>
 </main>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var bar = document.querySelector(".sn-filter"); if (!bar) return;
   bar.addEventListener("click", function (e) {

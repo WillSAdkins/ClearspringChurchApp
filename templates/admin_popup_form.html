@@ -39,13 +39,13 @@
     <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto">Save</button></div>
   </form>
   {% if p.id %}
-  <form method="post" onsubmit="return confirm('Delete this pop-up?');" style="margin-top:1.5rem">
+  <form method="post" data-confirm="Delete this pop-up?" style="margin-top:1.5rem">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete">
     <button type="submit" class="btn-danger small">Delete pop-up</button>
   </form>
   {% endif %}
 </main>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   // Shrink a large photo on this device before it uploads.
   var form = document.getElementById("puForm"), input = document.getElementById("image");

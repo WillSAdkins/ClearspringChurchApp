@@ -87,7 +87,7 @@
   {{ source("People data: Theographic Bible Metadata (CC BY-SA 4.0). Dates are traditional estimates.") }}
 </main>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.querySelectorAll("[data-clamp]").forEach(function (b) {
   if (b.scrollHeight <= b.clientHeight + 12) { b.classList.add("open"); return; }
   var btn = document.createElement("button");
@@ -98,7 +98,7 @@ document.querySelectorAll("[data-clamp]").forEach(function (b) {
 </script>
 {% if map_places %}
 <script src="{{ url_for('static', filename='bible-map.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
   BibleMap.mount(document.getElementById("personMap"), {
     markers: {{ map_places|tojson }}.map(function (x) { return { lat: x.lat, lon: x.lon, label: x.name, href: "/bible/places/" + x.slug, main: true }; }),
     fitMain: true

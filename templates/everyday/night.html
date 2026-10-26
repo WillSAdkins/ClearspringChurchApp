@@ -23,7 +23,7 @@
       {% if s.key == 'psalm' %}
         {{ scripture(texts[psalm], 'nt-say', false) }}
         <form method="get" class="pp-choose"><label for="ntPsalm">Another psalm</label>
-          <select id="ntPsalm" name="psalm" onchange="this.form.submit()">{% for p in psalms %}<option {{ 'selected' if p == psalm }}>{{ p }}</option>{% endfor %}</select></form>
+          <select id="ntPsalm" name="psalm" data-autosubmit>{% for p in psalms %}<option {{ 'selected' if p == psalm }}>{{ p }}</option>{% endfor %}</select></form>
       {% elif s.key == 'look' %}
         <p class="ps-small"><a href="{{ url_for('practice_page', slug='examen') }}">Take longer over this with the Examen →</a></p>
       {% elif s.key == 'give' %}
@@ -37,7 +37,7 @@
   </div>
 </main>
 <script src="{{ url_for('static', filename='prayers.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   "use strict";
   // Tonight's prayers: a few from the list, so they can be handed over by name.

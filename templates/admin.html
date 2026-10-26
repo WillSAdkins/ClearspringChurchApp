@@ -66,7 +66,7 @@
         <div class="admin-row-actions">
           <a href="{{ url_for('edit_event', event_id=e['id']) }}" class="btn-ghost small">Edit</a>
           <form method="post" action="{{ url_for('delete_event', event_id=e['id']) }}"
-                onsubmit="return confirm('Remove this event?');">
+                data-confirm="Remove this event?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-danger small">Delete</button>
           </form>

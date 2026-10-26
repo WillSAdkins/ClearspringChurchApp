@@ -61,7 +61,7 @@
           <div class="prayer-foot">
             <span class="prayer-author">{{ p['author_name'] or 'Anonymous' }} · {{ p['submitted_at']|ago }}</span>
             <a class="prayer-keep" href="{{ url_for('prayer_journal', add=p['body'][:300]) }}" aria-label="Add to my prayers" title="Add to my prayers">{{ icon('plus', 16) }}</a>
-            <form class="prayer-report" method="post" action="{{ url_for('prayer_report', prayer_id=p['id']) }}" onsubmit="var r=prompt('What’s wrong with this request? It will come off the wall until the church staff have looked at it.'); if(r===null) return false; this.reason.value=r; return true;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="reason"><button type="submit" aria-label="Report this request">Report</button></form>
+            <form class="prayer-report" method="post" action="{{ url_for('prayer_report', prayer_id=p['id']) }}" data-prompt="What’s wrong with this request? It will come off the wall until the church staff have looked at it." data-prompt-field="reason"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="reason"><button type="submit" aria-label="Report this request">Report</button></form>
             <button type="button" class="pray-btn" data-id="{{ p['id'] }}">
               {{ icon('hands', 16) }}
               <span class="pray-label">Praying</span>
@@ -75,7 +75,7 @@
 
 </main>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const KEY = "cs_prayed";
   function prayed() {

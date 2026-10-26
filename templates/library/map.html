@@ -9,7 +9,7 @@
   <p class="lib-note">Pinch or use + and − to zoom; the most-mentioned places are labelled first. Tap a place to open it. <a href="{{ url_for('journeys') }}">Journeys →</a></p>
 </main>
 <script src="{{ url_for('static', filename='bible-map.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 fetch("/api/map/places").then(function (r) { return r.json(); }).then(function (d) {
   BibleMap.mount(document.getElementById("worldMap"), {
     markers: d.places.map(function (p) { return { label: p[1], lat: p[2], lon: p[3], rank: p[4], href: "/bible/places/" + p[0], note: p[4] + " verses" }; }),

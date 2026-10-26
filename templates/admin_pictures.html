@@ -54,7 +54,7 @@
   .pc-pick { cursor: pointer; }
   .pc-busy { opacity: .6; pointer-events: none; }
 </style>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   // Shrink the photo on this device first: quicker uploads, and phone
   // photos (often 5-10 MB) fit comfortably.

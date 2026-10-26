@@ -40,7 +40,7 @@
 </main>
 <script src="{{ url_for('static', filename='prayers.js') }}"></script>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   "use strict";
   var R = window.Prayers, ul = document.getElementById("shNames");

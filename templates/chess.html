@@ -160,7 +160,7 @@
 
 <script src="{{ url_for('static', filename='games/chess-engine.js') }}"></script>
 <script src="{{ url_for('static', filename='games/chess-ai.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const setupEl = document.getElementById("cs-setup");
   const gameEl = document.getElementById("cs-game");

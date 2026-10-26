@@ -24,7 +24,7 @@
 </main>
 
 <script src="{{ url_for('static', filename='saved-verses.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const listEl = document.getElementById("sv-list");
   const emptyEl = document.getElementById("sv-empty");

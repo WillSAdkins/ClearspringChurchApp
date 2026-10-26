@@ -236,7 +236,7 @@
   .wpoll-thanks { font-size: var(--fs-base); color: var(--muted); margin: 0; }
 </style>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const section = document.getElementById("wpoll");
   const badgeText = document.getElementById("wpoll-badge-text");
@@ -260,10 +260,13 @@
       if (poll.reveal) {
         const row = document.createElement("div");
         row.className = "wpoll-result" + (opt.id === poll.voted_option_id ? " wpoll-mine" : "");
-        row.innerHTML =
-          '<span class="wpoll-result-fill" style="width:' + (opt.pct || 0) + '%"></span>' +
-          '<span class="wpoll-result-row"><span>' + opt.label + '</span>' +
-          '<span class="wpoll-result-pct">' + (opt.pct || 0) + '%</span></span>';
+        // Built from elements, so an option's wording is only ever text.
+        const pct = Math.max(0, Math.min(100, Number(opt.pct) || 0));
+        const fill = document.createElement("span"); fill.className = "wpoll-result-fill"; fill.style.width = pct + "%";
+        const line = document.createElement("span"); line.className = "wpoll-result-row";
+        const lab = document.createElement("span"); lab.textContent = opt.label;
+        const pc = document.createElement("span"); pc.className = "wpoll-result-pct"; pc.textContent = pct + "%";
+        line.append(lab, pc); row.append(fill, line);
         optionsEl.appendChild(row);
       } else {
         const btn = document.createElement("button");

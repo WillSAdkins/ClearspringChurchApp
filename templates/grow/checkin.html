@@ -48,7 +48,7 @@
 </main>
 <script id="ciData" type="application/json">{{ {'areas': areas, 'scale': scale}|tojson }}</script>
 <script src="{{ url_for('static', filename='grow.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   "use strict";
   var D = JSON.parse(document.getElementById("ciData").textContent), G = window.Grow;

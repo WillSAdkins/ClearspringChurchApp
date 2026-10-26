@@ -36,7 +36,7 @@
   {{ source(info.full ~ " (" ~ info.year ~ "). " ~ info.licence) }}
 </main>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
   /* Remember the commentary someone chose, and keep its tab in view. */
   try { localStorage.setItem("cs_commentary", "{{ source }}"); } catch (e) {}
   (function () { var t = document.querySelector("#cmTabs .on"); if (t && t.scrollIntoView) t.scrollIntoView({ block: "nearest", inline: "center" }); })();

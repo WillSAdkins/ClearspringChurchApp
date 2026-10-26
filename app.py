@@ -21,6 +21,7 @@ import calendar as calendar_mod
 import sqlite3
 import secrets
 import hashlib
+import hmac
 from datetime import datetime, date, timedelta
 from functools import wraps, lru_cache
 
@@ -388,6 +389,23 @@ def json_body():
     return data if isinstance(data, dict) else {}
 
 
+def web_link(value):
+    """A link someone typed into the admin area, or "" if it isn't a web
+    address. Only https/http/mailto/tel and same-site paths ("/watch") are
+    kept, so a "javascript:" link can never be saved or shown."""
+    v = str(value or "").strip()
+    if not v:
+        return ""
+    if v.startswith("/") and not v.startswith("//") and "\\" not in v:
+        return v
+    if re.match(r"(?i)^(https?://[^\s/]|mailto:|tel:)", v) and not re.search(r"[\x00-\x1f]", v):
+        return v
+    return ""
+
+
+app.jinja_env.filters["web_link"] = web_link
+
+
 def same_secret(a, b):
     """Constant-time comparison that copes with any characters (the standard
     one raises an error for non-ASCII text, which someone can simply type)."""
@@ -400,9 +418,12 @@ def rate_limited(bucket, ip, limit, window_seconds):
     key = (bucket, ip)
     hits = [t for t in _action_hits.get(key, []) if now - t < window_seconds]
 
-    # Stop the dict growing without bound on a long-running process.
-    if len(_action_hits) > 5000:
-        _action_hits.clear()
+    # Stop the dict growing without bound on a long-running process. Forget
+    # only entries whose window has passed: clearing everything would let
+    # someone wipe every limit by sending requests from lots of addresses.
+    if len(_action_hits) > 20000:
+        for k in [k for k, v in _action_hits.items() if not v or now - v[-1] > 3600]:
+            _action_hits.pop(k, None)
 
     if len(hits) >= limit:
         _action_hits[key] = hits
@@ -410,6 +431,46 @@ def rate_limited(bucket, ip, limit, window_seconds):
     hits.append(now)
     _action_hits[key] = hits
     return False
+
+
+# The site's own addresses. A sign-in link in an email must point at the
+# real site, never at whatever Host header the request happened to carry
+# (otherwise a forged request could make the app email someone a link to
+# another website with their sign-in token in it). Render sets
+# RENDER_EXTERNAL_HOSTNAME; ALLOWED_HOSTS can add a custom domain.
+SITE_HOSTS = [h.strip().lower() for h in ([os.environ.get("RENDER_EXTERNAL_HOSTNAME", "")] +
+              os.environ.get("ALLOWED_HOSTS", "").split(",")) if h.strip()]
+
+
+def email_url(endpoint, **values):
+    """A full link for an email, always on one of the site's own addresses."""
+    link = url_for(endpoint, _external=True, **values)
+    if SITE_HOSTS and (request.host or "").lower() not in SITE_HOSTS:
+        path = url_for(endpoint, **values)
+        link = f"https://{SITE_HOSTS[0]}{path}"
+    return link
+
+
+_failures = {}
+
+
+def record_failure(bucket, key, window_seconds):
+    now = datetime.now().timestamp()
+    hits = [t for t in _failures.get((bucket, key), []) if now - t < window_seconds]
+    hits.append(now)
+    _failures[(bucket, key)] = hits
+    if len(_failures) > 20000:
+        for k in [k for k, v in _failures.items() if not v or now - v[-1] > 3600]:
+            _failures.pop(k, None)
+
+
+def too_many_failures(bucket, key, limit, window_seconds):
+    """Like rate_limited, but only failed attempts count (wrong passwords)."""
+    now = datetime.now().timestamp()
+    return len([t for t in _failures.get((bucket, key), []) if now - t < window_seconds]) >= limit
+
+
+DUMMY_HASH = hash_password(secrets.token_urlsafe(12))
 
 
 def client_ip():
@@ -484,6 +545,16 @@ def compress_large_pages(response):
     return response
 
 
+def csp_nonce():
+    """A random value for this response: only scripts carrying it may run."""
+    if "csp_nonce" not in g:
+        g.csp_nonce = secrets.token_urlsafe(18)
+    return g.csp_nonce
+
+
+app.jinja_env.globals["csp_nonce"] = csp_nonce
+
+
 @app.after_request
 def security_headers(response):
     """Standard protective headers.
@@ -496,8 +567,12 @@ def security_headers(response):
     response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault(
-        "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
+        "Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), browsing-topics=()"
     )
+    # Pages this site opens can't reach back into it, and no old Flash or
+    # PDF plug-in may load data from it.
+    response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
+    response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
 
     # Only send HSTS over a genuinely secure connection, never on local HTTP.
     if request.is_secure or request.headers.get("X-Forwarded-Proto") == "https":
@@ -523,7 +598,12 @@ def security_headers(response):
             # compiles WebAssembly at runtime. It is far narrower than
             # 'unsafe-eval' — it permits WebAssembly compilation only, and
             # does not re-enable eval() or new Function() for JavaScript.
-            f"script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' {NATIVE_ORIGINS}",
+            # Inline scripts run only if they carry this response's nonce, and
+            # inline event handlers (onclick=...) never run, so injected markup
+            # can't execute. ('unsafe-inline' is ignored by every browser that
+            # understands nonces; it's only a fallback for very old ones.)
+            f"script-src 'self' 'nonce-{csp_nonce()}' 'unsafe-inline' 'wasm-unsafe-eval' {NATIVE_ORIGINS}",
+            "script-src-attr 'none'",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
             "img-src 'self' data: blob: https://i.ytimg.com",
@@ -534,6 +614,9 @@ def security_headers(response):
             "form-action 'self'",
             "base-uri 'self'",
             "object-src 'none'",
+            "frame-ancestors 'self'",
+            "manifest-src 'self'",
+            "worker-src 'self' blob:",
         ]))
 
     return response
@@ -623,6 +706,20 @@ def robots_txt():
     resp = app.response_class(ROBOTS_TXT, mimetype="text/plain")
     resp.headers["Cache-Control"] = "public, max-age=86400"
     return resp
+
+
+# Only these accept big uploads (backups, photos). Everything else is capped
+# far lower, so nobody can tie the server up sending huge bodies to any page.
+BIG_UPLOADS = {"admin_restore", "admin_merge", "admin_pictures", "admin_popup_edit", "admin_popups", "sync_bulk"}
+SMALL_BODY_MAX = 2 * 1024 * 1024
+
+
+@app.before_request
+def limit_body_size():
+    n = request.content_length
+    if n and n > SMALL_BODY_MAX and request.endpoint not in BIG_UPLOADS:
+        return ({"ok": False, "error": "too large"}, 413) if request.path.startswith("/api/") else ("That was too large to send.", 413)
+    return None
 
 
 @app.before_request
@@ -995,6 +1092,12 @@ def init_db():
         if col not in sermon_cols:
             db.execute(f"ALTER TABLE sermons ADD COLUMN {col} TEXT")
 
+    # Migration: changing a password (or "sign out everywhere") ends every
+    # other signed-in session for that member.
+    mem_cols = [r[1] for r in db.execute("PRAGMA table_info(members)").fetchall()]
+    if "signed_out_before" not in mem_cols:
+        db.execute("ALTER TABLE members ADD COLUMN signed_out_before TEXT")
+
     # Migration: let people update their own prayer requests
     pr_cols = [r[1] for r in db.execute("PRAGMA table_info(prayers)").fetchall()]
     for col in ("update_text", "update_at", "owner_hash"):
@@ -1174,9 +1277,42 @@ def inject_staff():
     return {"can_open": can_open, "data_missing": data_missing, "is_owner": lambda: "*" in staff_areas(), "staff_name": lambda: (current_staff() or {"name": None})["name"]}
 
 
+ADMIN_IDLE_SECONDS = 8 * 3600
+
+
+def admin_fingerprint(staff=None):
+    """Ties an admin session to the password it signed in with: change the
+    ADMIN_PASSWORD (or a volunteer's password) and those sessions end."""
+    secret = staff["password_hash"] if staff is not None else ADMIN_PASSWORD
+    return hmac.new(app.secret_key.encode() if isinstance(app.secret_key, str) else app.secret_key,
+                    ("admin:" + secret).encode(), hashlib.sha256).hexdigest()[:24]
+
+
+def admin_session_ok():
+    if not session.get("is_admin"):
+        return False
+    staff = current_staff() if session.get("staff_id") else None
+    if session.get("staff_id") and staff is None:
+        return False
+    fp = session.get("admin_fp") or ""
+    if not same_secret(fp, admin_fingerprint(staff)):
+        return False
+    seen = session.get("admin_seen") or 0
+    if time.time() - seen > ADMIN_IDLE_SECONDS:
+        return False
+    if time.time() - seen > 300:
+        session["admin_seen"] = int(time.time())
+    return True
+
+
 def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
+        if session.get("is_admin") and not admin_session_ok():
+            for k in ("is_admin", "staff_id", "admin_fp", "admin_seen"):
+                session.pop(k, None)
+            flash("For safety you've been signed out of the admin area. Please sign in again.")
+            return redirect(url_for("login", next=request.path))
         if not session.get("is_admin"):
             return redirect(url_for("login", next=request.path))
         if session.get("staff_id") and not current_staff():
@@ -1193,7 +1329,8 @@ def login_required(view):
 
 def _safe_next(target):
     """Only follow ?next= to a page on this site (never to another website)."""
-    if target and target.startswith("/") and not target.startswith("//") and "\\" not in target:
+    if target and target.startswith("/") and not target.startswith("//") and "\\" not in target \
+            and not re.search(r"[\x00-\x20\x7f]", target):
         return target
     return None
 
@@ -1206,7 +1343,7 @@ def login():
         ip = (request.headers.get("X-Forwarded-For", request.remote_addr or "")
               .split(",")[0].strip())
 
-        if _login_rate_limited(ip):
+        if _login_rate_limited(ip) or too_many_failures("admin_any", "all", 60, 900):
             flash("Too many attempts. Please wait a few minutes and try again.")
             return render_template(
                 "login.html",
@@ -1220,6 +1357,8 @@ def login():
             row = get_db().execute("SELECT * FROM staff WHERE email=? AND active=1", (email,)).fetchone()
             if row and password and verify_password(row["password_hash"], password):
                 staff = row
+            elif not row:
+                verify_password(DUMMY_HASH, password)   # same time taken either way
         ok = staff is not None or (not email and password and same_secret(password, ADMIN_PASSWORD))
         if ok:
             session.pop("staff_id", None)
@@ -1229,10 +1368,13 @@ def login():
                 get_db().execute("UPDATE staff SET last_login=? WHERE id=?", (datetime.now().isoformat(), staff["id"]))
                 get_db().commit()
             session.permanent = False
+            session["admin_fp"] = admin_fingerprint(staff)
+            session["admin_seen"] = int(time.time())
             _login_attempts.pop(ip, None)
             return redirect(_safe_next(request.args.get("next")) or url_for("admin"))
 
         _record_login_failure(ip)
+        record_failure("admin_any", "all", 900)
         flash("That email or password isn't right. Try again." if email else "That password isn't right. Try again.")
     return render_template(
         "login.html",
@@ -1328,8 +1470,8 @@ def admin_my_account():
 
 @app.route("/admin/logout")
 def logout():
-    session.pop("is_admin", None)
-    session.pop("staff_id", None)
+    for k in ("is_admin", "staff_id", "admin_fp", "admin_seen"):
+        session.pop(k, None)
     return redirect(url_for("index"))
 
 
@@ -1639,6 +1781,10 @@ def poll_vote(poll_id):
     voted = session.get("poll_votes", {})
     if str(poll_id) in voted:
         return {"ok": False, "error": "already_voted"}, 200
+    # Generous, because a whole congregation on the church wifi shares one
+    # address, but it stops a script stuffing the ballot.
+    if rate_limited(f"poll{poll_id}", client_ip(), limit=150, window_seconds=600):
+        return {"ok": False, "error": "busy"}, 429
 
     db = get_db()
     poll = db.execute(
@@ -2260,7 +2406,7 @@ def admin_college_session(cid, sid=None):
         vals = {"title": (f.get("title") or "").strip()[:120], "passage": (f.get("passage") or "").strip()[:80],
                 "reading": (f.get("reading") or "").strip()[:300], "teaching": (f.get("teaching") or "").strip()[:20000],
                 "questions": (f.get("questions") or "").strip()[:3000], "link_label": (f.get("link_label") or "").strip()[:60],
-                "link_url": (f.get("link_url") or "").strip()[:300], "session_date": (f.get("session_date") or "").strip()[:10] or None}
+                "link_url": web_link((f.get("link_url") or "").strip()[:300]), "session_date": (f.get("session_date") or "").strip()[:10] or None}
         problem = None
         if not vals["title"]:
             problem = "Give the session a title."
@@ -2720,6 +2866,15 @@ def page_not_found(e):
         return render_template("error_404.html"), 404
     except Exception:
         return "Page not found", 404
+
+
+@app.errorhandler(OverflowError)
+def number_too_big(e):
+    """A number too large to store (someone typed 99999999999999999999)."""
+    if request.path.startswith("/api/") or request.is_json:
+        return {"ok": False, "error": "number too large"}, 400
+    flash("One of those numbers is too large. Please check it and try again.")
+    return redirect(request.path), 303
 
 
 @app.errorhandler(500)
@@ -3643,9 +3798,14 @@ def current_member():
             row = get_db().execute(
                 "SELECT * FROM members WHERE id=? AND active=1", (member_id,)
             ).fetchone()
+            # A session from before the member changed their password (or
+            # chose "sign out everywhere") no longer counts.
+            if row is not None and row["signed_out_before"] and str(session.get("member_at") or "") < row["signed_out_before"]:
+                row = None
             g.member = row
             if row is None:
                 session.pop("member_id", None)
+                session.pop("member_at", None)
     return g.member
 
 
@@ -3665,7 +3825,9 @@ def member_required(view):
 
 
 def _finish_signin(member_row):
+    session.pop("member_id", None)
     session["member_id"] = member_row["id"]
+    session["member_at"] = datetime.now().isoformat()
     session.permanent = True
     get_db().execute(
         "UPDATE members SET last_login=? WHERE id=?",
@@ -3689,6 +3851,10 @@ def signup():
         if not valid_email(email):
             flash("Please enter a valid email address.")
             return render_template("signup.html", name=name, email=email)
+
+        if rate_limited("signup", client_ip(), limit=10, window_seconds=3600):
+            flash("Lots of accounts have been made from here recently. Please try again in an hour.")
+            return render_template("signup.html", name=name, email=email), 429
 
         if not request.form.get("agree"):
             flash("Please confirm you're 13 or older and have read the privacy notice.")
@@ -3730,13 +3896,28 @@ def signin():
         email = normalise_email(request.form.get("email", ""))
         password = request.form.get("password", "")
 
+        # Guessing passwords: a limit per address and, because addresses can
+        # be faked or rotated, a limit per account as well.
+        if too_many_failures("signin_ip", client_ip(), 20, 900) or too_many_failures("signin_email", email, 10, 900):
+            flash("Too many tries. Please wait 15 minutes, or use the email link option below.")
+            return render_template("signin.html", email=email), 429
+
         db = get_db()
         row = db.execute(
             "SELECT * FROM members WHERE email=? AND active=1", (email,)
         ).fetchone()
 
-        if row and verify_password(row["password_hash"], password):
+        # Check a password either way, so the time taken doesn't reveal
+        # whether the email has an account.
+        if row and row["password_hash"]:
+            good = verify_password(row["password_hash"], password)
+        else:
+            verify_password(DUMMY_HASH, password)
+            good = False
+        if good:
             return _finish_signin(row)
+        record_failure("signin_ip", client_ip(), 900)
+        record_failure("signin_email", email, 900)
 
         # Same message whether the account exists or the password was wrong.
         flash("That email and password don't match. Please try again, or use "
@@ -3755,7 +3936,8 @@ def magic_link_request():
         # Without this, anyone can point a script at this form and send an
         # unbounded number of emails to a member — and burn through the
         # sending quota for everyone else.
-        if rate_limited("magic_link", client_ip(), limit=5, window_seconds=900):
+        if rate_limited("magic_link", client_ip(), limit=5, window_seconds=900) or \
+                rate_limited("magic_link_to", email, limit=3, window_seconds=900):
             return render_template(
                 "magic_link_sent.html",
                 email=email,
@@ -3774,7 +3956,7 @@ def magic_link_request():
                 (hash_token(token), token_expiry(), row["id"]),
             )
             db.commit()
-            link = url_for("magic_link_use", token=token, _external=True)
+            link = email_url("magic_link_use", token=token)
             send_magic_link(row["email"], row["name"], link)
 
         # The same confirmation either way, so this page can't be used to
@@ -3827,7 +4009,7 @@ def _send_reset(row):
     db.execute("UPDATE members SET login_token_hash=?, login_token_expires=? WHERE id=?",
                (hash_token(token), token_expiry(), row["id"]))
     db.commit()
-    link = url_for("magic_link_use", token=token, then="password", _external=True)
+    link = email_url("magic_link_use", token=token, then="password")
     ok, message = emailer.send_password_reset(CHURCH_NAME, row["email"], row["name"], link)
     if not ok:
         app.logger.warning("Could not send password reset to member %s: %s", row["id"], message)
@@ -3839,7 +4021,8 @@ def account_forgot():
     """Forgotten password: email a one-time link to choose a new one."""
     if request.method == "POST":
         email = normalise_email(request.form.get("email", ""))
-        if not rate_limited("pw_reset", client_ip(), limit=5, window_seconds=900):
+        if not (rate_limited("pw_reset", client_ip(), limit=5, window_seconds=900)
+                or rate_limited("pw_reset_to", email, limit=3, window_seconds=900)):
             row = get_db().execute("SELECT * FROM members WHERE email=? AND active=1", (email,)).fetchone()
             if row:
                 _send_reset(row)
@@ -3876,10 +4059,12 @@ def account_password():
             if problem:
                 flash(problem)
             else:
-                db.execute("UPDATE members SET password_hash=?, login_token_hash=NULL, login_token_expires=NULL WHERE id=?",
-                           (hash_password(new), m["id"]))
+                stamp = datetime.now().isoformat()
+                db.execute("UPDATE members SET password_hash=?, login_token_hash=NULL, login_token_expires=NULL, signed_out_before=? WHERE id=?",
+                           (hash_password(new), stamp, m["id"]))
                 db.commit()
                 session.pop("pw_reset_ok", None)
+                session["member_at"] = stamp     # this device stays signed in; every other one is signed out
                 flash("Your password has been changed." if row["password_hash"] else "Password set. You can now sign in with it as well as by email link.")
                 return redirect(url_for("account"))
         return redirect(url_for("account_password"))
@@ -3887,9 +4072,24 @@ def account_password():
                            resetting=_reset_still_ok())
 
 
+@app.route("/account/signout-everywhere", methods=["POST"])
+@member_required
+def signout_everywhere():
+    """Sign out on every other phone and computer (a lost phone, a shared laptop)."""
+    m = current_member()
+    stamp = datetime.now().isoformat()
+    db = get_db()
+    db.execute("UPDATE members SET signed_out_before=?, login_token_hash=NULL, login_token_expires=NULL WHERE id=?", (stamp, m["id"]))
+    db.commit()
+    session["member_at"] = stamp
+    flash("Done. You're signed out everywhere except here.")
+    return redirect(url_for("account"))
+
+
 @app.route("/account/signout", methods=["POST"])
 def signout():
     session.pop("member_id", None)
+    session.pop("member_at", None)
     g.pop("member", None)
     flash("You've been signed out.")
     return redirect(url_for("index"))
@@ -4086,6 +4286,8 @@ def send_magic_link(to, name, link):
     return ok
 
 
+SYNC_MAX_ITEMS = 30000            # far more than anyone saves by hand
+SYNC_MAX_BYTES = 40 * 1024 * 1024
 SYNC_KINDS = {"verse", "note", "plan", "journal", "pcards", "learn", "highlight", "vnote", "soap", "talk", "cplan", "readlog", "memory", "prayerlog", "grow", "prefs", "college", "books"}
 
 
@@ -4131,6 +4333,11 @@ def sync_put(kind):
         return {"ok": False, "error": "too large"}, 413
 
     db = get_db()
+    if not data.get("delete") and not db.execute(
+            "SELECT 1 FROM member_data WHERE member_id=? AND kind=? AND item_key=?", (m["id"], kind, item_key)).fetchone():
+        n, size = db.execute("SELECT COUNT(*), COALESCE(SUM(LENGTH(payload)), 0) FROM member_data WHERE member_id=?", (m["id"],)).fetchone()
+        if n >= SYNC_MAX_ITEMS or size >= SYNC_MAX_BYTES:
+            return {"ok": False, "error": "full"}, 413
     if data.get("delete"):
         db.execute(
             "DELETE FROM member_data WHERE member_id=? AND kind=? AND item_key=?",
@@ -4170,8 +4377,13 @@ def sync_bulk(kind):
         return {"ok": False, "signed_in": False}, 200
 
     data = json_body()
-    items = data.get("items") or []
+    items = data.get("items")
+    if not isinstance(items, list):
+        items = []
     db = get_db()
+    n, size = db.execute("SELECT COUNT(*), COALESCE(SUM(LENGTH(payload)), 0) FROM member_data WHERE member_id=?", (m["id"],)).fetchone()
+    if n >= SYNC_MAX_ITEMS or size >= SYNC_MAX_BYTES:
+        return {"ok": False, "error": "full"}, 413
     stored = 0
     for item in items[:500]:
         if not isinstance(item, dict) or len(json.dumps(item.get("value"))) > 512 * 1024:
@@ -4396,7 +4608,7 @@ def resource_detail(resource_id):
         abort(404)
     # Links and files go straight out; only articles have a reader page.
     if r["kind"] != "article":
-        target = r["url"] or r["file_path"]
+        target = web_link(r["url"] or r["file_path"])
         if target:
             return redirect(target)
         abort(404)
@@ -4446,7 +4658,7 @@ def ministry_detail(slug):
                 continue
             if "|" in line:
                 label, url = line.split("|", 1)
-                resources.append({"label": label.strip(), "url": url.strip()})
+                resources.append({"label": label.strip(), "url": web_link(url) or None})
             else:
                 resources.append({"label": line, "url": None})
 
@@ -4676,6 +4888,9 @@ def prayer_new():
         # Honeypot
         if request.form.get("website"):
             return redirect(url_for("prayer_new", sent=1))
+        if rate_limited("prayer_new", client_ip(), limit=8, window_seconds=3600):
+            flash("Lots of requests have been sent from here in the last hour. Please try again a little later.")
+            return redirect(url_for("prayer_new"))
 
         body = request.form.get("body", "").strip()
         if not body:
@@ -4827,7 +5042,8 @@ def prayer_report(prayer_id):
         return redirect(url_for("prayer_wall"))
     db = get_db()
     row = db.execute("SELECT id FROM prayers WHERE id=? AND status='live' AND visibility='public'", (prayer_id,)).fetchone()
-    if row:
+    # One person (or a script clearing its cookies) can't empty the whole wall.
+    if row and not rate_limited("prayer_report", client_ip(), limit=10, window_seconds=3600):
         reason = (request.form.get("reason") or "").strip()[:200]
         db.execute("UPDATE prayers SET status='held', hold_reason=? WHERE id=?",
                    ("Reported by someone using the app" + (f": {reason}" if reason else ""), prayer_id))
@@ -4844,6 +5060,8 @@ def prayer_pray(prayer_id):
     prayed = session.get("prayed_for", [])
     if prayer_id in prayed:
         return {"ok": False, "reason": "already"}, 200
+    if rate_limited("pray", client_ip(), limit=150, window_seconds=3600):
+        return {"ok": False, "reason": "busy"}, 429
     db = get_db()
     row = db.execute(
         "SELECT id FROM prayers WHERE id=? AND status='live' AND visibility='public'",
@@ -5076,6 +5294,9 @@ def grow_stories():
 def grow_story_share():
     if request.form.get("website"):            # honeypot
         return redirect(url_for("grow_stories", sent=1))
+    if rate_limited("story", client_ip(), limit=5, window_seconds=3600):
+        flash("Lots of stories have been sent from here in the last hour. Please try again a little later.")
+        return redirect(url_for("grow_stories"))
     body = (request.form.get("body") or "").strip()[:6000]
     if len(body) < 40:
         flash("Your story looks a little short. Write a few sentences before sharing it.")
@@ -6900,6 +7121,9 @@ def ask_question():
         # Honeypot: a real visitor never fills this hidden field in
         if request.form.get("website"):
             return redirect(url_for("ask_question", sent=1))
+        if rate_limited("question", client_ip(), limit=8, window_seconds=3600):
+            flash("Lots of questions have been sent from here in the last hour. Please try again a little later.")
+            return redirect(url_for("ask_question"))
 
         question_text = request.form.get("question_text", "").strip()
         if not question_text:
@@ -7404,7 +7628,7 @@ def admin_email():
                                  else f"Request {i}")
                 ok, message = emailer.send_prayer_digest(
                     CHURCH_NAME, to, len(held), items,
-                    url_for("admin_prayers", _external=True),
+                    email_url("admin_prayers"),
                 )
                 result = ("good" if ok else "bad",
                           f"Digest sent to {to}." if ok else f"Failed: {message}")
@@ -7666,12 +7890,18 @@ def _check_backup_file(path):
     try:
         check = sqlite3.connect(path)
         tables = {r[0] for r in check.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        # The app never makes triggers or views. A file that has them wasn't
+        # made by the app, and a trigger would run its own SQL every time the
+        # app later saved something, so don't use it.
+        extras = check.execute("SELECT COUNT(*) FROM sqlite_master WHERE type IN ('trigger', 'view')").fetchone()[0]
         ok = check.execute("PRAGMA quick_check").fetchone()
         check.close()
     except sqlite3.Error:
         return "That file isn't a valid database. Nothing was changed."
     if "events" not in tables:
         return "That doesn't look like a Clearspring backup. Nothing was changed."
+    if extras:
+        return "That file has database triggers or views, which a Clearspring backup never has, so it wasn't used. Nothing was changed."
     if not ok or ok[0] != "ok":
         return "That backup is damaged (SQLite's check failed), so it wasn't used. Nothing was changed."
     return None
@@ -7995,6 +8225,8 @@ def admin_notifications():
         body = request.form.get("body", "").strip()
         type_key = request.form.get("type_key", "emergency")
         url_path = request.form.get("url", "/").strip() or "/"
+        if not (url_path.startswith("/") and not url_path.startswith("//")):
+            url_path = "/"
 
         if not title or not body:
             flash("Both a title and a message are needed.")
@@ -8102,10 +8334,10 @@ def _save_resource(resource_id):
         request.form.get("category", "growing"),
         request.form.get("summary", "").strip() or None,
         request.form.get("body", "").strip() or None,
-        request.form.get("url", "").strip() or None,
+        web_link(request.form.get("url", "")) or None,
         kind,
         request.form.get("author", "").strip() or None,
-        int(request.form.get("sort_order") or 0),
+        request.form.get("sort_order", 0, type=int) or 0,
         1 if request.form.get("published") else 0,
     )
     if resource_id:
@@ -8247,9 +8479,9 @@ def admin_store():
 def admin_store_settings():
     set_setting("store_enabled", "1" if request.form.get("store_enabled") else "0")
     set_setting("store_provider", request.form.get("store_provider", "").strip())
-    set_setting("store_buy_url", request.form.get("store_buy_url", "").strip())
+    set_setting("store_buy_url", web_link(request.form.get("store_buy_url", "")))
     set_setting("store_delivery_note", request.form.get("store_delivery_note", "").strip())
-    set_setting("store_returns_url", request.form.get("store_returns_url", "").strip())
+    set_setting("store_returns_url", web_link(request.form.get("store_returns_url", "")))
     flash("Store settings saved.")
     return redirect(url_for("admin_store"))
 
@@ -8263,11 +8495,11 @@ def _save_product(product_id):
         request.form.get("description", "").strip() or None,
         _pence(request.form.get("price")),
         request.form.get("price_note", "").strip() or None,
-        request.form.get("image_url", "").strip() or None,
-        request.form.get("buy_url", "").strip() or None,
+        web_link(request.form.get("image_url", "")) or None,
+        web_link(request.form.get("buy_url", "")) or None,
         request.form.get("stock", "available"),
         1 if request.form.get("featured") else 0,
-        int(request.form.get("sort_order") or 0),
+        request.form.get("sort_order", 0, type=int) or 0,
         1 if request.form.get("active") else 0,
     )
     if product_id:
@@ -8344,9 +8576,9 @@ def admin_giving():
 @login_required
 def admin_giving_settings():
     set_setting("give_provider", request.form.get("give_provider", "").strip())
-    set_setting("give_url", request.form.get("give_url", "").strip())
-    set_setting("give_regular_url", request.form.get("give_regular_url", "").strip())
-    set_setting("give_portal_url", request.form.get("give_portal_url", "").strip())
+    set_setting("give_url", web_link(request.form.get("give_url", "")))
+    set_setting("give_regular_url", web_link(request.form.get("give_regular_url", "")))
+    set_setting("give_portal_url", web_link(request.form.get("give_portal_url", "")))
     flash("Giving links saved.")
     return redirect(url_for("admin_giving"))
 
@@ -8385,7 +8617,7 @@ def new_campaign():
                 request.form.get("blurb", "").strip() or None,
                 _pence(request.form.get("target")),
                 _pence(request.form.get("raised")) or 0,
-                request.form.get("give_url", "").strip() or None,
+                web_link(request.form.get("give_url", "")) or None,
                 _form_date("closes_on"),
                 1 if request.form.get("active") else 0,
                 datetime.now().isoformat(),
@@ -8410,7 +8642,7 @@ def edit_campaign(campaign_id):
                 request.form.get("blurb", "").strip() or None,
                 _pence(request.form.get("target")),
                 _pence(request.form.get("raised")) or 0,
-                request.form.get("give_url", "").strip() or None,
+                web_link(request.form.get("give_url", "")) or None,
                 _form_date("closes_on"),
                 1 if request.form.get("active") else 0,
                 campaign_id,
@@ -8602,7 +8834,7 @@ def admin_watch_library():
             fields = {
                 "title": title, "teacher": (request.form.get("teacher") or "").strip()[:120],
                 "provider": (request.form.get("provider") or "").strip()[:120],
-                "provider_url": (request.form.get("provider_url") or "").strip()[:300],
+                "provider_url": web_link((request.form.get("provider_url") or "").strip()[:300]),
                 "subject": request.form.get("subject") if request.form.get("subject") in watch_library.SUBJECT_NAMES else "bible",
                 "level": request.form.get("level") if request.form.get("level") in watch_library.LEVEL_NAMES else "start",
                 "about": (request.form.get("about") or "").strip()[:2000],
@@ -8727,7 +8959,7 @@ def admin_youtube():
 @app.route("/admin/sermons/live", methods=["POST"])
 @login_required
 def admin_live_settings():
-    set_setting("live_stream_url", request.form.get("live_stream_url", "").strip())
+    set_setting("live_stream_url", web_link(request.form.get("live_stream_url", "")))
     set_setting("live_is_on", "1" if request.form.get("live_is_on") else "0")
     flash("Live stream settings saved.")
     return redirect(url_for("admin_sermons"))
@@ -8799,7 +9031,7 @@ def _sermon_form_values():
     if not title:
         problem = "Please give the sermon a title."
     values = (title or "", txt("speaker"), txt("series"), txt("topic"), txt("passage"), txt("summary", 5000),
-              preached, txt("video_url", 500), txt("audio_url", 500), duration,
+              preached, web_link(txt("video_url", 500)) or None, web_link(txt("audio_url", 500)) or None, duration,
               1 if f.get("published") else 0, txt("outline", 20000), txt("group_questions", 5000))
     return values, problem
 
@@ -9020,7 +9252,7 @@ def new_devotional():
                 title,
                 request.form.get("verse_ref", "").strip() or None,
                 body,
-                request.form.get("video_url", "").strip() or None,
+                web_link(request.form.get("video_url", "")) or None,
                 datetime.now().isoformat(),
                 1 if request.form.get("published") else 0,
             ),
@@ -9043,7 +9275,7 @@ def edit_devotional(devotional_id):
                 request.form.get("title", "").strip(),
                 request.form.get("verse_ref", "").strip() or None,
                 request.form.get("body", "").strip(),
-                request.form.get("video_url", "").strip() or None,
+                web_link(request.form.get("video_url", "")) or None,
                 1 if request.form.get("published") else 0,
                 devotional_id,
             ),
@@ -9081,7 +9313,9 @@ if __name__ == "__main__":
                                       "--workers", "1", "--threads", "8", "--timeout", "120",
                                       "--graceful-timeout", "30", "--max-requests", "2000",
                                       "--max-requests-jitter", "200", "--forwarded-allow-ips", "*",
-                                      "--access-logfile", "-"])
+                                      "--access-logfile", "-",
+                                      # The path without its ?query, so keys like CRON_SECRET never land in the logs.
+                                      "--access-logformat", '%({x-forwarded-for}i)s "%(m)s %(U)s" %(s)s %(B)s %(M)sms'])
         except ImportError:
             pass
     init_db()

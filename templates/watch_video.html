@@ -34,7 +34,7 @@
   {% endif %}
   <p class="wc-yt"><a href="https://www.youtube.com/watch?v={{ v['id'] }}" target="_blank" rel="noopener" data-external>Open on YouTube</a> · Plays in YouTube’s privacy-enhanced mode.</p>
 </main>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById("wvPoster").addEventListener("click", function () {
   var f = document.createElement("iframe");
   f.src = "https://www.youtube-nocookie.com/embed/{{ v['id'] }}?autoplay=1&rel=0&playsinline=1";

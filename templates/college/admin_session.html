@@ -28,7 +28,7 @@
     <div class="form-actions"><button type="submit" class="btn-primary" style="width:auto">Save session</button></div>
   </form>
   {% if s.id %}
-  <form method="post" onsubmit="return confirm('Delete this session?');" style="margin-top:1.5rem">
+  <form method="post" data-confirm="Delete this session?" style="margin-top:1.5rem">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete">
     <button type="submit" class="btn-danger small">Delete session</button>
   </form>

@@ -45,7 +45,7 @@
 
 </main>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const input = document.getElementById("bookFilter");
   const rows = [...document.querySelectorAll(".book-row")];
@@ -73,7 +73,7 @@
 </script>
 
 <script src="{{ url_for('static', filename='reading-position.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const strip = document.getElementById("recentStrip");
   if (!strip || !window.ReadingPosition) return;

@@ -26,8 +26,8 @@
     {% if info.full_address %}
     <p class="ct-p">{{ info.visit_address }}{% if info.visit_postcode %}, {{ info.visit_postcode }}{% endif %}</p>
     <div class="ct-actions">
-      <a class="ct-btn" href="{{ info.maps_google }}" target="_blank" rel="noopener" data-external>Google Maps</a>
-      <a class="ct-btn" href="{{ info.maps_apple }}" target="_blank" rel="noopener" data-external>Apple Maps</a>
+      <a class="ct-btn" href="{{ info.maps_google|web_link }}" target="_blank" rel="noopener" data-external>Google Maps</a>
+      <a class="ct-btn" href="{{ info.maps_apple|web_link }}" target="_blank" rel="noopener" data-external>Apple Maps</a>
     </div>
     {% endif %}
     <a class="ct-link" href="{{ url_for('plan_visit') }}">Planning your first visit →</a>
@@ -48,7 +48,7 @@
       {% if info.safeguarding_phone %}<a class="ct-btn" href="tel:{{ info.safeguarding_phone|replace(' ', '') }}">{{ icon('message', 16) }} {{ info.safeguarding_phone }}</a>{% endif %}
     </div>
     {% endif %}
-    {% if info.safeguarding_policy_url %}<a class="ct-link" href="{{ info.safeguarding_policy_url }}" target="_blank" rel="noopener" data-external>Read our safeguarding policy →</a>{% endif %}
+    {% if info.safeguarding_policy_url %}<a class="ct-link" href="{{ info.safeguarding_policy_url|web_link }}" target="_blank" rel="noopener" data-external>Read our safeguarding policy →</a>{% endif %}
     <p class="ct-note">If someone is in immediate danger, call 999. For advice about a child, the NSPCC helpline is 0808 800 5000.</p>
   </section>
 

@@ -84,7 +84,7 @@
     .tc-ladder li.done { background: var(--wash); border-color: transparent; }
   }
 </style>
-<script>
+<script nonce="{{ csp_nonce() }}">
   /* Keep the current rung of the strip in view as the game moves up. */
   (function () {
     var ladder = document.getElementById("tc-ladder"); if (!ladder || !window.MutationObserver) return;
@@ -95,7 +95,7 @@
   })();
 </script>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   const QUESTIONS = {{ questions | tojson }};
   const POINTS = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 1000000];

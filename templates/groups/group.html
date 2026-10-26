@@ -121,7 +121,7 @@
   <details class="gw-more gr-lead"><summary>Change or stop the plan</summary>
     <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="plan">
-      <button type="submit" name="clear" value="1" class="gw-btn" onclick="return confirm('Stop reading this plan as a group?');">Stop the group plan</button>
+      <button type="submit" name="clear" value="1" class="gw-btn" data-confirm="Stop reading this plan as a group?">Stop the group plan</button>
     </form>
   </details>
   {% endif %}
@@ -194,7 +194,7 @@
       <details class="gp-menu"><summary aria-label="Options for {{ p.name or 'this member' }}">⋯</summary><div class="gp-menu-list">
         {% if p.role != 'leader' %}<form method="post" action="{{ url_for('group_member_action', gid=grp['id'], mid=p.member_id, action='leader') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Make a leader</button></form>
         {% else %}<form method="post" action="{{ url_for('group_member_action', gid=grp['id'], mid=p.member_id, action='member') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Stop being a leader</button></form>{% endif %}
-        <form method="post" action="{{ url_for('group_member_action', gid=grp['id'], mid=p.member_id, action='remove') }}" onsubmit="return confirm('Remove {{ p.name or 'this member' }} from the group?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Remove from group</button></form>
+        <form method="post" action="{{ url_for('group_member_action', gid=grp['id'], mid=p.member_id, action='remove') }}" data-confirm="Remove {{ p.name or 'this member' }} from the group?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Remove from group</button></form>
       </div></details>
       {% endif %}
     </li>
@@ -220,18 +220,18 @@
       <label>About<textarea name="about" rows="2" maxlength="400">{{ grp['about'] or '' }}</textarea></label>
       <button type="submit" class="ps-go">Save</button>
     </form>
-    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form" onsubmit="return confirm('Make a new invite link? The old one will stop working.');">
+    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form" data-confirm="Make a new invite link? The old one will stop working.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="invite">
       <button type="submit" class="gw-btn">Make a new invite link</button>
     </form>
-    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form" onsubmit="return confirm('Close this group for everyone? Members will no longer be able to see it.');">
+    <form method="post" action="{{ url_for('group_settings', gid=grp['id']) }}" class="gr-form" data-confirm="Close this group for everyone? Members will no longer be able to see it.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="what" value="delete">
       <button type="submit" class="gw-btn gr-danger">Close the group</button>
     </form>
   </details>
   {% endif %}
 
-  <form method="post" action="{{ url_for('group_leave', gid=grp['id']) }}" onsubmit="return confirm('Leave {{ grp['name'] }}?');" class="gr-leave">
+  <form method="post" action="{{ url_for('group_leave', gid=grp['id']) }}" data-confirm="Leave {{ grp['name'] }}?" class="gr-leave">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="ps-link">Leave this group</button>
   </form>

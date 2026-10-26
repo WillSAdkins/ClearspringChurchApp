@@ -35,7 +35,7 @@
         <strong>{{ g['name'] }}</strong>{% if g['archived'] %} <em>(closed)</em>{% endif %}
         <span class="admin-row-loc">{{ g['members'] }} members · {{ g['posts'] }} posts · last active {{ (g['last_post'] or g['created_at'])|pretty_datetime }}</span>
       </div>
-      <form method="post" action="{{ url_for('admin_group_action', gid=g['id'], action='reopen' if g['archived'] else 'close') }}" onsubmit="return confirm('{{ 'Reopen' if g['archived'] else 'Close' }} this group?');">
+      <form method="post" action="{{ url_for('admin_group_action', gid=g['id'], action='reopen' if g['archived'] else 'close') }}" data-confirm="{{ 'Reopen' if g['archived'] else 'Close' }} this group?">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn-ghost small">{{ 'Reopen' if g['archived'] else 'Close' }}</button>
       </form>

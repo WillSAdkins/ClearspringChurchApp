@@ -58,7 +58,7 @@
           <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ c['id'] }}">
             <button type="submit" name="action" value="{{ act }}" class="btn-ghost small" {% if act in ('up','down') %}aria-label="Move {{ c['title'] }} {{ act }}"{% endif %}>{{ label }}</button></form>
           {% endfor %}
-          <form method="post" onsubmit="return confirm('Delete this course from the library?');">
+          <form method="post" data-confirm="Delete this course from the library?">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ c['id'] }}">
             <button type="submit" name="action" value="delete" class="btn-danger small">Delete</button>
           </form>
@@ -137,7 +137,7 @@
         <div class="admin-row-actions">
           <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ ch['id'] }}">
             <button type="submit" name="action" value="{{ 'channel_off' if ch['active'] else 'channel_on' }}" class="btn-ghost small">{{ 'Turn off' if ch['active'] else 'Turn on' }}</button></form>
-          <form method="post" onsubmit="return confirm('Remove this channel?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ ch['id'] }}">
+          <form method="post" data-confirm="Remove this channel?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ ch['id'] }}">
             <button type="submit" name="action" value="channel_delete" class="btn-danger small">Remove</button></form>
         </div>
       </div>

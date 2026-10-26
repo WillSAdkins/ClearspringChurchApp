@@ -28,7 +28,7 @@
         <div class="admin-row-actions">
           <a href="{{ url_for('edit_devotional', devotional_id=d['id']) }}" class="btn-ghost small">Edit</a>
           <form method="post" action="{{ url_for('delete_devotional', devotional_id=d['id']) }}"
-                onsubmit="return confirm('Delete this devotional?');">
+                data-confirm="Delete this devotional?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-danger small">Delete</button>
           </form>

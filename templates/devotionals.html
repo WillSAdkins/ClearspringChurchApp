@@ -65,7 +65,7 @@
   {% endif %}
 
 </main>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var read = []; try { read = JSON.parse(localStorage.getItem("cs_devos_read") || "[]"); } catch (e) {}
   var rows = document.querySelectorAll(".devo-archive-row");

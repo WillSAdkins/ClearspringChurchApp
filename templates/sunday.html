@@ -63,7 +63,7 @@
 {% if s %}
 <script src="{{ url_for('static', filename='study-store.js') }}"></script>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   "use strict";
   var S = window.Study, box = document.getElementById("sn"), D = box.dataset;

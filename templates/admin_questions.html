@@ -51,7 +51,7 @@
       </p>
       <div class="qa-answer">{{ q['answer_text'] }}</div>
       <form method="post" action="{{ url_for('delete_question', question_id=q['id']) }}"
-            onsubmit="return confirm('Remove this question and answer?');">
+            data-confirm="Remove this question and answer?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn-danger small">Delete</button>
       </form>

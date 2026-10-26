@@ -69,7 +69,7 @@
 
   <p class="lib-credits"><a href="{{ url_for('library_licenses') }}">Where this comes from</a></p>
 </main>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var q = document.getElementById("libQ"), box = document.getElementById("libSuggest"), t, seq = 0;
   var LABEL = { people: "People", places: "Places", topics: "Topics", dictionary: "Dictionary" };

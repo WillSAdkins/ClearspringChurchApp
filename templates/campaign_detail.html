@@ -36,7 +36,7 @@
 
   {% set target_url = c['give_url'] or give_url %}
   {% if target_url %}
-    <a href="{{ target_url }}" target="_blank" rel="noopener" class="give-primary">
+    <a href="{{ target_url|web_link }}" target="_blank" rel="noopener" class="give-primary">
       {{ icon('heart', 20) }}
       <span><strong>Give to this appeal</strong><small>Opens {{ provider }} securely</small></span>
       {{ icon('chevron-right', 18) }}

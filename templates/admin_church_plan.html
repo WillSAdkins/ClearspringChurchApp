@@ -19,7 +19,7 @@
     <p><strong>{{ current.emoji }} {{ current.title }}</strong>, started {{ current.start }}{% if current.note %}<br><span class="empty-sub">“{{ current.note }}”</span>{% endif %}</p>
     <form method="post" style="margin-top:1rem;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" name="clear" value="1" class="btn-ghost" onclick="return confirm('Take the church plan down?');">Take it down</button>
+      <button type="submit" name="clear" value="1" class="btn-ghost" data-confirm="Take the church plan down?">Take it down</button>
     </form>
   </section>
   {% endif %}

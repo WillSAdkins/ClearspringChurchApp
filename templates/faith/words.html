@@ -24,7 +24,7 @@
   <p class="gw-empty" id="glNone" hidden>That word isn’t here yet. Try the <a href="{{ url_for('dictionary_index') }}">Bible dictionary</a>.</p>
 </main>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var q = document.getElementById("gwQ"), rows = document.querySelectorAll(".gl-item");
   q.addEventListener("input", function () {

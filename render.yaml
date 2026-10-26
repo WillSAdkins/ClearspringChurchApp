@@ -15,7 +15,7 @@ services:
     buildCommand: pip install -r requirements.txt
     # Keep workers low: SQLite is a single file, and many processes writing at
     # once causes lock contention even under WAL. Threads handle concurrency.
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 --max-requests 2000 --max-requests-jitter 200 --forwarded-allow-ips '*'
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 --max-requests 2000 --max-requests-jitter 200 --forwarded-allow-ips '*' --access-logfile - --access-logformat '%({x-forwarded-for}i)s "%(m)s %(U)s" %(s)s %(B)s %(M)sms'
     healthCheckPath: /
     envVars:
       - key: RENDER

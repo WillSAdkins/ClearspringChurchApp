@@ -41,7 +41,7 @@
     <div class="form-row"><div><input type="date" id="first_date" name="first_date"></div><div><button type="submit" class="btn-ghost" style="width:auto">Fill dates</button></div></div>
   </form>
   {% endif %}
-  <form method="post" onsubmit="return confirm('Delete this course and all its sessions?');" style="margin-top:2rem">
+  <form method="post" data-confirm="Delete this course and all its sessions?" style="margin-top:2rem">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete">
     <button type="submit" class="btn-danger small">Delete course</button>
   </form>

@@ -8,7 +8,7 @@
   {{ head(title, url_for('compare_passages'), "Compare", "Side by side") }}
   <form class="cmp-trans" method="get">
     {% for c in cols %}<input type="hidden" name="r" value="{{ c.label }}">{% endfor %}<input type="hidden" name="t" value="{{ title }}">
-    <label>Translation <select name="translation" onchange="this.form.submit()">
+    <label>Translation <select name="translation" data-autosubmit>
       {% for code, name in translations %}<option value="{{ code }}" {{ 'selected' if code == translation }}>{{ name }}</option>{% endfor %}
     </select></label>
     <noscript><button class="ps-link" type="submit">Change</button></noscript>

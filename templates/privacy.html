@@ -70,7 +70,7 @@
   <p>Group posts and prayer requests are written by people in the church. If something is unkind or inappropriate, use <b>Report</b> on it and a member of staff will look at it; reported prayer requests are taken off the wall until they do. You can also choose <b>Hide their posts</b> to stop seeing someone's group posts; you can undo that from your account.</p>
 
   <h2>Children and young people</h2>
-  <p>You need to be 13 or older to create an account. Younger children are welcome to use the app without one, with a parent or carer. Groups for under-18s are run by leaders in line with the church's safeguarding policy{% if info.safeguarding_policy_url %} (<a href="{{ info.safeguarding_policy_url }}" target="_blank" rel="noopener" data-external>read it here</a>){% endif %}.</p>
+  <p>You need to be 13 or older to create an account. Younger children are welcome to use the app without one, with a parent or carer. Groups for under-18s are run by leaders in line with the church's safeguarding policy{% if info.safeguarding_policy_url %} (<a href="{{ info.safeguarding_policy_url|web_link }}" target="_blank" rel="noopener" data-external>read it here</a>){% endif %}.</p>
 
   <h2>Your rights</h2>
   <p>You can ask to see what we hold about you, have it corrected, have it deleted, or download a copy. Most of this you can do yourself from <a href="{{ url_for('account') }}">your account</a>. For anything else, <a href="{{ url_for('contact_page') }}">contact us</a>. If you're unhappy with how we've handled your information, you can complain to the Information Commissioner's Office at <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener" data-external>ico.org.uk</a>.</p>

@@ -33,7 +33,7 @@
     </div>
 
     {% if r['url'] %}
-      <a href="{{ r['url'] }}" target="_blank" rel="noopener" class="give-secondary" style="margin-top:1.5rem;">
+      <a href="{{ r['url']|web_link }}" target="_blank" rel="noopener" class="give-secondary" style="margin-top:1.5rem;">
         {{ icon('bookmark', 20) }}
         <span><strong>Read more</strong><small>Opens in a new tab</small></span>
         {{ icon('chevron-right', 18) }}

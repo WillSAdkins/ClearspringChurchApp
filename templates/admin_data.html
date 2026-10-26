@@ -80,7 +80,7 @@
         </div>
         <div>
           <button type="submit" formaction="{{ url_for('admin_restore') }}" class="btn-danger" style="width:auto;"
-                  onclick="return confirm('Replace ALL current data with this backup? Anything added since it was made will be gone (a safety copy is kept).');">Replace everything</button>
+                  data-confirm="Replace ALL current data with this backup? Anything added since it was made will be gone (a safety copy is kept).">Replace everything</button>
           <p class="empty-sub">Makes the app exactly as it was when the backup was made.</p>
         </div>
       </div>
@@ -103,7 +103,7 @@
         <div class="admin-row-actions">
           <a href="{{ url_for('admin_saved_copy', name=c.name) }}" class="btn-ghost small">Download</a>
           <form method="post" action="{{ url_for('admin_saved_copy', name=c.name) }}"
-                onsubmit="return confirm('Go back to this copy? What is here now will be kept as another safety copy.');">
+                data-confirm="Go back to this copy? What is here now will be kept as another safety copy.">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" name="action" value="restore" class="btn-ghost small">Go back to this</button>
           </form>

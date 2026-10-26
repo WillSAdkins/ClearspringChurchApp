@@ -20,7 +20,7 @@
       fetch(b.dataset.url, { method: "POST" }).then(function (r) { return r.json(); }).then(function (d) {
         if (!d || !d.ok) return;
         b.classList.toggle("on", d.on); b.setAttribute("aria-pressed", d.on ? "true" : "false");
-        b.innerHTML = "🙏 <span>" + (d.on ? "Prayed" : "I’ve prayed") + "</span>" + (d.count ? " · <i>" + d.count + "</i>" : "");
+        b.innerHTML = "🙏 <span>" + (d.on ? "Prayed" : "I’ve prayed") + "</span>" + (d.count ? " · <i>" + (Number(d.count) || 0) + "</i>" : "");
         if (d.on && window.Prayers) try { window.Prayers.logDay(); } catch (e) {}
       }).catch(function () {}).then(function () { b.disabled = false; });
     });

@@ -36,5 +36,9 @@
     "@capacitor/cli": "^8.5.3",
     "plist": "^3.1.1",
     "xcode": "^3.0.1"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6",
+    "tar": "^7.5.22"
   }
 }

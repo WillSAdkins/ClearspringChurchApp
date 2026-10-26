@@ -29,7 +29,7 @@
   </section>
   {% endif %}
 
-  {% if s.link_url %}<a class="lib-card-link" href="{{ s.link_url }}" rel="noopener" target="_blank"><b>{{ s.link_label or 'Slides and resources' }}</b><span>Opens in your browser</span></a>{% endif %}
+  {% if s.link_url %}<a class="lib-card-link" href="{{ s.link_url|web_link }}" rel="noopener" target="_blank"><b>{{ s.link_label or 'Slides and resources' }}</b><span>Opens in your browser</span></a>{% endif %}
 
   {% if questions %}
   <section class="vp-section">

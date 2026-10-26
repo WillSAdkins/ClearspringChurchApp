@@ -24,7 +24,7 @@
   {% if give_url or regular_url %}
     <div class="give-actions">
       {% if give_url %}
-        <a href="{{ give_url }}" target="_blank" rel="noopener" class="give-primary">
+        <a href="{{ give_url|web_link }}" target="_blank" rel="noopener" class="give-primary">
           {{ icon('heart', 20) }}
           <span>
             <strong>Give once</strong>
@@ -34,7 +34,7 @@
         </a>
       {% endif %}
       {% if regular_url %}
-        <a href="{{ regular_url }}" target="_blank" rel="noopener" class="give-secondary">
+        <a href="{{ regular_url|web_link }}" target="_blank" rel="noopener" class="give-secondary">
           {{ icon('calendar', 20) }}
           <span>
             <strong>Give regularly</strong>
@@ -88,7 +88,7 @@
       {{ icon('chevron-right', 18) }}
     </a>
     {% if portal_url %}
-      <a href="{{ portal_url }}" target="_blank" rel="noopener" class="bible-row">
+      <a href="{{ portal_url|web_link }}" target="_blank" rel="noopener" class="bible-row">
         <span class="bible-row-icon">{{ icon('book', 20) }}</span>
         <span class="bible-row-body">
           <span class="bible-row-title">Your giving history</span>

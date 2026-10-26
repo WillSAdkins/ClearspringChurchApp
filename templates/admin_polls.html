@@ -95,7 +95,7 @@
             </form>
           {% endif %}
           <form method="post" action="{{ url_for('delete_poll', poll_id=p['id']) }}"
-                onsubmit="return confirm('Delete this poll and its votes?');">
+                data-confirm="Delete this poll and its votes?">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-danger small">Delete</button>
           </form>

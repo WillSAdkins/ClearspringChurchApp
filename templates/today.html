@@ -81,7 +81,7 @@
 <script src="{{ url_for('static', filename='plans-mine.js') }}"></script>
 <script src="{{ url_for('static', filename='prayers.js') }}"></script>
 <script src="{{ url_for('static', filename='grow.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
   (function () {
     function paint() {
       var r = window.Grow.load().rhythm, t = window.Grow.today();
@@ -94,13 +94,13 @@
     paint(); window.Grow.sync().then(function (ch) { if (ch) paint(); });
   })();
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
   (function () {
     var n = window.Prayers ? Prayers.forToday().length : 0;
     if (n) document.getElementById("tdPrayText").textContent = n + (n === 1 ? " prayer" : " prayers") + " on your list for today";
   })();
 </script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var P = window.Plans;
   document.getElementById("tdDate").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });

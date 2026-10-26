@@ -34,7 +34,7 @@
     <a href="{{ url_for('product_detail', product_id=p['id']) }}" class="product-feature">
       {% if p['image_url'] %}
         <span class="product-feature-media">
-          <img src="{{ p['image_url'] }}" alt="" loading="lazy">
+          <img src="{{ p['image_url']|web_link }}" alt="" loading="lazy">
         </span>
       {% endif %}
       <span class="product-feature-body">
@@ -54,7 +54,7 @@
       <a href="{{ url_for('product_detail', product_id=p['id']) }}" class="product-card">
         <span class="product-media">
           {% if p['image_url'] %}
-            <img src="{{ p['image_url'] }}" alt="" loading="lazy">
+            <img src="{{ p['image_url']|web_link }}" alt="" loading="lazy">
           {% else %}
             {{ icon('bookmark', 22) }}
           {% endif %}
@@ -74,7 +74,7 @@
   <p class="charity-note">
     Clearspring Church is a registered charity (CIO no. {{ charity_number }}).
     {% if delivery_note %}<br>{{ delivery_note }}{% endif %}
-    {% if returns_url %}<br><a href="{{ returns_url }}" target="_blank" rel="noopener">Returns &amp; delivery</a>{% endif %}
+    {% if returns_url %}<br><a href="{{ returns_url|web_link }}" target="_blank" rel="noopener">Returns &amp; delivery</a>{% endif %}
   </p>
 
 </main>

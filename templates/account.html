@@ -110,11 +110,16 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="btn-ghost" style="width:100%;">Sign out</button>
   </form>
+  <form method="post" action="{{ url_for('signout_everywhere') }}" style="margin-top:.75rem;"
+        data-confirm="Sign out on every other phone, tablet and computer? You'll stay signed in here.">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="ps-link" style="width:100%;">Sign out on all my other devices</button>
+  </form>
 
   <details style="margin-top:2.5rem;">
     <summary style="cursor:pointer; opacity:.65; font-size:var(--fs-base);">Delete my account</summary>
     <form method="post" action="{{ url_for('account_delete') }}" style="margin-top:1rem;"
-          onsubmit="return confirm('This permanently deletes your account, saved verses, notes, journal, scores and everything you have posted in groups. There is no undo. Delete it?');">
+          data-confirm="This permanently deletes your account, saved verses, notes, journal, scores and everything you have posted in groups. There is no undo. Delete it?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <p style="font-size:var(--fs-base); opacity:.75; margin:0 0 .75rem;">
         This permanently removes your account and everything saved to it:

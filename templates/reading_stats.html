@@ -40,7 +40,7 @@
 </main>
 <script id="rsBooksData" type="application/json">{{ books|tojson }}</script>
 <script src="{{ url_for('static', filename='plans.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var P = window.Plans, books = JSON.parse(document.getElementById("rsBooksData").textContent);
   var editing = false;

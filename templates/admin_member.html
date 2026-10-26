@@ -32,7 +32,7 @@
   <section class="admin-panel" style="margin-top:1.5rem">
     <h2 class="section-label">Delete this account</h2>
     <p class="empty-sub" style="line-height:1.6;margin-bottom:.75rem">Only when they've asked (people can also do it themselves in Account). This removes the account and everything in it: saved items, group posts, scores, streaks. It can't be undone. It's noted in the staff log, without their name or email.</p>
-    <form method="post" onsubmit="return confirm('Delete this account and everything in it? This cannot be undone.');">
+    <form method="post" data-confirm="Delete this account and everything in it? This cannot be undone.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label for="ce" class="data-label" style="display:block;font-weight:600;margin-bottom:.35rem">Type their email to confirm</label>
       <input type="email" id="ce" name="confirm_email" required autocomplete="off" style="width:100%;max-width:26rem;margin-bottom:.6rem">

@@ -31,11 +31,11 @@
 
   <div class="sn-acts">
     <button type="button" class="gw-btn" id="sgShare">{{ icon('message', 16) }} Send to my group</button>
-    <button type="button" class="gw-btn" onclick="window.print()">Print</button>
+    <button type="button" class="gw-btn" data-print>Print</button>
   </div>
 </main>
 <script src="{{ url_for('static', filename='verse-peek.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById("sgShare").addEventListener("click", function () {
   var d = { title: document.title, text: "Questions for our group this week:", url: location.href }, b = this;
   if (navigator.share) navigator.share(d).catch(function () {});

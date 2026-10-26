@@ -81,7 +81,7 @@
   <p class="wl-credit">Videos play from YouTube in its privacy-enhanced mode, and belong to the people who made them. Recommending a course doesn’t mean the church agrees with every word; if something puzzles you, ask one of the team.</p>
 </main>
 <script src="{{ url_for('static', filename='learn.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var L = window.Learn; if (!L) return;
   function paint() {
