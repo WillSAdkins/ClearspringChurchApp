@@ -47,11 +47,11 @@
   } catch (e) {}
 })();
 </script>
-<script src="{{ url_for('static', filename='palette.js', v='54') }}"></script>
+<script src="{{ url_for('static', filename='palette.js', v='55') }}"></script>
 <script src="{{ url_for('static', filename='safe-actions.js', v='1') }}" defer></script>
 <script nonce="{{ csp_nonce() }}">window.CS_AUDIO_BOOKS = {{ audio_bible_js.books|tojson }}; window.CS_AUDIO_READERS = {{ audio_bible_js.readers|tojson }}; window.CS_AUDIO_DEFAULT_READER = {{ audio_bible_js.default|tojson }};</script>
-<script src="{{ url_for('static', filename='audio-bible.js', v='54') }}"></script>
-<script src="{{ url_for('static', filename='mini-player.js', v='54') }}" defer></script>
+<script src="{{ url_for('static', filename='audio-bible.js', v='55') }}"></script>
+<script src="{{ url_for('static', filename='mini-player.js', v='55') }}" defer></script>
 <title>{% block title %}Clearspring Church, Cheltenham{% endblock %}</title>
 
 <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -61,7 +61,7 @@
 <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ url_for('static', filename='fonts/literata.woff2') }}" as="font" type="font/woff2" crossorigin>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='54') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style-classic.css' if classic_theme else 'style.css', v='55') }}">
 <script nonce="{{ csp_nonce() }}">
 // Attach the CSRF token to every same-origin state-changing fetch, so
 // individual scripts don't each have to remember to do it.
@@ -93,7 +93,7 @@
 <body class="{{ 'has-tabbar' if request.endpoint in nav_endpoints }}">
 
 <div id="app-splash" class="app-splash">
-  <video class="app-splash-video" autoplay muted playsinline>
+  <video class="app-splash-video" autoplay muted playsinline webkit-playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true" tabindex="-1">
     <source src="{{ url_for('static', filename='loading-screen.mp4') }}" type="video/mp4">
   </video>
 </div>
@@ -135,6 +135,18 @@
     }
   });
   video.addEventListener("error", function () { videoPlayedThrough = true; maybeHide(); });
+
+  // Some phones refuse to start a video by themselves (iPhone Low Power Mode,
+  // data saver, some in-app browsers) and show a play button instead. A
+  // loading screen you have to press play on is worse than none, so if the
+  // clip doesn't start, skip it.
+  video.muted = true;
+  function skip() { videoPlayedThrough = true; pageLoaded = true; hide(); }
+  try {
+    var started = video.play();
+    if (started && started.catch) started.catch(skip);
+  } catch (e) { skip(); }
+  setTimeout(function () { if (video.paused && !video.currentTime) skip(); }, 900);
   window.addEventListener("load", function () { pageLoaded = true; maybeHide(); });
   setTimeout(hide, MAX_MS);
 })();

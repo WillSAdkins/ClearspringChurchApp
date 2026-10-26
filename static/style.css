@@ -4269,6 +4269,14 @@ span.plan-passage { color: var(--muted); border-bottom-color: var(--line); }
   height: 100%;
   object-fit: cover;
 }
+/* Never show the phone's own play button over the loading clip. */
+.app-splash-video::-webkit-media-controls,
+.app-splash-video::-webkit-media-controls-panel,
+.app-splash-video::-webkit-media-controls-overlay-play-button,
+.app-splash-video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
 .app-splash-hide {
   opacity: 0;
   pointer-events: none;
