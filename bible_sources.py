@@ -576,3 +576,13 @@ def search_verses(query, limit=40):
             "verse": verse,
         })
     return results
+
+
+# ---------------------------------------------------------------- hiding a translation
+# Set HIDE_TRANSLATIONS on Render (for example "kjv") to take a translation out
+# of the app without changing code: say, if a publisher asks, or until a
+# permission comes through. Links to it fall back to the default translation.
+HIDDEN = {c.strip().lower() for c in os.environ.get("HIDE_TRANSLATIONS", "").split(",") if c.strip()}
+for _c in HIDDEN:
+    PUBLIC_DOMAIN.pop(_c, None)
+    _LOCAL_BIBLES.pop(_c, None)

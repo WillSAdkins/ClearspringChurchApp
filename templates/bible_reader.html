@@ -193,6 +193,10 @@
       <div class="lib-chips">{% for x in chapter_lib.places %}<a class="lib-chip lib-chip-place" href="{{ url_for('place_page', slug=x.slug) }}">{{ x.name }}</a>{% endfor %}</div>
       {% if mapped %}<div class="lib-map ch-study-map" id="chMap" data-places='{{ mapped|tojson }}'></div>{% endif %}
       {% endif %}
+      {% if models_3d %}
+      <p class="ch-study-h">See it in 3D</p>
+      <div class="lib-chips">{% for x in models_3d %}<a class="lib-chip b3d-chip" href="{{ url_for('bible_3d', slug=x.slug) }}">{{ x.emoji }} {{ x.title }}</a>{% endfor %}</div>
+      {% endif %}
       <a class="lib-more" href="{{ url_for('library_hub') }}">Dictionary, topics, timeline and more in the Library →</a>
     </section>
   {% endif %}

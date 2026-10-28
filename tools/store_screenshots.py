@@ -33,6 +33,7 @@ DEVICES = {
 PAGES = [
     ("home", "/"),
     ("bible", "/bible/read/john/1"),
+    ("3d", "/bible/3d/tabernacle"),
     ("listen", "/bible/listen"),
     ("prayer", "/prayer"),
     ("library", "/library/classics"),
