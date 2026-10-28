@@ -7782,11 +7782,19 @@ body.pu-open .gd-fab { visibility: hidden; }
 .b3d-info-x { position: absolute; top: .5rem; right: .5rem; width: 2rem; height: 2rem; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 1.2rem; cursor: pointer; }
 .b3d-nogl-msg { display: none; position: absolute; inset: 0; margin: 0; padding: 2rem; place-items: center; text-align: center; color: var(--muted); }
 .b3d-nogl .b3d-nogl-msg { display: grid; }
+.b3d-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--muted); font-size: var(--fs-sm); pointer-events: none; }
+.b3d-loading::before { content: ""; width: 2rem; height: 2rem; margin: 0 auto .6rem; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: b3dspin 1s linear infinite; display: block; }
+@keyframes b3dspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .b3d-loading::before { animation: none; } }
+.b3d-ready .b3d-loading, .b3d-nogl .b3d-loading, .b3d-failed .b3d-loading { display: none; }
+.b3d-failed-msg { display: none; position: absolute; inset: 0; margin: 0; padding: 2rem; place-items: center; text-align: center; color: var(--muted); }
+.b3d-failed .b3d-failed-msg { display: grid; }
 .b3d-tools { display: flex; flex-wrap: wrap; gap: .4rem; }
 .b3d-tools button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--r-full); padding: .45rem .9rem; font: 600 var(--fs-sm) var(--body); cursor: pointer; }
 .b3d-tools button[aria-pressed="true"] { background: var(--invert-bg); color: var(--invert-ink); border-color: var(--invert-bg); }
 .b3d-help { font-size: var(--fs-xs); color: var(--muted); margin: .6rem 0 .25rem; }
 .b3d-ref { font-size: var(--fs-sm); margin: 0 0 1rem; }
+.b3d-more-h { font: 600 var(--fs-md) var(--display); margin: 1rem 0 .5rem; }
 .b3d-more { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
 .b3d-credit { font-size: var(--fs-2xs, .72rem); color: var(--muted); }
 .b3d-chip { margin: .5rem 0 0; }

@@ -58,8 +58,10 @@ becomes possible, but it isn't needed.
 **The KJV.** In the UK the King James Version is under Crown copyright,
 which Cambridge University Press looks after. The app shows it. Either email
 CUP's Bible permissions team to confirm it's fine for a free church app (it
-usually is, with their wording in the copyright line), or remove `kjv` from
-`_LOCAL_BIBLES` in `bible_sources.py` before you submit.
+usually is, with their wording in the copyright line), or, until you hear
+back, add `HIDE_TRANSLATIONS` = `kjv` in Render's Environment settings. That
+takes the KJV out of the app straight away, with no code change; delete the
+setting when permission comes through.
 
 ---
 
@@ -149,7 +151,9 @@ update gets reviewed.
 > (Bible → any chapter; Bible → Listen keeps playing with the phone locked),
 > follow reading plans, watch Sunday sermons, share and pray for prayer
 > requests, take part in small groups, and get notifications from the
-> church. Sign in with the account above to see groups and saved notes.
+> church. Study → 3D Bible world has over 200 interactive 3D models (the
+> tabernacle, Noah's ark, Solomon's temple, Paul's ship…) that you can turn,
+> zoom and tap to learn about. Sign in with the account above to see groups and saved notes.
 > Giving opens in Safari; nothing is sold in the app. People can report and
 > hide posts in groups and on the prayer wall, and delete their account from
 > Community and More → Your account.
@@ -264,6 +268,9 @@ read and listen to the Bible, pray, watch and connect.
 > • Listen to the whole Bible read aloud. It carries on chapter after chapter
 >   with your phone locked.
 > • Follow reading plans and keep a journal, highlights and notes.
+> • Explore the 3D Bible world: over 200 models of places, objects and scenes,
+>   from the ark of the covenant to Paul's ship, built to the Bible's own
+>   measurements. Turn them, zoom in, and tap to learn more.
 > • Watch Sunday's sermon and catch up on series.
 > • Share prayer requests and pray for others. Keep your own prayer list.
 > • Join your small group: posts, prayer and plans together.
@@ -273,7 +280,7 @@ read and listen to the Bible, pray, watch and connect.
 > Free, with no adverts and no tracking.
 
 **Keywords (Apple, 100 characters):**
-bible,church,prayer,cheltenham,audio bible,sermons,devotional,reading plan,christian,faith
+bible,church,prayer,cheltenham,audio bible,sermons,3d bible,reading plan,christian,faith
 
 ---
 

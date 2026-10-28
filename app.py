@@ -30,6 +30,7 @@ import threading
 import youtube_import
 import guide as guide_mod
 import scenes
+import models3d
 import fathers
 from flask import Flask, render_template, request, redirect, url_for, session, g, flash, Response, abort, make_response, send_from_directory, send_file, stream_with_context
 
@@ -1946,6 +1947,19 @@ def _search_everything(query):
                 break
         if pages:
             groups.append(("In the app", pages))
+        # 3D models ("ark", "sling", "Exodus 28")
+        terms = re.findall(r"[\w']+", ql)
+
+        def _hit(m):
+            text = " ".join((m["title"], m["sub"], m["ref"], m.get("also", ""))).lower()
+            return all(re.search(r"\b" + re.escape(t), text) for t in terms)
+
+        def _rank(m):
+            title = m["title"].lower()
+            return (not re.search(r"\b" + re.escape(ql), title), len(title))
+        models = sorted((m for m in MODELS_3D if _hit(m)), key=_rank)
+        if models:
+            groups.append(("In 3D", [(f"{m['emoji']} {m['title']}", m["sub"], url_for("bible_3d", slug=m["slug"])) for m in models[:5]]))
         # Sermons
         like = "%" + q.replace("%", "").replace("_", "") + "%"
         rows = get_db().execute(
@@ -6363,7 +6377,7 @@ def _licensed_response(resp, tokens):
 
 # ---------- Memorise: Duolingo-style scripture memory ----------
 
-MEMORISE_TRANSLATIONS = ("web", "kjv", "asv", "bbe")
+MEMORISE_TRANSLATIONS = tuple(c for c in ("web", "kjv", "asv", "bbe") if c not in bible_sources.HIDDEN)
 
 
 @app.route("/memorise")
@@ -6529,29 +6543,9 @@ def verse_page(book_slug, chapter, verse):
 
 # ---------- 3D: models built to the Bible's measurements, and a relief map ----------
 
-MODELS_3D = [
-    # kind: places, objects, scenes, size
-    {"slug": "map", "kind": "places", "title": "The land in 3D", "sub": "Hills, valleys and the Jordan rift, with the places of the Bible pinned on", "ref": "", "emoji": "🗺️"},
-    {"slug": "tabernacle", "kind": "places", "inside": "closed", "title": "The tabernacle", "sub": "The tent of meeting in the wilderness, 100 × 50 cubits", "ref": "Exodus 25–27", "emoji": "⛺"},
-    {"slug": "temple", "kind": "places", "inside": "closed", "title": "Solomon's temple", "sub": "The house, the pillars Jachin and Boaz, and the bronze Sea", "ref": "1 Kings 6–7", "emoji": "🏛️"},
-    {"slug": "ark-of-the-covenant", "kind": "objects", "title": "The ark of the covenant", "sub": "The gold chest with the mercy seat and cherubim", "ref": "Exodus 25:10–22", "emoji": "✨"},
-    {"slug": "lampstand", "kind": "objects", "title": "The golden lampstand", "sub": "Seven lamps, hammered from one piece of gold", "ref": "Exodus 25:31–40", "emoji": "🕎"},
-    {"slug": "table-of-showbread", "kind": "objects", "title": "The table and the bread", "sub": "Twelve loaves of the bread of the Presence", "ref": "Exodus 25:23–30; Leviticus 24:5–9", "emoji": "🍞"},
-    {"slug": "altar-of-incense", "kind": "objects", "title": "The altar of incense", "sub": "Prayer rising like incense before the veil", "ref": "Exodus 30:1–10", "emoji": "🕯️"},
-    {"slug": "bronze-altar", "kind": "objects", "title": "The bronze altar", "sub": "Where the sacrifices were offered, 5 cubits square", "ref": "Exodus 27:1–8", "emoji": "🔥"},
-    {"slug": "breastplate", "kind": "objects", "title": "The high priest's breastplate", "sub": "Twelve stones for the twelve tribes", "ref": "Exodus 28:15–30", "emoji": "💎"},
-    {"slug": "throne", "kind": "objects", "title": "Solomon's throne", "sub": "Ivory and gold, six steps and twelve lions", "ref": "1 Kings 10:18–20", "emoji": "👑"},
-    {"slug": "david-and-goliath", "kind": "scenes", "title": "David and Goliath", "sub": "The Valley of Elah, two armies and a giant", "ref": "1 Samuel 17", "emoji": "🪨"},
-    {"slug": "galilee-boat", "kind": "scenes", "title": "A boat on Galilee", "sub": "Jesus asleep in the stern as the storm rises", "ref": "Mark 4:35–41", "emoji": "⛵"},
-    {"slug": "nativity", "kind": "scenes", "inside": "open", "title": "The first Christmas", "sub": "A manger in a Bethlehem house, and shepherds", "ref": "Luke 2:1–20", "emoji": "⭐"},
-    {"slug": "last-supper", "kind": "scenes", "title": "The Last Supper", "sub": "Reclining round the table in the upper room", "ref": "Luke 22:7–20; John 13", "emoji": "🍷"},
-    {"slug": "empty-tomb", "kind": "scenes", "title": "The empty tomb", "sub": "The stone rolled away, in a garden", "ref": "Mark 16; John 20", "emoji": "🌅"},
-    {"slug": "daniel-statue", "kind": "size", "title": "The statue in Daniel's vision", "sub": "Gold, silver, bronze, iron and clay, and the stone cut without hands", "ref": "Daniel 2:31–45", "emoji": "🗿"},
-    {"slug": "ark", "kind": "size", "title": "Noah's ark", "sub": "300 cubits long: see how big it really was", "ref": "Genesis 6", "emoji": "🛶"},
-    {"slug": "nebuchadnezzar-statue", "kind": "size", "title": "Nebuchadnezzar's statue", "sub": "60 cubits of gold, and the fiery furnace", "ref": "Daniel 3", "emoji": "🗿"},
-]
-MODELS_3D_KINDS = [("places", "Places"), ("objects", "Holy objects"), ("scenes", "Scenes from the Bible"), ("size", "How big was it?")]
-MODELS_3D_BY_SLUG = {m["slug"]: m for m in MODELS_3D}
+MODELS_3D = models3d.MODELS
+MODELS_3D_KINDS = [k for k in models3d.KINDS if any(m["kind"] == k[0] for m in models3d.MODELS)]
+MODELS_3D_BY_SLUG = models3d.BY_SLUG
 
 
 def _map_places_3d():
@@ -6596,9 +6590,33 @@ def fathers_chapter(book_slug, chapter):
                            total=sum(len(g["items"]) for g in groups))
 
 
+@lru_cache(maxsize=1)
+def _b3d_version():
+    """Changes whenever the 3D engine is rebuilt, so phones fetch the new one."""
+    try:
+        with open(os.path.join(app.static_folder, "vendor", "bible3d", "bible3d.js"), "rb") as f:
+            return hashlib.sha1(f.read()).hexdigest()[:10]
+    except OSError:
+        return "0"
+
+
+def _related_3d(m, n=12):
+    """Other models to try next: the same shelf first, then the rest."""
+    same = [x for x in MODELS_3D if x["kind"] == m["kind"] and x["slug"] != m["slug"]]
+    rest = [x for x in MODELS_3D if x["kind"] != m["kind"]]
+    return (same + rest)[:n] if len(same) < n else same[:n]
+
+
 @app.route("/bible/3d")
 def bible_3d_hub():
-    return render_template("bible3d_hub.html", models=MODELS_3D, kinds=MODELS_3D_KINDS)
+    return render_template("bible3d_hub.html", models=MODELS_3D, kinds=MODELS_3D_KINDS, thumb_v=_b3d_version())
+
+
+@app.route("/bible/3d/random")
+def bible_3d_random():
+    """Surprise me: any model but the relief map."""
+    import random
+    return redirect(url_for("bible_3d", slug=random.choice([m["slug"] for m in MODELS_3D if m["slug"] != "map"])))
 
 
 @app.route("/bible/3d/<slug>")
@@ -6607,7 +6625,8 @@ def bible_3d(slug):
     if not m:
         abort(404)
     focus = request.args.get("focus", "")
-    return render_template("bible3d.html", m=m, models=MODELS_3D,
+    return render_template("bible3d.html", m=m, models=MODELS_3D, b3d_v=_b3d_version(),
+                           related=_related_3d(m),
                            places=_map_places_3d() if slug == "map" else [],
                            focus=focus if re.fullmatch(r"[a-z0-9-]{1,80}", focus or "") else "")
 
@@ -6881,6 +6900,7 @@ def bible_read_chapter(book_slug, chapter):
         gateway_url=f"https://www.biblegateway.com/passage/?search={gateway_query}",
         talks=talks_on(book_slug, chapter) if not error else [],
         quick_books=QUICK_BOOKS,
+        models_3d=models3d.for_chapter(book_slug, chapter),
     )
     if data and data.get("licensed"):
         return _licensed_response(page, [data.get("fums")])

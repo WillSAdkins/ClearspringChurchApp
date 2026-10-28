@@ -6,17 +6,26 @@
 {% block content %}
 <main class="bible">
   {{ head('3D Bible world', url_for('bible_hub'), 'Back to Study') }}
-  <p class="bible-lede">Walk around {{ models|length }} places, objects and scenes from the Bible. The models are built to the measurements the Bible itself gives, so you can see their real size, with a person standing alongside for scale.</p>
-  <nav class="cl-jump" aria-label="Kinds of model">
-    {% for k, name in kinds %}<a href="#k-{{ k }}">{{ name }}</a>{% endfor %}
-  </nav>
+  <p class="bible-lede">Walk around {{ models|length }} places, objects and scenes from the Bible. They're built to the measurements the Bible itself gives where it gives them, with a person or a hand alongside for scale.</p>
+
+  <div class="b3h-find" role="search">
+    <label class="sr-only" for="b3hQ">Search the models</label>
+    <input id="b3hQ" class="b3h-q" type="search" placeholder="Search: ark, sling, coin, Exodus 28…" autocomplete="off" enterkeyhint="search">
+    <a class="b3h-random" href="{{ url_for('bible_3d_random') }}">Surprise me</a>
+  </div>
+  <div class="b3h-chips" role="group" aria-label="Show one kind">
+    <button type="button" class="b3h-chip" data-kind="" aria-pressed="true">All</button>
+    {% for k, name in kinds %}<button type="button" class="b3h-chip" data-kind="{{ k }}" aria-pressed="false">{{ name }}</button>{% endfor %}
+  </div>
+  <p class="b3h-count" id="b3hCount" role="status" aria-live="polite"></p>
+
   {% for k, name in kinds %}
-  <section class="b3h-sec" id="k-{{ k }}" aria-labelledby="k-{{ k }}-h">
+  <section class="b3h-sec" id="k-{{ k }}" data-kind="{{ k }}" aria-labelledby="k-{{ k }}-h">
     <h2 class="cl-shelf-h" id="k-{{ k }}-h">{{ name }}</h2>
     <div class="b3h-grid">
       {% for m in models if m.kind == k %}
-      <a class="b3h-card" href="{{ url_for('bible_3d', slug=m.slug) }}">
-        <img class="b3h-pic" src="{{ url_for('static', filename='3d/' ~ m.slug ~ '.jpg', v='1') }}" alt="" loading="lazy" width="480" height="360">
+      <a class="b3h-card" href="{{ url_for('bible_3d', slug=m.slug) }}" data-find="{{ (m.title ~ ' ' ~ m.sub ~ ' ' ~ m.ref ~ ' ' ~ (m.also or ''))|lower }}">
+        <img class="b3h-pic" src="{{ url_for('static', filename='3d/' ~ m.slug ~ '.jpg', v=thumb_v) }}" alt="" loading="lazy" decoding="async" width="480" height="360">
         <span class="b3h-text">
           <b>{{ m.title }}</b>
           <span>{{ m.sub }}</span>
@@ -27,19 +36,54 @@
     </div>
   </section>
   {% endfor %}
-  <p class="b3h-note">Drag to turn, pinch or scroll to zoom, and tap a label to learn more. The relief map is approximate: heights are exaggerated three times so the hills and the Jordan valley stand out.</p>
+  <p class="b3h-empty" id="b3hEmpty" hidden>Nothing matches that yet. Try another word, or a book of the Bible.</p>
+  <p class="b3h-note">Drag to turn, pinch or scroll to zoom, and tap a label to learn more. Where the Bible gives no size or shape, the label says so and the model follows the best evidence from the time. The relief map's heights are exaggerated three times so the hills and the Jordan valley stand out.</p>
 </main>
 <style>
+  .b3h-find { display: flex; gap: .5rem; align-items: center; margin: .75rem 0 .5rem; }
+  .b3h-q { flex: 1; min-width: 0; padding: .7rem .9rem; border-radius: var(--r-full); border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 var(--fs-base) var(--body); }
+  .b3h-random { flex: none; padding: .65rem .9rem; border-radius: var(--r-full); background: var(--invert-bg); color: var(--invert-ink); font: 600 var(--fs-sm) var(--body); text-decoration: none; }
+  .b3h-chips { display: flex; gap: .4rem; overflow-x: auto; padding: .25rem 0 .5rem; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .b3h-chips::-webkit-scrollbar { display: none; }
+  .b3h-chip { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--r-full); padding: .45rem .8rem; font: 600 var(--fs-xs) var(--body); cursor: pointer; white-space: nowrap; }
+  .b3h-chip[aria-pressed="true"] { background: var(--invert-bg); color: var(--invert-ink); border-color: var(--invert-bg); }
+  .b3h-count { font-size: var(--fs-xs); color: var(--muted); margin: 0 0 .25rem; min-height: 1.2em; }
   .b3h-sec { scroll-margin-top: 5rem; margin-top: 1.1rem; }
+  .b3h-sec[hidden], .b3h-card[hidden] { display: none; }
   .b3h-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; margin: .5rem 0 1rem; }
+  @media (min-width: 720px) { .b3h-grid { grid-template-columns: repeat(3, 1fr); } }
   .b3h-card { display: grid; align-content: start; border-radius: var(--r-md); border: 1px solid var(--tone-line); background: var(--tone); color: var(--on-tone); text-decoration: none; min-width: 0; overflow: hidden; }
   .b3h-pic { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; background: var(--surface-2); }
   .b3h-text { display: grid; gap: .2rem; padding: .7rem .75rem .8rem; }
-  .b3h-wide { grid-column: 1 / -1; background: var(--tone); border-color: var(--tone-line); }
-  .b3h-emoji { font-size: 1.75rem; }
   .b3h-card b { font: 600 var(--fs-base) var(--display); line-height: 1.25; }
   .b3h-text span { font-size: var(--fs-xs); color: var(--tone-muted); line-height: 1.4; }
   .b3h-card small { font-size: var(--fs-2xs, .75rem); color: var(--tone-accent); font-weight: 600; }
+  .b3h-empty { font-size: var(--fs-sm); color: var(--muted); }
   .b3h-note { font-size: var(--fs-sm); color: var(--muted); line-height: 1.55; }
 </style>
+<script nonce="{{ csp_nonce() }}">
+(function () {
+  var q = document.getElementById("b3hQ"), chips = document.querySelectorAll(".b3h-chip");
+  var secs = document.querySelectorAll(".b3h-sec"), count = document.getElementById("b3hCount"), empty = document.getElementById("b3hEmpty");
+  var kind = "";
+  try { var saved = sessionStorage.getItem("b3h_kind"); if (saved) kind = saved; } catch (e) {}
+  function run() {
+    var words = (q.value || "").toLowerCase().trim().split(/\s+/).filter(Boolean), shown = 0;
+    secs.forEach(function (s) {
+      var n = 0;
+      s.querySelectorAll(".b3h-card").forEach(function (c) {
+        var t = " " + c.getAttribute("data-find"), ok = (!kind || s.getAttribute("data-kind") === kind) && words.every(function (w) { return t.indexOf(" " + w) >= 0 || t.indexOf("-" + w) >= 0 || t.indexOf("(" + w) >= 0 || (/^\d/.test(w) && t.indexOf(w) >= 0); });
+        c.hidden = !ok; if (ok) n++;
+      });
+      s.hidden = n === 0; shown += n;
+    });
+    chips.forEach(function (c) { c.setAttribute("aria-pressed", c.getAttribute("data-kind") === kind ? "true" : "false"); });
+    count.textContent = (words.length || kind) ? (shown === 1 ? "1 model" : shown + " models") : "";
+    empty.hidden = shown > 0;
+  }
+  chips.forEach(function (c) { c.addEventListener("click", function () { kind = c.getAttribute("data-kind"); try { sessionStorage.setItem("b3h_kind", kind); } catch (e) {} run(); }); });
+  q.addEventListener("input", run);
+  run();
+})();
+</script>
 {% endblock %}
