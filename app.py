@@ -585,6 +585,8 @@ def security_headers(response):
     # PDF plug-in may load data from it.
     response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
     response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
+    # Not in search results for now (see turn_away_crawlers).
+    response.headers.setdefault("X-Robots-Tag", "noindex, nofollow")
 
     # Only send HSTS over a genuinely secure connection, never on local HTTP.
     if request.is_secure or request.headers.get("X-Forwarded-Proto") == "https":
@@ -686,20 +688,77 @@ def slow_down_crawlers():
     return None
 
 
-# Crawlers that ignore robots.txt and fetch library pages from hundreds of
-# addresses at once (each address stays under the per-address limit). They're
-# turned away from the library only; the rest of the site stays open to them.
-BOT_AGENTS = re.compile(r"meta-externalagent|facebookexternalhit|GPTBot|ChatGPT-User|OAI-SearchBot|ClaudeBot|anthropic-ai|"
-                        r"CCBot|Bytespider|Amazonbot|PerplexityBot|Applebot-Extended|Google-Extended|DataForSeoBot|"
-                        r"AhrefsBot|SemrushBot|MJ12bot|PetalBot|YandexBot|DotBot|ImagesiftBot|Diffbot|omgili|"
-                        r"Timpibot|cohere-ai|YouBot|Scrapy|python-requests|Go-http-client|okhttp|curl/", re.I)
+# Crawlers. For now the whole site is closed to them, search engines
+# included: robots.txt says so, and anything that announces itself as a
+# crawler is turned away here (the ones that ignore robots.txt). Link-preview
+# fetchers are the exception: when someone shares a link in WhatsApp,
+# Facebook, iMessage and the like, they get a tiny page with the church's
+# name, a line about the app and the logo, and nothing else.
+PREVIEW_AGENTS = re.compile(r"facebookexternalhit|Facebot|WhatsApp|Twitterbot|Slackbot-LinkExpanding|Slack-ImgProxy|Discordbot|"
+                            r"LinkedInBot|TelegramBot|SkypeUriPreview|Iframely|Embedly|redditbot|Pinterestbot|"
+                            r"Google-PageRenderer|GoogleImageProxy|vkShare|Viber|Mastodon|Bluesky|Cardyb", re.I)
+BOT_AGENTS = re.compile(r"Googlebot|Google-InspectionTool|GoogleOther|Storebot|AdsBot|Mediapartners|bingbot|BingPreview|msnbot|"
+                        r"Applebot|DuckDuckBot|YandexBot|YandexImages|Baiduspider|Sogou|Exabot|SeznamBot|Qwantify|Yeti|"
+                        r"meta-externalagent|meta-externalfetcher|GPTBot|ChatGPT-User|OAI-SearchBot|ClaudeBot|Claude-Web|anthropic-ai|"
+                        r"CCBot|Bytespider|Amazonbot|PerplexityBot|DataForSeoBot|AhrefsBot|SemrushBot|MJ12bot|PetalBot|DotBot|"
+                        r"ImagesiftBot|Diffbot|omgili|Timpibot|cohere-ai|YouBot|ia_archiver|archive\.org_bot|BLEXBot|"
+                        r"MegaIndex|serpstatbot|Barkrowler|SeekportBot|Scrapy|python-requests|python-urllib|aiohttp|httpx|"
+                        r"Go-http-client|okhttp|Java/|libwww-perl|curl/|Wget|HeadlessChrome|PhantomJS|axios/|node-fetch|"
+                        r"undici|Nutch|Heritrix", re.I)
+# Anything else that calls itself a bot, crawler or spider and gives a web
+# address for itself, as polite crawlers do ("+http://...").
+GENERIC_BOT = re.compile(r"(bot|crawler|spider|scraper)\b", re.I)
+# These must still answer machines: app links for the phone apps, the
+# reminders timer, robots.txt itself, and the files a preview card uses.
+BOT_OPEN_PATHS = ("/.well-known/", "/cron/", "/robots.txt", "/static/icons/", "/static/manifest.json")
+ALLOW_BOTS = os.environ.get("CS_ALLOW_BOTS") == "1"     # local testing only
+
+
+def is_crawler(ua):
+    return bool(BOT_AGENTS.search(ua) or (GENERIC_BOT.search(ua) and "http" in ua.lower()))
 
 
 @app.before_request
-def turn_away_library_bots():
-    if request.path.startswith(CRAWL_PREFIXES) and BOT_AGENTS.search(request.headers.get("User-Agent", "")):
-        return app.response_class("Automated access to the library isn't allowed. See /robots.txt.\n", status=403, mimetype="text/plain")
+def turn_away_crawlers():
+    if ALLOW_BOTS or request.path.startswith(BOT_OPEN_PATHS):
+        return None
+    ua = request.headers.get("User-Agent", "")
+    if not ua:
+        return None
+    if PREVIEW_AGENTS.search(ua):
+        if request.path.startswith("/static/") or request.method not in ("GET", "HEAD"):
+            return app.response_class("", status=403)
+        return preview_card()
+    if is_crawler(ua):
+        return app.response_class("Automated access to this site isn't allowed.\n", status=403, mimetype="text/plain")
     return None
+
+
+PREVIEW_DESCRIPTION = "The Clearspring Church app: the Bible, sermons, prayer, groups and what's on at church."
+
+
+def preview_card():
+    """Just enough for a link preview: name, a line about the app, the logo."""
+    from markupsafe import escape
+    site = request.host_url.rstrip("/")
+    title = f"{CHURCH_NAME} Church"
+    body = f"""<!doctype html><html lang="en-GB"><head><meta charset="utf-8">
+<title>{escape(title)}</title>
+<meta name="description" content="{escape(PREVIEW_DESCRIPTION)}">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{escape(title)}">
+<meta property="og:title" content="{escape(title)}">
+<meta property="og:description" content="{escape(PREVIEW_DESCRIPTION)}">
+<meta property="og:url" content="{escape(site + request.path)}">
+<meta property="og:image" content="{escape(site)}/static/icons/icon-512.png">
+<meta property="og:image:width" content="512"><meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="{escape(title)} logo">
+<meta name="twitter:card" content="summary">
+</head><body><h1>{escape(title)}</h1><p>{escape(PREVIEW_DESCRIPTION)}</p></body></html>"""
+    resp = app.response_class(body, mimetype="text/html")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
 
 
 # The heaviest pages (the word-by-word interlinear, passage study, a word's
@@ -745,29 +804,9 @@ def give_back_heavy_slot(exc=None):
 
 
 ROBOTS_TXT = """# Clearspring Church app
-# The Bible library here has tens of thousands of generated pages (commentaries,
-# dictionaries, every verse). Please don't crawl them: the same texts are freely
-# available from their original sources.
+# Closed to all crawlers for now, search engines included.
 User-agent: *
-Disallow: /bible/commentary/
-Disallow: /bible/reference/
-Disallow: /bible/v/
-Disallow: /bible/dictionary/
-Disallow: /bible/offline
-Disallow: /bible/search
-Disallow: /bible/passage
-Disallow: /bible/fathers/
-Disallow: /bible/compare
-Disallow: /bible/interlinear
-Disallow: /bible/words
-Disallow: /library/
-Disallow: /api/
-Disallow: /audio/
-Disallow: /media/
-Disallow: /admin
-Disallow: /account
-Disallow: /*?translation=
-Crawl-delay: 10
+Disallow: /
 """
 
 
