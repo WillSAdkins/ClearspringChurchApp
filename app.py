@@ -722,6 +722,11 @@ def is_crawler(ua):
 def turn_away_crawlers():
     if ALLOW_BOTS or request.path.startswith(BOT_OPEN_PATHS):
         return None
+    # Render's own health check comes from inside Render, not through its
+    # public proxy, so it carries no X-Forwarded-For. Turning it away would
+    # make Render think the app is down and restart it.
+    if not request.headers.get("X-Forwarded-For"):
+        return None
     ua = request.headers.get("User-Agent", "")
     if not ua:
         return None
