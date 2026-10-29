@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% set show_back = false %}
+{% block title %}Statistics · Clearspring admin{% endblock %}
+{% block content %}
+<main class="admin-page st">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Staff area</p>
+      <h1>Statistics</h1>
+    </div>
+    <div class="admin-actions">
+      <a href="{{ url_for('admin') }}" class="btn-ghost">← Admin</a>
+    </div>
+  </div>
+
+  <nav class="st-range" aria-label="Period">
+    {% for d, label in [(7, '7 days'), (30, '30 days'), (90, '90 days'), (365, 'A year')] %}
+    <a href="{{ url_for('admin_stats', days=d) }}" class="{{ 'on' if r.days == d }}"{% if r.days == d %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  {% if not r.first_day or r.first_day > r.since %}
+  <p class="st-note">Counting started {% if r.first_day %}on {{ r.first_day }}{% else %}today{% endif %}, so earlier days show nothing yet.</p>
+  {% endif %}
+
+  <section class="st-tiles" aria-label="Summary">
+    <div class="st-tile"><b>{{ "{:,}".format(r.today_people) }}</b><span>{{ "person" if r.today_people == 1 else "people" }} today</span></div>
+    <div class="st-tile"><b>{{ "{:,}".format(r.visits) }}</b><span>visits in {{ r.days }} days</span><small>a person counts once a day</small></div>
+    <div class="st-tile"><b>{{ "{:,}".format(r.pages) }}</b><span>pages opened</span><small>{{ "{:,}".format(r.today_pages) }} today</small></div>
+    <div class="st-tile"><b>{{ ((r.app_pages / r.pages * 100)|round|int) if r.pages else 0 }}%</b><span>in the phone app</span><small>the rest in a web browser</small></div>
+    <div class="st-tile"><b>{{ ((r.signed_in_pages / r.pages * 100)|round|int) if r.pages else 0 }}%</b><span>signed in</span><small>pages opened by members</small></div>
+    <div class="st-tile"><b>{{ r.avg_ms if r.avg_ms is not none else '–' }}{% if r.avg_ms is not none %}<i>ms</i>{% endif %}</b><span>average page speed</span><small>{{ r.slow }} slow page{{ 's' if r.slow != 1 }} (over 1.5 s)</small></div>
+    <div class="st-tile st-tile-bots"><b>{{ "{:,}".format(r.bots) }}</b><span>crawler requests blocked</span></div>
+    <div class="st-tile{{ ' st-tile-warn' if r.errors }}"><b>{{ r.errors }}</b><span>server errors</span><small>{{ "{:,}".format(r.limited) }} slowed down for going too fast</small></div>
+  </section>
+
+  {% set n = r.daily|length %}
+  {% set w = 360 %}{% set h = 120 %}{% set bw = (w / n) %}
+  <section class="admin-panel st-chart">
+    <h2 class="section-label">People each day</h2>
+    <svg viewBox="0 0 {{ w }} {{ h + 22 }}" role="img" aria-label="People each day for the last {{ r.days }} days, highest {{ peak }}">
+      <line x1="0" y1="{{ h }}" x2="{{ w }}" y2="{{ h }}" class="st-axis"/>
+      {% for d in r.daily %}
+      {% set bh = (d.people / peak * (h - 14)) if peak else 0 %}
+      <rect x="{{ loop.index0 * bw + bw * 0.12 }}" y="{{ h - bh }}" width="{{ bw * 0.76 }}" height="{{ bh }}" rx="{{ 2 if bw > 6 else 0 }}" class="st-bar"><title>{{ d.day }}: {{ d.people }} people, {{ d.pages }} pages</title></rect>
+      {% if n <= 14 and d.people %}<text x="{{ loop.index0 * bw + bw / 2 }}" y="{{ h - bh - 4 }}" class="st-val">{{ d.people }}</text>{% endif %}
+      {% endfor %}
+      <text x="0" y="{{ h + 16 }}" class="st-lbl">{{ r.daily[0].day[5:] }}</text>
+      <text x="{{ w }}" y="{{ h + 16 }}" class="st-lbl" text-anchor="end">today</text>
+    </svg>
+  </section>
+
+  <section class="admin-panel st-chart">
+    <h2 class="section-label">Crawler requests blocked each day</h2>
+    <svg viewBox="0 0 {{ w }} {{ h + 22 }}" role="img" aria-label="Crawler requests blocked each day, highest {{ bot_peak }}">
+      <line x1="0" y1="{{ h }}" x2="{{ w }}" y2="{{ h }}" class="st-axis"/>
+      {% for d in r.daily %}
+      {% set bh = (d.bots / bot_peak * (h - 14)) if bot_peak else 0 %}
+      <rect x="{{ loop.index0 * bw + bw * 0.12 }}" y="{{ h - bh }}" width="{{ bw * 0.76 }}" height="{{ bh }}" rx="{{ 2 if bw > 6 else 0 }}" class="st-bar st-bar-bot"><title>{{ d.day }}: {{ d.bots }} blocked</title></rect>
+      {% endfor %}
+      <text x="0" y="{{ h + 16 }}" class="st-lbl">{{ r.daily[0].day[5:] }}</text>
+      <text x="{{ w }}" y="{{ h + 16 }}" class="st-lbl" text-anchor="end">today</text>
+    </svg>
+  </section>
+
+  <div class="st-two">
+    <section class="admin-panel">
+      <h2 class="section-label">Most-used parts of the app</h2>
+      {% if r.areas %}
+      {% set top = r.areas[0][1] %}
+      <ol class="st-list">
+        {% for name, count in r.areas %}
+        <li><span>{{ name }}</span><i style="--w: {{ (count / top * 100)|round(1) }}%"></i><b>{{ "{:,}".format(count) }}</b></li>
+        {% endfor %}
+      </ol>
+      {% else %}<p class="st-note">Nothing yet.</p>{% endif %}
+    </section>
+
+    <section class="admin-panel">
+      <h2 class="section-label">Crawlers turned away</h2>
+      {% if r.bots_by %}
+      {% set top = r.bots_by[0][1] %}
+      <ol class="st-list st-list-bots">
+        {% for name, count in r.bots_by %}
+        <li><span>{{ name }}</span><i style="--w: {{ (count / top * 100)|round(1) }}%"></i><b>{{ "{:,}".format(count) }}</b></li>
+        {% endfor %}
+      </ol>
+      {% else %}<p class="st-note">None in this period.</p>{% endif %}
+      {% if r.previews_by %}
+      <h3 class="st-h3">Link previews shown</h3>
+      <ol class="st-list">
+        {% for name, count in r.previews_by %}<li><span>{{ name }}</span><i style="--w: 0"></i><b>{{ count }}</b></li>{% endfor %}
+      </ol>
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="admin-panel">
+    <h2 class="section-label">Most-opened pages</h2>
+    {% if r.pages_top %}
+    <ol class="st-list st-pages">
+      {% for page, count in r.pages_top %}
+      <li><span>{{ page|replace('<int:', '<')|replace('<path:', '<') }}</span><b>{{ "{:,}".format(count) }}</b></li>
+      {% endfor %}
+    </ol>
+    <p class="st-note">Pages of the same kind are grouped: “/bible/read/&lt;book_slug&gt;/&lt;chapter&gt;” is every Bible chapter.</p>
+    {% else %}<p class="st-note">Nothing yet.</p>{% endif %}
+  </section>
+
+  <section class="admin-panel">
+    <h2 class="section-label">The church in the app ({{ r.days }} days)</h2>
+    <div class="st-tiles st-church">
+      {% for label, value, sub in church %}
+      <div class="st-tile"><b>{{ "{:,}".format(value) }}</b><span>{{ label }}</span>{% if sub %}<small>{{ sub }}</small>{% endif %}</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <p class="st-note st-privacy">Counts only. No names, email addresses or IP addresses are stored for these figures. A visitor is counted once a day with a code that is replaced every day and deleted when the day ends, so no visit can be traced back to a person. Staff browsing while signed in to Admin isn’t counted.</p>
+</main>
+<style>
+  .st-range { display: flex; gap: .4rem; flex-wrap: wrap; margin: 0 0 1rem; }
+  .st-range a { padding: .4rem .8rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: var(--fs-sm); }
+  .st-range a.on { background: var(--accent-fill); color: var(--on-accent-fill); border-color: transparent; }
+  .st-note { color: var(--muted); font-size: var(--fs-sm); }
+  .st-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap: .6rem; margin: 0 0 1rem; }
+  .st-tile { display: grid; gap: .1rem; align-content: start; padding: .8rem .9rem; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); }
+  .st-tile b { font: 700 1.6rem/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .st-tile b i { font: 600 .8rem var(--body); font-style: normal; margin-left: .15rem; color: var(--muted); }
+  .st-tile span { font-weight: 600; font-size: var(--fs-sm); }
+  .st-tile small { color: var(--muted); font-size: var(--fs-xs); }
+  .st-tile-bots b { color: var(--muted); }
+  .st-tile-warn b { color: var(--danger); }
+  .st-chart svg { width: 100%; height: auto; display: block; }
+  .st-axis { stroke: var(--line); stroke-width: 1; }
+  .st-bar { fill: var(--accent); }
+  .st-bar-bot { fill: var(--muted); opacity: .6; }
+  .st-val { font: 600 9px var(--body); fill: var(--muted); text-anchor: middle; }
+  .st-lbl { font: 500 10px var(--body); fill: var(--muted); }
+  .st-two { display: grid; gap: 1rem; }
+  @media (min-width: 52rem) { .st-two { grid-template-columns: 1fr 1fr; } }
+  .st-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .35rem; }
+  .st-list li { display: grid; grid-template-columns: minmax(0, 11rem) 1fr auto; align-items: center; gap: .6rem; font-size: var(--fs-sm); }
+  .st-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .st-list i { display: block; height: .55rem; border-radius: 4px; background: linear-gradient(90deg, var(--accent) var(--w), transparent var(--w)); }
+  .st-list-bots i { background: linear-gradient(90deg, var(--muted) var(--w), transparent var(--w)); opacity: .7; }
+  .st-list b { font-variant-numeric: tabular-nums; }
+  .st-pages li { grid-template-columns: 1fr auto; padding: .25rem 0; border-bottom: 1px solid var(--line); }
+  .st-pages span { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-xs); }
+  .st-h3 { font-size: var(--fs-sm); margin: 1rem 0 .4rem; color: var(--muted); }
+  .st-church { margin: 0; grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 1fr)); }
+  .st-church .st-tile b { font-size: 1.35rem; }
+  .st-privacy { margin-top: 1.5rem; line-height: 1.55; }
+</style>
+{% endblock %}

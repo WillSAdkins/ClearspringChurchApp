@@ -9,6 +9,7 @@
       <h1>The board</h1>
     </div>
     <div class="admin-actions">
+      {% if can_open('admin_stats') %}<a href="{{ url_for('admin_stats') }}" class="btn-ghost">Statistics</a>{% endif %}
       {% if can_open('admin_status') %}<a href="{{ url_for('admin_status') }}" class="btn-ghost">Status</a>{% endif %}
       {% if can_open('admin_email') %}<a href="{{ url_for('admin_email') }}" class="btn-ghost">Email</a>{% endif %}
       {% if can_open('admin_home') %}<a href="{{ url_for('admin_home') }}" class="btn-ghost">Home</a>{% endif %}

@@ -68,6 +68,7 @@ import threading as _threading
 import reference
 import classics
 import church_fathers
+import traffic
 import study_assistant
 import grammar
 import grammar_guide
@@ -661,6 +662,47 @@ def inject_csrf():
     return {"csrf_token": csrf_token, "in_app": in_native_app()}
 
 
+@app.before_request
+def start_clock():
+    g.t0 = time.time()
+
+
+@app.after_request
+def count_visit(response):
+    """Anonymous statistics for Admin → Statistics (see traffic.py)."""
+    try:
+        t = g.get("traffic")
+        if t:
+            traffic.add(*t)
+        elif response.status_code == 429:
+            traffic.add("limited", "too fast")
+        elif response.status_code >= 500:
+            traffic.add("errors", str(response.status_code))
+        elif (request.method == "GET" and response.status_code < 400 and response.mimetype == "text/html"
+              and not session.get("is_admin")
+              # A person opening a page, not the app saving pages for offline in the background.
+              and request.headers.get("Sec-Fetch-Mode", "navigate") == "navigate"
+              and request.headers.get("X-CS-Pack") != "1"):
+            area = traffic.area_for(request.path)
+            if area:
+                ua = request.headers.get("User-Agent", "")
+                channel = "app" if in_native_app() else "web"
+                traffic.add("area", area)
+                traffic.add("page", request.url_rule.rule if request.url_rule else request.path)
+                traffic.add("channel", channel)
+                traffic.add("signed_in", "yes" if session.get("member_id") else "no")
+                traffic.visitor(client_ip(), ua, channel, DB_PATH)
+                ms = int((time.time() - g.get("t0", time.time())) * 1000)
+                traffic.add("speed", "ms", ms)
+                traffic.add("speed", "count")
+                if ms > 1500:
+                    traffic.add("speed", "slow")
+        traffic.maybe_flush(DB_PATH)
+    except Exception:
+        app.logger.exception("statistics")
+    return response
+
+
 def in_native_app():
     """True inside the iPhone/Android app (its webview adds this to the user agent)."""
     try:
@@ -731,10 +773,12 @@ def turn_away_crawlers():
     if not ua:
         return None
     if PREVIEW_AGENTS.search(ua):
+        g.traffic = ("preview", traffic.bot_name(ua))
         if request.path.startswith("/static/") or request.method not in ("GET", "HEAD"):
             return app.response_class("", status=403)
         return preview_card()
     if is_crawler(ua):
+        g.traffic = ("bot", traffic.bot_name(ua))
         return app.response_class("Automated access to this site isn't allowed.\n", status=403, mimetype="text/plain")
     return None
 
@@ -1220,6 +1264,7 @@ def init_db():
 
     # Migration: add ministry tag to events for existing databases
     achievements.ensure_tables(db)
+    traffic.ensure_tables(db)
     college.ensure_tables(db)
     college.seed_sample(db)
     watch_library.ensure_tables(db)
@@ -7900,6 +7945,40 @@ for _d in data_missing():
     # Shows in Render's logs on every start, so a missing file is easy to spot.
     print(f"WARNING: Bible data file {_d['file']} is {_d['problem']}; "
           f"'{_d['feature']}' is switched off. Upload {_d['zip']}.", flush=True)
+
+
+@app.route("/admin/stats")
+@login_required
+def admin_stats():
+    """Anonymous statistics: visits, what's used, crawlers turned away, and
+    the church's activity in the app. Counts only, nothing personal."""
+    traffic.maybe_flush(DB_PATH, force=True)
+    days = request.args.get("days", 30, type=int)
+    days = days if days in (7, 30, 90, 365) else 30
+    db = get_db()
+    r = traffic.report(db, days)
+    since = r["since"]
+
+    def one(sql, *args):
+        try:
+            return db.execute(sql, args).fetchone()[0] or 0
+        except sqlite3.Error:
+            return 0
+    church = [
+        ("Member accounts", one("SELECT COUNT(*) FROM members WHERE active=1"), f"{one('SELECT COUNT(*) FROM members WHERE created_at >= ?', since)} new in this period"),
+        ("Members active", one("SELECT COUNT(DISTINCT member_id) FROM member_activity WHERE day >= ?", since), "used the app while signed in"),
+        ("Signed in", one("SELECT COUNT(*) FROM members WHERE last_login >= ?", since), "members who signed in"),
+        ("Groups", one("SELECT COUNT(*) FROM groups WHERE archived=0"), f"{one('SELECT COUNT(*) FROM group_posts WHERE created_at >= ?', since)} posts and prayers in this period"),
+        ("Prayer requests", one("SELECT COUNT(*) FROM prayers WHERE submitted_at >= ?", since), f"{one('SELECT COALESCE(SUM(pray_count),0) FROM prayers WHERE submitted_at >= ?', since)} times someone prayed for them"),
+        ("Questions asked", one("SELECT COUNT(*) FROM questions WHERE submitted_at >= ?", since), f"{one('SELECT COUNT(*) FROM questions WHERE answered_at >= ?', since)} answered"),
+        ("Stories shared", one("SELECT COUNT(*) FROM testimonies WHERE submitted_at >= ?", since), ""),
+        ("Notifications on", one("SELECT COUNT(*) FROM push_subscriptions"), "phones and browsers that get notifications"),
+        ("Saved verses and notes", one("SELECT COUNT(*) FROM member_data WHERE kind IN ('verse','note','vnote','highlight','journal')"), "kept in members' accounts"),
+        ("Game scores", one("SELECT COUNT(*) FROM game_scores WHERE achieved_at >= ?", since), "new best scores published"),
+    ]
+    peak = max([d["people"] for d in r["daily"]] + [1])
+    bot_peak = max([d["bots"] for d in r["daily"]] + [1])
+    return render_template("admin_stats.html", r=r, church=church, peak=peak, bot_peak=bot_peak)
 
 
 @app.route("/admin/status")
