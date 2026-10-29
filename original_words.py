@@ -38,7 +38,7 @@ def _connect():
     return sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
 
 
-@lru_cache(maxsize=64)
+@lru_cache(maxsize=16)
 def _chapter(slug, chapter):
     with _connect() as db:
         row = db.execute("SELECT data FROM chapter_words WHERE slug=? AND chapter=?",

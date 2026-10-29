@@ -86,7 +86,7 @@ def neighbours(slug, chapter, verse):
 
 # ------------------------------------------------------- cross-references
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=32)
 def _xref_chapter(slug, chapter):
     if not os.path.exists(XREF_DB):
         return {}
@@ -148,7 +148,7 @@ def related_senses(key):
     return [{"strong": s, "meaning": (g or "").lstrip(": ")} for s, g in rows if len(s) <= len(base) + 1]
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=32)
 def _concordance(key):
     with _ro(WORDS_DB) as db:
         row = db.execute("SELECT count, data FROM concordance WHERE strong=?", (key,)).fetchone()

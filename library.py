@@ -10,6 +10,8 @@ import json
 import os
 import re
 import sqlite3
+
+import ro_db
 import zlib
 from functools import lru_cache
 
@@ -56,20 +58,8 @@ def available():
     return os.path.exists(DB)
 
 
-def _db():
-    conn = sqlite3.connect(f"file:{DB}?mode=ro", uri=True, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-_conn = None
-
-
 def db():
-    global _conn
-    if _conn is None:
-        _conn = _db()
-    return _conn
+    return ro_db.connect(DB)
 
 
 def _z(blob, as_json=False):
@@ -191,14 +181,8 @@ def popular_topics():
 
 # ------------------------------------------------------------ commentary
 
-_comm_conns = {}
-
-
 def _comm_conn(code):
-    if code not in _comm_conns:
-        path = os.path.join(COMM_DIR, f"{code}.sqlite")
-        _comm_conns[code] = sqlite3.connect(f"file:{path}?mode=ro", uri=True, check_same_thread=False) if os.path.exists(path) else None
-    return _comm_conns[code]
+    return ro_db.connect(os.path.join(COMM_DIR, f"{code}.sqlite"), rows=False)
 
 
 @lru_cache(maxsize=24)
@@ -207,7 +191,7 @@ def _comm_index(code):
     return frozenset((b, ch) for b, ch in c.execute("SELECT book, chapter FROM ch")) if c else frozenset()
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=64)
 def _comm_rows(code, slug, ch):
     c = _comm_conn(code)
     if not c or (slug, ch) not in _comm_index(code):

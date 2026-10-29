@@ -32,7 +32,7 @@ def available():
 
 
 def _db():
-    db = sqlite3.connect(f"file:{PATH}?mode=ro", uri=True, check_same_thread=False)
+    db = sqlite3.connect(f"file:{PATH}?mode=ro", uri=True)
     db.row_factory = sqlite3.Row
     return db
 

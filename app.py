@@ -494,17 +494,27 @@ CRAWL_LIMIT = (45, 60)        # pages per minute from one address
 _crawl_hits = {}
 
 
-def too_fast():
-    ip = client_ip()
-    now = time.time()
-    start, n = _crawl_hits.get(ip, (now, 0))
+NETWORK_LIMIT = 120           # pages per minute from one network (a.b.c.*): crawlers spread over many addresses
+
+
+def _count_hit(key, limit, now):
+    start, n = _crawl_hits.get(key, (now, 0))
     if now - start > CRAWL_LIMIT[1]:
         start, n = now, 0
     n += 1
-    if len(_crawl_hits) > 20000:
-        _crawl_hits.clear()
-    _crawl_hits[ip] = (start, n)
-    return n > CRAWL_LIMIT[0]
+    _crawl_hits[key] = (start, n)
+    return n > limit
+
+
+def too_fast():
+    ip = client_ip()
+    now = time.time()
+    if len(_crawl_hits) > 20000:      # forget only windows that have ended
+        for k in [k for k, (s, _) in _crawl_hits.items() if now - s > CRAWL_LIMIT[1]]:
+            _crawl_hits.pop(k, None)
+    over = _count_hit(ip, CRAWL_LIMIT[0], now)
+    net = ip.rsplit(".", 1)[0] + ".*" if ip.count(".") == 3 else ":".join(ip.split(":")[:4]) + "::*"
+    return _count_hit(net, NETWORK_LIMIT, now) or over
 
 # Cookie hardening. Lax lets ordinary links into the site work while blocking
 # cookies on cross-site POSTs, which is the shape a CSRF attack takes.
@@ -674,6 +684,64 @@ def slow_down_crawlers():
         resp.headers["Retry-After"] = "60"
         return resp
     return None
+
+
+# Crawlers that ignore robots.txt and fetch library pages from hundreds of
+# addresses at once (each address stays under the per-address limit). They're
+# turned away from the library only; the rest of the site stays open to them.
+BOT_AGENTS = re.compile(r"meta-externalagent|facebookexternalhit|GPTBot|ChatGPT-User|OAI-SearchBot|ClaudeBot|anthropic-ai|"
+                        r"CCBot|Bytespider|Amazonbot|PerplexityBot|Applebot-Extended|Google-Extended|DataForSeoBot|"
+                        r"AhrefsBot|SemrushBot|MJ12bot|PetalBot|YandexBot|DotBot|ImagesiftBot|Diffbot|omgili|"
+                        r"Timpibot|cohere-ai|YouBot|Scrapy|python-requests|Go-http-client|okhttp|curl/", re.I)
+
+
+@app.before_request
+def turn_away_library_bots():
+    if request.path.startswith(CRAWL_PREFIXES) and BOT_AGENTS.search(request.headers.get("User-Agent", "")):
+        return app.response_class("Automated access to the library isn't allowed. See /robots.txt.\n", status=403, mimetype="text/plain")
+    return None
+
+
+# The heaviest pages (the word-by-word interlinear, passage study, a word's
+# every use) can each take tens of megabytes while they're built. Only a few
+# at once, so a burst of them can't run the server out of memory.
+HEAVY_PAGES = {"interlinear", "passage_study_page", "word_page", "verse_page", "compare_passages", "words_hub",
+               "fathers_search", "library_search"}
+_heavy_slots = _threading.BoundedSemaphore(3)
+
+
+@app.before_request
+def take_heavy_slot():
+    if request.endpoint in HEAVY_PAGES:
+        if not _heavy_slots.acquire(timeout=25):
+            resp = app.response_class("Busy, please try again in a moment.\n", status=503, mimetype="text/plain")
+            resp.headers["Retry-After"] = "5"
+            return resp
+        g.heavy_slot = True
+    return None
+
+
+try:
+    import ctypes
+    _libc = ctypes.CDLL("libc.so.6")
+    _malloc_trim = _libc.malloc_trim
+except (OSError, AttributeError):
+    _malloc_trim = None
+_heavy_done = [0]
+
+
+@app.teardown_request
+def give_back_heavy_slot(exc=None):
+    if g.pop("heavy_slot", False):
+        _heavy_slots.release()
+        # Hand memory freed by big pages back to the system now and then, so
+        # the server's footprint doesn't creep up towards the limit.
+        _heavy_done[0] += 1
+        if _malloc_trim and _heavy_done[0] % 5 == 0:
+            try:
+                _malloc_trim(0)
+            except Exception:
+                pass
 
 
 ROBOTS_TXT = """# Clearspring Church app
@@ -9389,6 +9457,11 @@ if __name__ == "__main__":
         try:
             import gunicorn  # noqa: F401
             print("Starting the production server (gunicorn)", flush=True)
+            # The system memory allocator keeps a separate pool per thread; with
+            # several threads these grow and are never handed back, which is
+            # what pushed the server past Render's memory limit. Two pools is
+            # plenty for this app and keeps memory flat.
+            os.environ.setdefault("MALLOC_ARENA_MAX", "2")
             os.execv(sys.executable, [sys.executable, "-m", "gunicorn", "app:app",
                                       "--bind", f"0.0.0.0:{os.environ.get('PORT', '10000')}",
                                       "--workers", "1", "--threads", "8", "--timeout", "120",

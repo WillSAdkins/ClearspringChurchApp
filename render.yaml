@@ -22,6 +22,9 @@ services:
         value: "1"
       - key: HTTPS_ONLY
         value: "1"
+      # Keeps memory flat with several threads (see app.py).
+      - key: MALLOC_ARENA_MAX
+        value: "2"
       - key: CHURCH_DB
         value: "/var/data/church.db"
       - key: SECRET_KEY

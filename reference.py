@@ -6,6 +6,8 @@ from public-domain CrossWire SWORD modules).
 import os
 import re
 import sqlite3
+
+import ro_db
 import zlib
 from datetime import date, datetime
 from functools import lru_cache
@@ -38,15 +40,8 @@ def available():
     return os.path.exists(DB)
 
 
-_conn = None
-
-
 def db():
-    global _conn
-    if _conn is None:
-        _conn = sqlite3.connect(f"file:{DB}?mode=ro", uri=True, check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-    return _conn
+    return ro_db.connect(DB)
 
 
 def _html(blob):

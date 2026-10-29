@@ -5,6 +5,8 @@ Fathers, 1867-1900, and other translations of that age)."""
 import os
 import re
 import sqlite3
+
+import ro_db
 import zlib
 from functools import lru_cache
 
@@ -93,26 +95,12 @@ def available():
     return os.path.exists(DB)
 
 
-_conn = None
-
-
 def db():
-    global _conn
-    if _conn is None:
-        _conn = sqlite3.connect(f"file:{DB}?mode=ro", uri=True, check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-    return _conn
-
-
-_sconn = None
+    return ro_db.connect(DB)
 
 
 def sdb():
-    global _sconn
-    if _sconn is None:
-        _sconn = sqlite3.connect(f"file:{SEARCH_DB}?mode=ro", uri=True, check_same_thread=False)
-        _sconn.row_factory = sqlite3.Row
-    return _sconn
+    return ro_db.connect(SEARCH_DB)
 
 
 def minutes(words):

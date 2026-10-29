@@ -20,11 +20,11 @@ def available():
 
 
 def _db():
-    db = sqlite3.connect(f"file:{PATH}?mode=ro", uri=True, check_same_thread=False)
+    db = sqlite3.connect(f"file:{PATH}?mode=ro", uri=True)
     return db
 
 
-@functools.lru_cache(maxsize=48)
+@functools.lru_cache(maxsize=12)
 def chapter(slug, ch):
     """{verse number (int): [grammar row per word]} or {}."""
     if not available():
