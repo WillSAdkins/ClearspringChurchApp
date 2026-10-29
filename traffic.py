@@ -2,9 +2,10 @@
 
 Counts only: how many pages were opened, which parts of the app, phone app or
 browser, signed in or not, how fast pages were, which crawlers were turned
-away. Nothing that identifies anyone is stored. A visitor is counted once a
-day using a code made from their address and browser with a secret that is
-replaced every day; once the day is over the codes are deleted and only the
+away. Nothing that identifies anyone is stored. Each phone or browser is
+counted once a day using a code made from the app's own sign-in cookie (so
+changing between Wi-Fi and mobile data doesn't count twice) with a secret that
+is replaced every day; once the day is over the codes are deleted and only the
 total is kept, so a visit can't be traced back to a person.
 
 Counts are gathered in memory and written to the database about once a
@@ -76,12 +77,12 @@ def add(kind, key, n=1, day=None):
         _counts[k] = _counts.get(k, 0) + n
 
 
-def _code(ip, ua, today, db_path):
+def _code(identity, today, db_path):
     """Today's anonymous code for a visitor (the secret changes every day)."""
     if _salt["day"] != today:
         _salt["value"] = _load_salt(today, db_path)
         _salt["day"] = today
-    return hashlib.sha256(f"{_salt['value']}|{ip}|{ua}".encode()).hexdigest()[:20]
+    return hashlib.sha256(f"{_salt['value']}|{identity}".encode()).hexdigest()[:20]
 
 
 def _load_salt(today, db_path):
@@ -98,9 +99,12 @@ def _load_salt(today, db_path):
         return today + ":" + secrets.token_hex(16)
 
 
-def visitor(ip, ua, channel, db_path):
+def visitor(identity, channel, db_path):
+    """Count this phone or browser once today. `identity` is the random value
+    already in the app's sign-in cookie (or address and browser if a device
+    refuses cookies); only a daily, one-way code made from it is kept."""
     today = date.today().isoformat()
-    code = _code(ip, ua, today, db_path)
+    code = _code(identity, today, db_path)
     with _lock:
         _seen.setdefault((today, code), channel)
 

@@ -691,7 +691,10 @@ def count_visit(response):
                 traffic.add("page", request.url_rule.rule if request.url_rule else request.path)
                 traffic.add("channel", channel)
                 traffic.add("signed_in", "yes" if session.get("member_id") else "no")
-                traffic.visitor(client_ip(), ua, channel, DB_PATH)
+                # Each phone or browser once a day, by the random value already in its
+                # sign-in cookie, so switching between Wi-Fi and 5G isn't a new person.
+                identity = session.get("csrf_token") or f"{client_ip()}|{ua}"
+                traffic.visitor(identity, channel, DB_PATH)
                 ms = int((time.time() - g.get("t0", time.time())) * 1000)
                 traffic.add("speed", "ms", ms)
                 traffic.add("speed", "count")
